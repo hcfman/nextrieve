@@ -23,7 +23,7 @@ Before that it was used to index several mailing lists, such as:
 * ascend mailing list
 * Livingston mailing list
 
-It was also used to index a collection of government documents for the NRC Handelsblad around "The irtaffaire".
+It was also used to index a collection of government documents for the NRC Handelsblad around "The IRT-affaire".
 
 I have intentions to get it building sometime but to be honest it should be re-written in a language like rust for more memory safety.
 
