@@ -1,4 +1,4 @@
-# nextrieve
+# NexTrieve
 NexTrieve is a fuzzy text retrieval system
 
 *UNDER CONSTRUCTION*
