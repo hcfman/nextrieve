@@ -27,4 +27,4 @@ It was also used to index a collection of government documents for the NRC Hande
 
 I have intentions to get it building sometime but to be honest it should be re-written in a language like rust for more memory safety.
 
-- Kim Hendrikse
+Kim Hendrikse
