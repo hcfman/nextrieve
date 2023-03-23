@@ -1,6 +1,8 @@
 # nextrieve
 NexTrieve is a fuzzy text retrieval system
 
+*UNDER CONSTRUCTION*
+
 Note: THIS CODE ISN'T BUILDING JUST YET, I've recently looked it up and placed it here for me it's part of the Dutch Internet historical reference.
 
 I originally wrote it around 1995 when I had a company called Nexial Systems. Later, it became part of a National Search engine called Search.NL. Search.NL was one of the first national search engines in the Netherlands.
