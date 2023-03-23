@@ -6,7 +6,11 @@ Note: THIS CODE ISN'T BUILDING JUST YET, I've recently looked it up and placed i
 
 I originally wrote it around 1995 when I had a company called Nexial Systems. Later, it became part of a National Search engine called Search.NL. Search.NL was one of the first national search engines in the Netherlands.
 
-There's a small piece of history about this (In Dutch) here:
+Here's one snapshot in the wayback machine
+
+https://web.archive.org/web/20021125174556/http://www.search.nl/
+
+There's a small piece of history about this (In Dutch) here
 
 https://www.eindhovenfotos.nl/1/ilse.nl.html#news1-y8
 
