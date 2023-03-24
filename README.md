@@ -18,6 +18,10 @@ https://www.eindhovenfotos.nl/1/ilse.nl.html#news1-y8
 
 According to the above artikel, in 1999 Computable magazine referred to Search.NL as the best scoring Dutch search engine, Altavista and Hotbot were first and second. I never read that article myself but I'm proud to read it in this history page.
 
+I also started one of the first search engines in New Zealand, the URL for this still works and goes to a search engine, though I understand they use a different search engine now. The look and feel is pretty much the same as when I sold it to NZcity:
+
+http://www.searchnz.co.nz/
+
 It's based on tri-grams together with a secondary extra weighting step. The indexes use a technique for efficient document references based on a book called "Managing gigabytes". It was able to index 10GB of text with both fuzzy and exact indexes in about 5 hours on a Pentium IV with 2GB of ram. Not the fastest but not the slowest either. Not too bad for just 2GB total ram on the platform.
 
 Before that it was used to index several mailing lists when the formative years of the Internet were under construction, such as:
