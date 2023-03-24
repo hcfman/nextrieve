@@ -20,7 +20,7 @@ According to the above artikel, in 1999 Computable magazine referred to Search.N
 
 It's based on tri-grams together with a secondary extra weighting step. The indexes use a technique for efficient document references based on a book called "Managing gigabytes". It was able to index 10GB of text with both fuzzy and exact indexes in about 5 hours on a Pentium IV with 2GB of ram. Not the fastest but not the slowest either. Not too bad for just 2GB total ram on the platform.
 
-Before that it was used to index several mailing lists, such as:
+Before that it was used to index several mailing lists when the formative years of the Internet were under construction, such as:
 
 * Cisco mailing list
 * greatcircle.com's firewalls mailing list
@@ -28,7 +28,7 @@ Before that it was used to index several mailing lists, such as:
 * ascend mailing list
 * Livingston mailing list
 
-It was also used to index a collection of documents surrounding "The IRT-affaire", a collection of documents obtained by Buro Jansen and Janssen and made public on the NRC Handelsblad.
+It was also used to index a collection of documents surrounding "The IRT-affaire", a collection of documents obtained by Buro Jansen and Janssen and made public on the NRC Handelsblad that relates to abuse of police and justice department powers. At that time as I understand it a team called the IRTs or "Interregionaal Recherche Teams" (Inter-regional detective teams) were working effectively making criminals rich. This created a huge scandal. At the time my Dutch wasn't sufficiently good for me to understand it well, nor did it seem particularly relevant to me at the time.
 
 I have intentions to get it building sometime but to be honest it should be re-written in a language like rust for more memory safety.
 
