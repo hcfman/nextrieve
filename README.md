@@ -28,7 +28,7 @@ Before that it was used to index several mailing lists when the formative years 
 * ascend mailing list
 * Livingston mailing list
 
-It was also used to index a collection of documents surrounding "The IRT-affaire", a collection of documents obtained by Buro Jansen and Janssen and made public on the NRC Handelsblad that relates to abuse of police and justice department powers. At that time as I understand it a team called the IRTs or "Interregionaal Recherche Teams" (Inter-regional detective teams) were working effectively making criminals rich. This created a huge scandal. At the time my Dutch wasn't sufficiently good for me to understand it well, nor did it seem particularly relevant to me at the time.
+It was also used to index a collection of documents surrounding "The IRT-affaire" (https://nl.wikipedia.org/wiki/Parlementaire_enqu%C3%AAte_opsporingsmethoden), a collection of documents obtained by Buro Jansen and Janssen and made public on the NRC Handelsblad that relates to abuse of police and justice department powers. At that time as I understand it a team called the IRTs or "Interregionaal Recherche Teams" (Inter-regional detective teams) were working effectively making criminals rich. This created a huge scandal. At the time my Dutch wasn't sufficiently good for me to understand it well, nor did it seem particularly relevant to me at the time.
 
 I have intentions to get it building sometime but to be honest it should be re-written in a language like rust for more memory safety.
 
