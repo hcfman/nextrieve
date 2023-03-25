@@ -1,0 +1,21 @@
+
+<ntv-pg-ifmlt>
+Pages: <FONT FACE="arial" SIZE=-1>
+<ntv-pg-ifprv>
+    <A HREF="<ntv-pg-linkfirst>">|&lt;&lt;</A>
+    <A HREF="<ntv-pg-linkprv>">&lt;&lt</A>
+</ntv-pg-ifprv>
+<ntv-pages 10>
+    <ntv-pg-ifcur>
+    <A HREF="<ntv-pg-link>"><B>*<ntv-pg-number>*</B></A>
+    </ntv-pg-ifcur>
+    <ntv-pg-ifcur!>
+    <A HREF="<ntv-pg-link>"><ntv-pg-number></A>
+    </ntv-pg-ifcur!>
+</ntv-pages>
+<ntv-pg-ifnxt>
+    <A HREF="<ntv-pg-linknxt>">&gt;&gt</A>
+    <A HREF="<ntv-pg-linklast>">&gt;&gt;|</A>
+</ntv-pg-ifnxt>
+</FONT>
+</ntv-pg-ifmlt>

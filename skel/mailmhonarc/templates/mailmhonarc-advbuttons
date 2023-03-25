@@ -1,0 +1,118 @@
+
+<ntv-ctl-state-adv>
+
+<TABLE WIDTH="90%" BORDER="0">
+<TR>
+<TD>
+
+<TABLE BORDER="0">
+<TR>
+<TD>
+Subjects only
+</TD>
+<TD>
+<input
+    type="checkbox"
+    NAME="vblsubjectsonly"
+    VALUE="checked"
+    <ntv-vbl vblsubjectsonly>
+    >
+</TD>
+</TR>
+
+<TR>
+<TD>All words:</TD>
+<TD>
+<ntv-ctl-searchall VALUE="<ntv-searchall>">
+</TD>
+</TR>
+
+<TR>
+<TD>
+Any words:
+</TD>
+<TD>
+<ntv-ctl-searchany VALUE="<ntv-searchany>">
+</TD>
+</TR>
+
+<TR>
+<TD>
+Not words:
+</TD>
+<TD>
+<ntv-ctl-searchnot VALUE="<ntv-searchnot>">
+</TD>
+</TR>
+
+<TR>
+<TD>
+From includes:
+</TD>
+<TD>
+<input type="text" name="vblfromcons" VALUE="<ntv-vbl vblfromcons>">
+</TD>
+</TR>
+
+<TR>
+<TD>
+From excludes:
+</TD>
+<TD>
+<input type="text" name="vblnotfromcons" VALUE="<ntv-vbl vblnotfromcons>">
+</TD>
+</TR>
+
+<TR>
+<TD COLSPAN="2">
+<ntv-ctl-moderadio-fuzzy 0>
+<I>Exact</I>
+<ntv-ctl-moderadio-fuzzy 1> <I>Fuzzy</I>
+</TD>
+</TR>
+
+</TABLE>
+
+</TD>
+<TD VALIGN="TOP">
+<TABLE BORDER=0>
+<TR> <TD>Total hits:</B></TD> <TD><ntv-ctl-totalhits></TD> </TR>
+<TR> <TD>Hits to display:</B></TD> <TD><ntv-ctl-displayedhits></TD> </TR>
+<TR> <TD>Fuzziness:</TD> <TD><ntv-ctl-fuzzyfactor></TD> </TR>
+<TR> <TD>Highlighting:</TD> <TD><ntv-ctl-highlight></TD> </TR>
+<TR>
+<TD>
+Subject includes:
+</TD>
+<TD>
+<input type="text" name="vblsubcons" VALUE="<ntv-vbl vblsubcons>">
+</TD>
+</TR>
+
+<TR>
+<TD>
+Subject excludes
+</TD>
+<TD>
+<input type="text" name="vblnotsubcons" VALUE="<ntv-vbl vblnotsubcons>">
+</TD>
+</TR>
+
+</TABLE>
+
+</TD>
+</TR>
+
+<TR>
+<TD COLSPAN="2" ALIGN="CENTER">
+<FONT FACE="Arial,Helvetica" SIZE="2">The above ("From" and "Subject" only) fields may include simple regular expressions involving '*' and '?'<BR>e.g. dave?@comp*.com</FONT>
+</TD>
+</TR>
+</TABLE>
+
+<ntv-ctl-submit VALUE=" Search ">
+<BR>
+
+<BR><FONT SIZE=-1><A HREF="<ntv-script>?<ntv-linktextquery>&fuzzy=<ntv-moderadio-fuzzy>&vblsubjectsonly=<ntv-vbl vblsubjectsonly>">Simple search</A></FONT>
+
+<BR>

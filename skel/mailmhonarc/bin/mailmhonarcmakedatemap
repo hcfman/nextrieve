@@ -1,0 +1,75 @@
+#!%%NTVPERL%%
+
+# $Header: /data1/home/kim/devel/cvsprojects/nextrieve-2.0.28/skel/mailmhonarc/bin/mailmhonarcmakedatemap,v 1.1.1.1 2007/07/01 19:58:57 kim Exp $
+
+$INDEXBASE = '%%NTVBASEDIR%%';
+$ADMINISTRATOR = 'kim@nexial.com';
+$CC = 'kim@nexial.com';
+$MAILPROG = '/usr/sbin/sendmail';
+$DATABASE = '%%NTVNAME%%';
+
+sub error {
+    local( $format, @list ) = @_;
+
+    $message = sprintf( $format, @list );
+
+    $message = "$!" ? "$message: $!\n" : "$message\n";
+    print $message;
+    exit( 1 );
+}
+
+chdir $INDEXBASE ||
+    &error( "Can't change to $INDEXBASE" );
+
+#
+# Suck list of years out of the system
+#
+opendir( DIR, "." ) ||
+    &error( "Can't open $INDEXBASE" );
+@filelist = grep( /^\d\d\d\d\d\d$/, readdir( DIR ) );
+closedir DIR;
+
+for ( @filelist ) {
+    ( $year, $month ) = m%^(\d\d\d\d)(\d\d)%;
+    $yearMonth{ "$year$month" } = 1;
+}
+
+@lastMonths = reverse sort keys %yearMonth;
+
+#
+# Find the last twelve, prepare for marking cmdfiles
+#
+$i = 0;
+$limit = $#lastMonths > 11 ? 11 : $#lastMonths;
+while ( $i <= $limit ) {
+    ( $year ) = $lastMonths[ $i ] =~ /^(\d\d\d\d)/;
+    $years{ $year } = 1;
+
+    $i++;
+}
+
+# Make the if test
+@lastMonths = reverse @lastMonths;
+for ( $i = 0; $i <= $#lastMonths; $i++ ) {
+    ( $theyear ) = $lastMonths[ $i ] =~ /^(\d\d\d\d)/;
+    if ( $years{ $theyear } ) {
+	$s1 = int( rand( 200 ) ) + 53;
+	$s2 = int( rand( 200 ) ) + 53;
+	$s3 = int( rand( 200 ) ) + 53;
+	$color = sprintf( "#%02x%02x%02x", $s1, $s2, $s3 );
+	print "<ntv-hit-ifattreq date $lastMonths[ $i ]*>BGCOLOR=\"$color\"</ntv-hit-if>\n";
+    } else {
+	$s1 = int( rand( 200 ) ) + 53;
+	$s2 = int( rand( 200 ) ) + 53;
+	$s3 = int( rand( 200 ) ) + 53;
+	$color = sprintf( "#%02x%02x%02x", $s1, $s2, $s3 );
+	if ( defined( $colors{ $theyear } ) ) {
+	    print "<ntv-hit-ifattreq date $lastMonths[ $i ]*>BGCOLOR=\"$colors{ $theyear }\"</ntv-hit-if>\n";
+	} else {
+	    print "<ntv-hit-ifattreq date $lastMonths[ $i ]*>BGCOLOR=\"$color\"</ntv-hit-if>\n";
+	    $colors{ $theyear } = $color;
+	}
+    }
+}
+
+exit 0;

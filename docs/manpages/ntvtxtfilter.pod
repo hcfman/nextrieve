@@ -1,0 +1,58 @@
+
+=head1 NAME
+
+ntvtxtfilter - NexTrieve TXT file filter
+
+=head1 SYNOPSIS
+
+  ntvpdffilter [-Drh] [-f fnameattr] [-t titleattr] [-T titletext]
+
+
+=head1 DESCRIPTION
+
+B<ntvtxtfilter> is a simple shell script that expects a series of filenames
+on stdin, each representing the name of a file containing a basic text
+document, and produces on stdout XML suitable for passing to ntvindex.
+
+Each TXT file encountered is emitted in XML as a separate document
+with associated attributes.
+
+=head1 OPTIONS
+
+=over
+
+=item C<-f> fnameattr
+
+The name of the file being processed is emitted as the "fnameattr" attribute.
+
+=item C<-t> titleattr
+
+The title of the text file is emitted as the "titleattr" attribute.  The
+title is simply taken to be the first line of text.
+
+=item C<-T> titlett
+
+The title of the text file is emitted as a <titlett> container in the
+text of the document.  The title is simply taken
+to be the first line of text.
+
+=item C<-D>
+
+A <ntv:docseq> container will be generated surrounding the filter output.
+This enables the output to be sent directly to ntvindex.
+
+=item C<-h>
+
+Print some help information.
+
+=item C<-r>
+
+Operate in "raw" mode.  The content of a single document is expected on stdin
+(rather than filenames); it will be converted to UTF-8 and output to
+stdout.  No attributes or text types will be generated.
+
+=back
+
+=head1 SEE ALSO
+
+    ntvmailfilter(1), ntvdocfilter(1), ntvhtmlfilter(1)

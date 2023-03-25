@@ -1,0 +1,8 @@
+#!%%NTVPERL%% -I%%NTVBASE%%/%%NTVNAME%%/bin
+
+use %%NTVNAME%%error;
+
+my $message = join( ' ', @ARGV );
+ntverror( "$message\n" );
+
+exit 1;

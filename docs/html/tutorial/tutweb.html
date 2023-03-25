@@ -1,0 +1,1458 @@
+<HTML>
+<HEAD>
+<TITLE>Building a Web Interface From First Principles</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">Building a Web Interface From First Principles</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<LI><A HREF="tutweb.html#overview">OVERVIEW</A></LI>
+	<LI><A HREF="tutweb.html#operating environment">OPERATING ENVIRONMENT</A></LI>
+	<LI><A HREF="tutweb.html#provided functionality">PROVIDED FUNCTIONALITY</A></LI>
+	<LI><A HREF="tutweb.html#creating the text index">CREATING THE TEXT INDEX</A></LI>
+	<LI><A HREF="tutweb.html#using the search server">USING THE SEARCH SERVER</A></LI>
+	<LI><A HREF="tutweb.html#ntvultralite resource file">NTVULTRALITE RESOURCE FILE</A></LI>
+	<LI><A HREF="tutweb.html#creating the cgi script">CREATING THE CGI SCRIPT</A></LI>
+	<LI><A HREF="tutweb.html#creating some templates">CREATING SOME TEMPLATES</A></LI>
+	<UL>
+
+		<LI><A HREF="tutweb.html#simple">Simple</A></LI>
+		<UL>
+
+			<LI><A HREF="tutweb.html#basic search controls">Basic Search Controls</A></LI>
+			<LI><A HREF="tutweb.html#displaying hits">Displaying Hits</A></LI>
+			<UL>
+
+				<LI><A HREF="tutweb.html#coloring date fields">Coloring Date Fields</A></LI>
+			</UL>
+
+			<LI><A HREF="tutweb.html#displaying search page numbers">Displaying Search Page Numbers</A></LI>
+			<LI><A HREF="tutweb.html#putting it all together">Putting It All Together</A></LI>
+			<UL>
+
+				<LI><A HREF="tutweb.html#__cisco">__cisco</A></LI>
+				<LI><A HREF="tutweb.html#q_cisco">Q_cisco</A></LI>
+				<LI><A HREF="tutweb.html#e_cisco">E_cisco</A></LI>
+			</UL>
+
+		</UL>
+
+		<LI><A HREF="tutweb.html#advanced">Advanced</A></LI>
+		<UL>
+
+			<LI><A HREF="tutweb.html#advanced buttons">Advanced Buttons</A></LI>
+			<LI><A HREF="tutweb.html#putting it all together">Putting it all Together</A></LI>
+			<UL>
+
+				<LI><A HREF="tutweb.html#_acisco">_Acisco</A></LI>
+				<LI><A HREF="tutweb.html#qacisco">QAcisco</A></LI>
+				<LI><A HREF="tutweb.html#eacisco">EAcisco</A></LI>
+			</UL>
+
+		</UL>
+
+	</UL>
+
+	<LI><A HREF="tutweb.html#debugging ntvultralite">DEBUGGING NTVULTRALITE</A></LI>
+	<UL>
+
+		<LI><A HREF="tutweb.html#running ntvultralite standalone">Running ntvultralite ``standalone''</A></LI>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H1><A NAME="overview">OVERVIEW</A></H1>
+<P>We describe here an example mailing list application that is set up
+using ntvultralite searching on a mailing list text index.  This application
+serves up web-pages to a client operating a browser, with the content
+dependant on queries the client enters.</P>
+<P>We will be building this web-page serving search system from first
+principles.  If you are not familiar with the NexTrieve set of search
+products, it might be wise to initially create some example web-page
+serving engines using the script ``ntvmakenewwebindex''.  This will create
+some functional boilerplate examples.</P>
+<P>In this document, we first
+describe the basic operating environment.  This is followed by
+using a simple mailbox analyzer tool to construct and index your mailing
+list files.  Then, once we have the text index, we can actually construct
+some HTML template pages, and use ntvultralite to start serving them.</P>
+<P>
+<HR>
+<H1><A NAME="operating environment">OPERATING ENVIRONMENT</A></H1>
+<P>How does it all fit together?</P>
+<P>What we will build here is a CGI script which runs ntvultralite to
+provide search results from a mailing list text index.</P>
+<P>To follow this example, you should be familiar with the following things:</P>
+<UL>
+<LI>
+How a CGI script runs in your environment.  Eg, where it must be located
+(/usr/local/apache/cgi-bin, for example) and what permissions it must have.
+You will create a small CGI script that will, as its last action,
+pass control to ntvultralite after setting some environment variables.
+<P></P>
+<LI>
+How an HTML form-based request arrives.  Ie, you should know that
+when a CGI script is run there are various environment variables set
+corresponding to the form-related variables set by the user (and other
+information).  More information also arrives on the ``standard input'' of
+the CGI script for most queries.
+<P>Knowledge of this area is vital for debugging any problems you may have.
+See the section Debuggin below.</P>
+<P></P>
+<LI>
+How to construct basic HTML pages that work.  The whole idea of the template
+mechanism is to substitute parts of HTML pages prior to presenting them
+to the client.  You should have a basic knowledge of how to construct
+valid HTML.
+<P></P></UL>
+<P>In this example, we will assume that the nextrieve related information
+is stored under /usr/local/nextrieve.  Ie, there are (or will be)
+subdirectories:</P>
+<DL>
+<DT><STRONG><A NAME="item_%2E%2E%2E%2F2%2E0%2E0%2Fbin">.../2.0.0/bin</A></STRONG><BR>
+<DD>
+Containing nextrieve binaries.  ntvultralite, ntvsearch, ntsearchd
+and ntvindex
+are important for this tutorial.  This directory is assumed to be in your
+current PATH for most examples.
+<P></P>
+<DT><STRONG><A NAME="item_%2E%2E%2E%2Fcollection">.../collection</A></STRONG><BR>
+<DD>
+A further subdirectory will be created here containing all the information
+related to our web interface.
+<P></P></DL>
+<P>
+<HR>
+<H1><A NAME="provided functionality">PROVIDED FUNCTIONALITY</A></H1>
+<P>We will index a copy of the cisco mailing list for this example.
+We will have two types of searches performed, ``simple'' and ``advanced''.</P>
+<P>With a simple search, we will provide the following features:</P>
+<UL>
+<LI>
+There will be a single text-area for entering the search query.
+<P></P>
+<LI>
+There will be a <EM>fuzzy</EM> checkbox -- this will allow the client to
+perform an <EM>exact</EM> or a <EM>fuzzy</EM> search for the entered text.
+<P></P>
+<LI>
+There will be a <EM>subjects only</EM> checkbox which will restrict the search
+to be in the subjects of email messages, rather than the default of
+searching both the body and subject.
+<P>This will introduce, in a simple way, the concept of ntvultralite
+``variables''.</P>
+<P></P></UL>
+<P>With an advanced search, we will show the use of several other features
+of ntvultralite.</P>
+<UL>
+<LI>
+We will use a fuzzy/exact ``radio'' button, rather than a <EM>fuzzy</EM> checkbox.
+A minor difference.
+<P></P>
+<LI>
+We will add an <EM>all words</EM> checkbox, to ensure that all the search words
+are present in each returned document for an exact search.
+<P></P>
+<LI>
+We will provide a group of checkboxes to restrict our search 
+to various date ranges -- this will show the use of ntvultralite variables
+to build up a constraint.
+<P></P>
+<LI>
+A few miscellaneous nextrieve controls will be shown, setting limits
+for the total number of hits processed, the number of hits to display,
+the fuzziness level, etc.
+<P></P></UL>
+<P>To make the example more ``modular'', we will have a search server
+operating on the text index that returns results to ntvultralite.  It
+is also possible to have ntvultralite directly search the text index,
+but this incurs an additional startup penalty if the text index is
+large.</P>
+<P>
+<HR>
+<H1><A NAME="creating the text index">CREATING THE TEXT INDEX</A></H1>
+<P>We will use ntvmailbox2ntvml, a perl script that comes with the nextrieve
+distribution, to create the XML representation of the mailbox that actually
+gets indexed.</P>
+<P>For this example, we want to index the following fields:</P>
+<DL>
+<DT><STRONG><A NAME="item_from">from</A></STRONG><BR>
+<DD>
+We will treat this as a single string attribute per email message
+called ``from''.
+<P></P>
+<DT><STRONG><A NAME="item_to">to</A></STRONG><BR>
+<DD>
+We will treat this as a single string attribute per email message
+called ``to''.
+<P></P>
+<DT><STRONG><A NAME="item_subject">subject</A></STRONG><BR>
+<DD>
+We will treat this as a single string attribute per email message
+called ``subject''.  We will also index the subject text as a special
+texttype called ``subject''.  This will allow fuzzy or exact searches restricted
+to the message subjects.
+<P></P>
+<DT><STRONG><A NAME="item_date">date</A></STRONG><BR>
+<DD>
+We will treat this as a single numeric attribute of the form
+YYYYMMDD.  This allows date-based constraints to be easily generated.
+<P></P>
+<DT><STRONG><A NAME="item_body%2Dtext">body-text</A></STRONG><BR>
+<DD>
+This is always output by ntvmailbox2ntvml.
+<P></P>
+<DT><STRONG><A NAME="item_mailfile%2C_mail_message_offset_and_length">mailfile, mail message offset and length</A></STRONG><BR>
+<DD>
+This information is always output by ntvmailbox2ntvml as
+&lt;mailbox&gt;, &lt;offset&gt; and &lt;length&gt; attributes.  This information, if indexed,
+can be used by other utilities to locate the original email message source
+to be used for display, for example.
+<P></P></DL>
+<P>Note that we're assuming a single <EM>from</EM> and <EM>to</EM> field per mail message.
+If this is not the case, you might want to make these attributes ``multi
+valued'' (ie, nvals=``*'' below, rather than nvals=``1'').</P>
+<P>To create this XML, it suffices to run mailbox2ntvml.pl in the following
+manner with each mail archive file called ``archive'':</P>
+<PRE>
+    echo archive | ntvmailbox2ntvml -a to from subject -d date -t subject \
+        &gt; archive.xml</PRE>
+<P>The content of archive.xml is a sequence of &lt;document&gt; elements, each
+&lt;document&gt; element represents an email message.</P>
+<P>To index this XML, a resource file should be created of the following
+form.  Note that it's assumed that we're creating the text index under
+/usr/local/nextrieve/collection/cisco/index, and the resource
+file will be called
+/usr/local/nextrieve/collection/cisco/cisco.res.</P>
+<PRE>
+    &lt;ntv:resource xmlns:ntv=&quot;http://www.nextrieve.com/1.0&quot;&gt;
+        &lt;indexdir name=&quot;/usr/local/nextrieve/collection/cisco&quot;/&gt;
+        &lt;logfile name=&quot;/usr/local/nextrieve/collection/cisco/logs/log.txt&quot;/&gt;</PRE>
+<PRE>
+        &lt;indexcreation&gt;
+            &lt;exact accentaction=&quot;both&quot;/&gt;
+            &lt;fuzzy accentaction=&quot;both&quot;/&gt;</PRE>
+<PRE>
+            &lt;attribute name=&quot;from&quot; type=&quot;string&quot; key=&quot;notkey&quot; nvals=&quot;1&quot;/&gt;
+            &lt;attribute name=&quot;to&quot; type=&quot;string&quot; key=&quot;notkey&quot; nvals=&quot;1&quot;/&gt;
+            &lt;attribute name=&quot;subject&quot; type=&quot;string&quot; key=&quot;notkey&quot; nvals=&quot;1&quot;/&gt;
+            &lt;attribute name=&quot;date&quot; type=&quot;number&quot; key=&quot;notkey&quot; nvals=&quot;1&quot;/&gt;
+            &lt;attribute name=&quot;mailbox&quot; type=&quot;string&quot; key=&quot;notkey&quot; nvals=&quot;1&quot;/&gt;
+            &lt;attribute name=&quot;offset&quot; type=&quot;number&quot; key=&quot;notkey&quot; nvals=&quot;1&quot;/&gt;
+            &lt;attribute name=&quot;length&quot; type=&quot;number&quot; key=&quot;notkey&quot; nvals=&quot;1&quot;/&gt;</PRE>
+<PRE>
+            &lt;texttype name=&quot;subject&quot;/&gt;
+        &lt;/indexcreation&gt;</PRE>
+<PRE>
+        &lt;searching&gt;
+            &lt;querylog path=&quot;/usr/local/nextrieve/collection/cisco/logs&quot;/&gt;
+        &lt;/searching&gt;</PRE>
+<PRE>
+    &lt;/ntv:resource&gt;</PRE>
+<P>Each converted email archive can then be indexed with</P>
+<PRE>
+    export NTV_RESOURCE=/usr/local/nextrieve/collection/cisco/cisco.res
+    ntvdocseq &lt; archive.xml | ntvindex -v - &gt; idx.out.txt</PRE>
+<P>If the text index is large, optimize it with:</P>
+<PRE>
+    ntvopt /usr/local/nextrieve/collection/cisco/index
+    ntvidx-useopt.sh /usr/local/nextrieve/collection/cisco/index</PRE>
+<P>
+<HR>
+<H1><A NAME="using the search server">USING THE SEARCH SERVER</A></H1>
+<P>For this example, we will have ntvultralite communicate with a nextrieve
+search server.  This search server (and hence the text index) can be on
+a different machine to the one that ntvultralite is running on.</P>
+<P>If you are just performing tests on a single machine, it suffices to choose
+a port number ``portnumber'' (we use 7777 as an example) and use:</P>
+<PRE>
+    export NTV_RESOURCE=/usr/local/nextrieve/collection/cisco/cisco.res
+    ntvsearchd -A localhost -P &quot;7777&quot;</PRE>
+<P>to run a search server that will accept requests originating on that same
+machine.  If the search server and web server machines are different,
+you'll probably have to use something similar to:</P>
+<PRE>
+    export NTV_RESOURCE=/usr/local/nextrieve/collection/cisco/cisco.res
+    ntvsearchd -A some.business.com -P &quot;7777&quot;</PRE>
+<P>In either case</P>
+<P>
+<HR>
+<H1><A NAME="ntvultralite resource file">NTVULTRALITE RESOURCE FILE</A></H1>
+<P>As we're communicating with a remote search server in this example, we
+will create a resource file on the web server
+under /usr/local/nextrieve/collection/cisco called ``cisco.res''.  This
+resource file can simply contain (at this stage):</P>
+<PRE>
+    &lt;ntv:resource xmlns:ntv=&quot;http://www.nextrieve.com/1.0&quot;&gt;
+        &lt;ultralite&gt;
+            &lt;server name=&quot;some.business.com:7777&quot;/&gt;
+        &lt;/ultralite&gt;
+    &lt;/ntv:resource&gt;</PRE>
+<P>If you're using the same machine as the web and search server, simply insert
+the &lt;ultralite&gt; container into the existing resource file ``cisco.res''; also
+replace <EM>some.business.com</EM> with <EM>localhost</EM>.</P>
+<P>
+<HR>
+<H1><A NAME="creating the cgi script">CREATING THE CGI SCRIPT</A></H1>
+<P>As mentioned before, a small CGI script needs to be run that will
+set a couple of environment variables and then invoke ntvultralite.
+An example of such a script is the following:</P>
+<PRE>
+    #!/bin/sh
+    export NTVBASE=/usr/local/nextrieve/collection
+    export NTVNAME=cisco</PRE>
+<PRE>
+    exec /usr/local/nextrieve/2.0.0/bin/ntvultralite</PRE>
+<PRE>
+    echo Content-type: text/plain
+    echo
+    echo Could not execute /usr/local/nextrieve/2.0.0/bin/ntvultralite.</PRE>
+<P>For high throughput operations you might want to replace this with a
+compiled C program.</P>
+<P>For this example, the script is called ``cisco'' under the cgi-bin directory
+of the web system.  As such, it is accessed with</P>
+<PRE>
+    http://www.somemachine.com/cgi-bin/cisco</PRE>
+<P>Note that two environment variables are set that are used by ntvultralite
+to locate its resources: NTVBASE and NTVNAME.</P>
+<P>The HTML templates accessed by ntvultralite are assumed to be under
+$NTVBASE/$NTVNAME/templates, with names starting with two special
+``state'' characters and ending with the value of $NTVNAME.</P>
+<P>Ntvultralite will assume it can find its resource file with the
+name $NTVBASE/$NTVNAME/$NTVNAME.res.</P>
+<P>The script above makes the assumption that the binary for ntvultralite
+is found in /usr/local/nextrieve/2.0.0/bin/ntvultralite.  This is not a
+requirement.</P>
+<P>
+<HR>
+<H1><A NAME="creating some templates">CREATING SOME TEMPLATES</A></H1>
+<P>Once all the above is in place, we still need to create some HTML template
+pages that are filled in by ntvultralite.  If you try and access the
+system now via a browser (using an address probably similar
+to http://www.machine.com/cgi-bin/cisco), you should get an error similar to:</P>
+<PRE>
+    Error
+    Can't open template &quot;/usr/local/nextrieve/collection/cisco/templates/__cisco&quot;</PRE>
+<P>being displayed.</P>
+<P>
+<H2><A NAME="simple">Simple</A></H2>
+<P>For our ``simple'' search templates, we need to construct at
+least three files under /usr/local/nextrieve/collection/cisco/templates:</P>
+<DL>
+<DT><STRONG><A NAME="item___cisco">__cisco</A></STRONG><BR>
+<DD>
+The template used when no query has been entered and there are no results.
+This is the first page presented to the client.
+<P></P>
+<DT><STRONG><A NAME="item_Q_cisco">Q_cisco</A></STRONG><BR>
+<DD>
+The template used when a query has been entered, and results are being
+displayed.
+<P></P>
+<DT><STRONG><A NAME="item_E_cisco">E_cisco</A></STRONG><BR>
+<DD>
+The template used when a query has been entered but no results were found.
+<P></P></DL>
+<P>As these templates contain common text (eg, the search buttons), we will
+use an ``include file'' facility to reduce duplication.</P>
+<P>Click <A HREF="tutweb-s_.gif" target="_blank">here</A> for an example image showing an initial page.</P>
+<P>The <EM>Fuzzy</EM> checkbox allows the client to perform a fuzzy (if checked) or
+exact search with the search words entered in the input box.</P>
+<P>The <EM>Subjects only</EM> checkbox allows the client to search only subject
+lines (if checked) or both body-text and subject lines.</P>
+<P>After a search has been performed, we want a results page of:</P>
+<P>Click <A HREF="tutweb-sq.gif" target="_blank">here</A> for an example image showing a search-results
+page.</P>
+<P>When presenting results,
+we want our input and check boxes to retain the information that was entered.
+We want to present an ``advanced search options'' link, and present the results
+themselves, simply formatted.</P>
+<P>When presenting the results, we want to show:</P>
+<UL>
+<LI>
+A hit number.
+<P></P>
+<LI>
+A date in the same form as stored -- ie, YYYYMMDD.
+<P>To easily distinguish in a timewise fashion, we will use different background
+colors for different date ranges.</P>
+<P></P>
+<LI>
+The subject line of the email, allowing the user to click on it to see
+the entire email message.
+<P></P>
+<LI>
+Some preview text.  Note that if the user has done a <EM>Subjects only</EM> search,
+we want the preview text to be suppressed.
+<P></P></UL>
+<P>Also, if there are many results, we want to have the typical ``page link''
+links at the bottom of the page.</P>
+<P>How do we do these things?</P>
+<P>In this example, we will make a number of template files.  We will create
+the template files required for a simple search:</P>
+<DL>
+<DT><STRONG>__cisco</STRONG><BR>
+<DD>
+<DT><STRONG>Q_cisco</STRONG><BR>
+<DD>
+<DT><STRONG>E_cisco</STRONG><BR>
+<DD>
+</DL>
+<P>In addition, these files will use</P>
+<DL>
+<DT><STRONG><A NAME="item_cisco%2Dbasicbuttons">cisco-basicbuttons</A></STRONG><BR>
+<DD>
+This will define the basic search controls, and will be included by
+__cisco, Q_cisco and E_cisco.
+<P></P>
+<DT><STRONG><A NAME="item_cisco%2Dbasichit">cisco-basichit</A></STRONG><BR>
+<DD>
+This will define the structure of a single hit being displayed, and will
+be included by Q_cisco and, later, by QAcisco.
+<P></P>
+<DT><STRONG><A NAME="item_cisco%2Dbasicpages">cisco-basicpages</A></STRONG><BR>
+<DD>
+This will define the ``page buttons'' that appear at the bottom of search
+results.  This file will be included by Q_cisco and, later, by QAcisco.
+<P></P></DL>
+<P>
+<H3><A NAME="basic search controls">Basic Search Controls</A></H3>
+<P>Firstly, we note that the search controls on the forms are the same.  We will
+create a dedicated template fragment containing these button definitions.
+This file will be included into the other ``top level'' templates.</P>
+<P>The file, in this example, is called ``cisco-basicbuttons'' and should
+be created
+under the directory where all the template files are found.  This file
+should contain:</P>
+<PRE>
+    &lt;ntv-ctl-search VALUE=&quot;&lt;ntv-search&gt;&quot;&gt;
+    &lt;ntv-ctl-submit VALUE=&quot; Go &quot;&gt; &lt;BR&gt;
+    &lt;ntv-ctl-fuzzybutton&gt; &lt;I&gt;Fuzzy&lt;/I&gt; &lt;BR&gt;
+    &lt;input
+        type=&quot;checkbox&quot;
+        NAME=&quot;vblsubjectsonly&quot;
+        VALUE=&quot;checked&quot;
+        &lt;ntv-vbl vblsubjectsonly&gt;
+        &gt;
+    &lt;I&gt;Subjects only&lt;/I&gt;
+    &lt;BR&gt;</PRE>
+<P>This fragment defines the following controls:</P>
+<DL>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dsearch%3E">&lt;ntv-ctl-search&gt;</A></STRONG><BR>
+<DD>
+This defines a text-input box which is
+automatically initialized with whatever the user has searched for
+(using VALUE=``&lt;ntv-search&gt;'').
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dsubmit%3E">&lt;ntv-ctl-submit&gt;</A></STRONG><BR>
+<DD>
+This defines a submit button (&lt;ntv-ctl-submit) labelled `` Go ''.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dfuzzybutton%3E">&lt;ntv-ctl-fuzzybutton&gt;</A></STRONG><BR>
+<DD>
+This creates a checkbox type control that will control the ``fuzzy'' state
+of any search that's performed.  It automatically inititalizes itself
+from its previous state (ie, the fuzzy state of searches is remembered).
+<P></P>
+<DT><STRONG><A NAME="item_%3Cinput%3E">&lt;input&gt;</A></STRONG><BR>
+<DD>
+A raw HTML input checkbox.  We label this with a name starting with
+``vbl'', indicating to ntvultralite that it should perform variable processing
+with this value, if encountered.
+<P>The name we use is ``vblsubjectsonly'' which we set to a value of ``checked''
+if the button is, in fact, checked.  We use the value checked simply so that
+it is easy to remember the state of the button by using the</P>
+<PRE>
+    &lt;ntv-vbl vblsubjectsonly&gt;</PRE>
+<P>construct immediately following.  This construct will expand to ``checked''
+if the checkbox was previously checked, causing it to retain state
+between page updates.</P>
+<P></P></DL>
+<P>The use of a ``variable'', in the ``vblsubjectsonly'' checkbox, requires
+that we add some information in the resource file that ntvultralite reads,
+describing what the value of this variable represents.
+To perform a ``subjects only'' texttype search, we add the following elements
+to the &lt;ultralite&gt; resource file element:</P>
+<PRE>
+    &lt;vblsub name=&quot;vblsubjectsonly&quot; text=&quot;subject&quot;/&gt;
+    &lt;vbluse name=&quot;vblsubjectsonly&quot; type=&quot;texttype&quot; class=&quot;any&quot;/&gt;</PRE>
+<P>This tells ntvultralite that, no matter what what the actual value
+of ``vblsubjectsonly'' is (it is, in fact, ``checked'' if the user checks
+the checkbox), convert it to ``subject'' during processing when it arrives.
+Then, treat it as a texttype specification.  Thus, it becomes
+equivalent to using</P>
+<PRE>
+    -T subject</PRE>
+<P>when using ntvquerygen, or placing</P>
+<PRE>
+    &lt;texttype name=&quot;subject&quot;/&gt;</PRE>
+<P>in an XML query.  Ie, only subject text will be searched.</P>
+<P>
+<H3><A NAME="displaying hits">Displaying Hits</A></H3>
+<P>We will also create a file containing an HTML fragment that displays
+results.  We do this, because this fragment will be used both in
+the ``simple'' search being described here, and in the ``advanced'' search
+described in a following section.</P>
+<P>The template fragment for displaying hits should be called
+``cisco-basichit''.</P>
+<P>It can initially be constructed containing the following HTML
+code:</P>
+<PRE>
+    &lt;TABLE CELLSPACING=0 CELLPADDING=0&gt;
+    &lt;TR&gt;
+    &lt;TD WIDTH=32&gt;
+        &lt;FONT FACE=&quot;arial&quot; SIZE=2&gt;&lt;B&gt;&lt;ntv-hit-count&gt;&lt;/B&gt;&lt;/FONT&gt;
+    &lt;/TD&gt;
+    &lt;TD ALIGN=CENTER&gt;
+        &lt;FONT FACE=&quot;arial&quot; SIZE=2&gt;&lt;B&gt;
+            &lt;ntv-hit-printattr date &quot;no date&quot;&gt;
+        &lt;/B&gt;&lt;/FONT&gt;
+    &lt;/TD&gt;
+    &lt;TD WIDTH=32&gt;&amp;nbsp;&lt;/TD&gt;
+    &lt;TD&gt;
+        &lt;FONT FACE=&quot;arial&quot; SIZE=2&gt;
+        &lt;A HREF=&quot;ciscoshow?mailbox=&lt;ntv-hit-linkattr mailbox&gt;
+                          &amp;offset=&lt;ntv-hit-linkattr offset&gt;
+                          &amp;length=&lt;ntv-hit-linkattr length&gt;&quot;
+            TARGET=&quot;launch&quot;&gt;
+            &lt;B&gt;&lt;ntv-hit-printattr subject &quot;(no subject)&quot;&gt;&lt;/B&gt;
+        &lt;/A&gt;
+        &lt;/FONT&gt;
+    &lt;/TD&gt;
+    &lt;/TR&gt;
+    &lt;ntv-vbleq! vblsubjectsonly checked&gt;
+        &lt;!-- a preview line. --&gt;
+        &lt;TR&gt;
+        &lt;TD&gt;&amp;nbsp;&lt;/TD&gt;
+        &lt;TD&gt;&amp;nbsp;&lt;/TD&gt;
+        &lt;TD&gt;&amp;nbsp;&lt;/TD&gt;
+        &lt;TD&gt; &lt;FONT FACE=&quot;arial&quot; SIZE=2&gt;&lt;ntv-hit-preview&gt;&lt;/FONT&gt; &lt;/TD&gt;
+        &lt;/TR&gt;
+    &lt;/ntv-vbleq&gt;
+    &lt;/TABLE&gt;
+    &lt;BR&gt;</PRE>
+<P>We are filling a table having two rows for each hit.  The first
+row contains:</P>
+<UL>
+<LI>
+The hit number substituted with &lt;ntv-hit-count&gt;.
+<P></P>
+<LI>
+A date field containing the numeric form (YYYYMMDD) of the date that
+was stored as an attribute.  This is substituted using:
+<PRE>
+    &lt;ntv-hit-printattr date &quot;no date&quot;&gt;</PRE>
+<P>The &lt;ntv-hit-printattr&gt; construct takes a sequence of attribute names
+(in this case simply ``date'') followed by some optional default text (in this
+case ``no date'').  It will substitute the value of the first attribute
+found having a non-empty value for the hit being displayed.  If none
+of the attributes named have value for a particular hit, the default text
+is used instead.</P>
+<P></P>
+<LI>
+A field used for controlling spacing.
+<P></P>
+<LI>
+A field containing the subject line presented as a link.  The link is
+defined as:
+<PRE>
+    &lt;A HREF=&quot;ciscoshow?mailbox=&lt;ntv-hit-linkattr mailbox&gt;
+                      &amp;offset=&lt;ntv-hit-linkattr offset&gt;
+                      &amp;length=&lt;ntv-hit-linkattr length&gt;&quot;
+        TARGET=&quot;launch&quot;&gt;
+        &lt;B&gt;&lt;ntv-hit-printattr subject &quot;(no subject)&quot;&gt;&lt;/B&gt;
+    &lt;/A&gt;</PRE>
+<P>The text of the link is defined by</P>
+<PRE>
+    &lt;ntv-hit-printattr subject &quot;(no subject)&quot;&gt;</PRE>
+<P>The &lt;ntv-hit-printattr&gt; construct has been discussed above when it was
+used to display the date field.</P>
+<P>The actual link is constructed with</P>
+<PRE>
+    &quot;ciscoshow?mailbox=&lt;ntv-hit-linkattr mailbox&gt;
+              &amp;offset=&lt;ntv-hit-linkattr offset&gt;
+              &amp;length=&lt;ntv-hit-linkattr length&gt;&quot;</PRE>
+<P>It substitutes in various information presented during indexing, namely
+the &lt;mailbox&gt; name, the &lt;offset&gt; of the message within the mailbox, and the
+&lt;length&gt; of the message.  This information allows a program, in this
+case a CGI script called ``ciscoshow'', to access the mail message for
+display.</P>
+<P>Note that this information is substituted with</P>
+<PRE>
+    &lt;ntv-hit-linkattr ...&gt;</PRE>
+<P>This construct is similar in function to &lt;ntv-hit-printattr...&gt;, but it
+encodes its result in a form suitable for use within links.</P>
+<P></P></UL>
+<P>The second row is used for presenting a preview.  As such, it contains:</P>
+<UL>
+<LI>
+Three empty spacer fields (to match the first three fields used in the
+first row).
+<P></P>
+<LI>
+A field containing the preview.  The preview
+text is substituted using &lt;ntv-hit-preview&gt;.
+<P></P></UL>
+<P>Note that the definition of the second row of the table is surrounded
+by</P>
+<PRE>
+    &lt;ntv-vbleq! vblsubjectsonly checked&gt;
+    ...
+    &lt;/ntv-vbleq&gt;</PRE>
+<P>The &lt;ntv-vbleq&gt; construct is like a very simple ``if'' statement.  The content
+between &lt;ntv-vbleq...&gt; and &lt;/ntv-vbleq&gt; is only substituted if a
+condition is met, otherwise nothing is substituted.  The condition
+in this case is that the variable named ``vblsubjectsonly'' does <EM>not</EM>
+have the value ``checked''.  We do this so that if the client performs
+a subjects-only search, we don't present a preview.  The preview lines
+in this case, if displayed, would be fragments of the subject line
+that's already being displayed as a link on the first row.</P>
+<P>
+<H4><A NAME="coloring date fields">Coloring Date Fields</A></H4>
+<P>If we want to color the date fields differently for different date ranges,
+we can add a sequence of lines like</P>
+<PRE>
+    &lt;ntv-hit-ifattreq date 2001*&gt;BGCOLOR=&quot;#FF0000&quot;&lt;/ntv-hit-if&gt;</PRE>
+<P>to ``cisco-basichit'', to redefine the background color of the date
+field.  The above line will use a color of red (#FF0000) for any
+date in 2001 (ie, any date which, when treated textually, starts with 2001;
+note the use of the '*' wildcard character).  The ``cisco-basichit''
+file might now look something like:</P>
+<PRE>
+    &lt;TABLE CELLSPACING=0 CELLPADDING=0&gt;
+    &lt;TR&gt;
+    &lt;TD WIDTH=32&gt;
+        &lt;FONT FACE=&quot;arial&quot; SIZE=2&gt;&lt;B&gt;&lt;ntv-hit-count&gt;&lt;/B&gt;&lt;/FONT&gt;
+    &lt;/TD&gt;
+    &lt;TD ALIGN=CENTER
+        &lt;ntv-hit-ifattreq date 1986*&gt;BGCOLOR=&quot;#B000B0&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 1987*&gt;BGCOLOR=&quot;#B0B0B0&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 1988*&gt;BGCOLOR=&quot;#B0B000&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 1989*&gt;BGCOLOR=&quot;#00B000&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 1990*&gt;BGCOLOR=&quot;#B00000&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 1991*&gt;BGCOLOR=&quot;#D0D0D0&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 1992*&gt;BGCOLOR=&quot;#0000D0&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 1993*&gt;BGCOLOR=&quot;#D000D0&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 1994*&gt;BGCOLOR=&quot;#D0D000&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 1995*&gt;BGCOLOR=&quot;#00D000&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 1996*&gt;BGCOLOR=&quot;#D00000&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 1997*&gt;BGCOLOR=&quot;#00FFFF&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 1998*&gt;BGCOLOR=&quot;#FF00FF&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 1999*&gt;BGCOLOR=&quot;#FFFF00&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 2000*&gt;BGCOLOR=&quot;#00FF00&quot;&lt;/ntv-hit-if&gt;
+        &lt;ntv-hit-ifattreq date 2001*&gt;BGCOLOR=&quot;#FF0000&quot;&lt;/ntv-hit-if&gt;
+        &gt;
+        &lt;FONT FACE=&quot;arial&quot; SIZE=2&gt;&lt;B&gt;
+            &lt;ntv-hit-printattr date &quot;no date&quot;&gt;
+        &lt;/B&gt;&lt;/FONT&gt;
+    &lt;/TD&gt;
+    &lt;TD WIDTH=32&gt;&amp;nbsp;&lt;/TD&gt;
+    &lt;TD&gt;
+        &lt;FONT FACE=&quot;arial&quot; SIZE=2&gt;
+        &lt;A HREF=&quot;ciscoshow?mailbox=&lt;ntv-hit-linkattr mailbox&gt;
+                          &amp;offset=&lt;ntv-hit-linkattr offset&gt;
+                          &amp;length=&lt;ntv-hit-linkattr length&gt;&quot;
+            TARGET=&quot;launch&quot;&gt;
+            &lt;B&gt;&lt;ntv-hit-printattr subject &quot;(no subject)&quot;&gt;&lt;/B&gt;
+        &lt;/A&gt;
+        &lt;/FONT&gt;
+    &lt;/TD&gt;
+    &lt;/TR&gt;
+    &lt;ntv-vbleq! vblsubjectsonly checked&gt;
+        &lt;!-- a preview line. --&gt;
+        &lt;TR&gt;
+        &lt;TD&gt;&amp;nbsp;&lt;/TD&gt;
+        &lt;TD&gt;&amp;nbsp;&lt;/TD&gt;
+        &lt;TD&gt;&amp;nbsp;&lt;/TD&gt;
+        &lt;TD&gt; &lt;FONT FACE=&quot;arial&quot; SIZE=2&gt;&lt;ntv-hit-preview&gt;&lt;/FONT&gt; &lt;/TD&gt;
+        &lt;/TR&gt;
+    &lt;/ntv-vbleq&gt;
+    &lt;/TABLE&gt;
+    &lt;BR&gt;</PRE>
+<P>
+<H3><A NAME="displaying search page numbers">Displaying Search Page Numbers</A></H3>
+<P>We will create a file containing an HTML fragment that will display
+a sequence of ``page buttons'' that appear at
+the bottom of a page displaying search results. 
+We do this because this fragment will be used both in
+the ``simple'' search being described here, and in the ``advanced'' search
+described in a following section.</P>
+<P>In this example, the file is called ``cisco-basicpages''.  It can contain:</P>
+<PRE>
+    &lt;ntv-pg-ifmlt&gt;
+    Pages: &lt;FONT FACE=&quot;arial&quot; SIZE=-1&gt;
+    &lt;ntv-pg-ifprv&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-linkfirst&gt;&quot;&gt;|&amp;lt;&amp;lt;&lt;/A&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-linkprv&gt;&quot;&gt;&amp;lt;&amp;lt&lt;/A&gt;
+    &lt;/ntv-pg-ifprv&gt;
+    &lt;ntv-pages 10&gt;
+        &lt;ntv-pg-ifcur&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-link&gt;&quot;&gt;&lt;B&gt;*&lt;ntv-pg-number&gt;*&lt;/B&gt;&lt;/A&gt;
+        &lt;/ntv-pg-ifcur&gt;
+        &lt;ntv-pg-ifcur!&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-link&gt;&quot;&gt;&lt;ntv-pg-number&gt;&lt;/A&gt;
+        &lt;/ntv-pg-ifcur!&gt;
+    &lt;/ntv-pages&gt;
+    &lt;ntv-pg-ifnxt&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-linknxt&gt;&quot;&gt;&amp;gt;&amp;gt&lt;/A&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-linklast&gt;&quot;&gt;&amp;gt;&amp;gt;|&lt;/A&gt;
+    &lt;/ntv-pg-ifnxt&gt;
+    &lt;/FONT&gt;
+    &lt;/ntv-pg-ifmlt&gt;</PRE>
+<P>This might look a bit complicated, but this HTML template fragment can 
+be thought of as ``boilerplate''.  Ie, something to be taken as-is, and
+modified to do what you want, rather than something that is created
+from scratch.</P>
+<P>Even so, we will briefly discuss what the various parts of the template
+do.</P>
+<P>Note that the entire template is surrounded with</P>
+<PRE>
+    &lt;ntv-pg-ifmlt&gt;
+    ...
+    &lt;/ntv-pg-ifmlt&gt;</PRE>
+<P>The &lt;ntv-pg-ifmlt&gt; construct substitutes its content only if there are
+multiple ``pages'' of results (as defined by the total number of hits found,
+and the number of hits to display defined by the user).  If there is only
+a single page of results, the substitution is not performed.</P>
+<P>Thus, we only get our page buttons if there is more than one page of
+results.</P>
+<P>Following the ``pages:'' text that appears to the left of our displayed
+buttons, we use the following construct:</P>
+<PRE>
+    &lt;ntv-pg-ifprv&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-linkfirst&gt;&quot;&gt;|&amp;lt;&amp;lt;&lt;/A&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-linkprv&gt;&quot;&gt;&amp;lt;&amp;lt&lt;/A&gt;
+    &lt;/ntv-pg-ifprv&gt;</PRE>
+<P>The &lt;ntv-pg-ifprv&gt; construct substitutes its content if there exists a
+<EM>previous</EM> page of results to the current one being displayed.
+In this case we start our button list with two buttons.  The first:</P>
+<PRE>
+        &lt;A HREF=&quot;&lt;ntv-pg-linkfirst&gt;&quot;&gt;|&amp;lt;&amp;lt;&lt;/A&gt;</PRE>
+<P>being a link that will take us directly to the very first page of results,
+showing text of ``|&lt;&lt;''.</P>
+<P>The second:</P>
+<PRE>
+        &lt;A HREF=&quot;&lt;ntv-pg-linkprv&gt;&quot;&gt;&amp;lt;&amp;lt&lt;/A&gt;</PRE>
+<P>being a link that will take us to the previous page of results, showing
+text of simply ``&lt;&lt;''.</P>
+<P>Next, we come to the direct-jump buttons themselves.  We want to
+display up to a certain number of buttons, each representing a page
+of search results.  One of the buttons will represent the page of results
+we are currently viewing, and we want that button to be highlighted in
+some way for reference.</P>
+<P>We use the &lt;ntv-pages&gt;&lt;/ntv-pages&gt; construct to generate our buttons.
+This construct takes the number of buttons that we want to display and,
+for each button actually displayed, will substitute its content.
+In our example:</P>
+<PRE>
+    &lt;ntv-pages 10&gt;
+        &lt;ntv-pg-ifcur&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-link&gt;&quot;&gt;&lt;B&gt;*&lt;ntv-pg-number&gt;*&lt;/B&gt;&lt;/A&gt;
+        &lt;/ntv-pg-ifcur&gt;
+        &lt;ntv-pg-ifcur!&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-link&gt;&quot;&gt;&lt;ntv-pg-number&gt;&lt;/A&gt;
+        &lt;/ntv-pg-ifcur!&gt;
+    &lt;/ntv-pages&gt;</PRE>
+<P>we want to display up to 10 buttons.</P>
+<P>For each button the template text</P>
+<PRE>
+    &lt;ntv-pg-ifcur&gt;
+    &lt;A HREF=&quot;&lt;ntv-pg-link&gt;&quot;&gt;&lt;B&gt;*&lt;ntv-pg-number&gt;*&lt;/B&gt;&lt;/A&gt;
+    &lt;/ntv-pg-ifcur&gt;
+    &lt;ntv-pg-ifcur!&gt;
+    &lt;A HREF=&quot;&lt;ntv-pg-link&gt;&quot;&gt;&lt;ntv-pg-number&gt;&lt;/A&gt;
+    &lt;/ntv-pg-ifcur!&gt;</PRE>
+<P>is substituted.  This template text is comprised of two uses of the
+&lt;ntv-pg-ifcur&gt; construct.  The first is used if the page button represents
+the current page.  The second (&lt;ntv-pg-ifcur!&gt;) is used for all other page
+buttons.  We do this so that we can distinguish between the current
+and other page buttons, substituting in a different image or, here,
+using different highlighting.</P>
+<P>A normal page button is defined using:</P>
+<PRE>
+    &lt;A HREF=&quot;&lt;ntv-pg-link&gt;&quot;&gt;&lt;ntv-pg-number&gt;&lt;/A&gt;</PRE>
+<P>The &lt;ntv-pg-link&gt; construct defines a link that will access the appropriate
+page of results.  &lt;ntv-pg-number&gt; gives the textual number of that page
+of results, with ``1'' being the first page.</P>
+<P>The current page button is defined using:</P>
+<PRE>
+    &lt;A HREF=&quot;&lt;ntv-pg-link&gt;&quot;&gt;&lt;B&gt;*&lt;ntv-pg-number&gt;*&lt;/B&gt;&lt;/A&gt;</PRE>
+<P>This is identical to a non-current page except we bold the page number
+and surround it with '*' characters.</P>
+<P>Finally, we want to append a ``next page'' and ``last page'' button.  We do
+this using:</P>
+<PRE>
+    &lt;ntv-pg-ifnxt&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-linknxt&gt;&quot;&gt;&amp;gt;&amp;gt&lt;/A&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-linklast&gt;&quot;&gt;&amp;gt;&amp;gt;|&lt;/A&gt;
+    &lt;/ntv-pg-ifnxt&gt;</PRE>
+<P>This is similar to the ``first page'' and ``previous page'' buttons already
+discussed, where &lt;ntv-pg-ifnxt&gt; substitutes its content if a next
+page of results does, in fact, exist.  We use ``&gt;&gt;'' as the text to display
+for the ``next page'' button, and ``&gt;&gt;|'' as the text to display for the
+``last page'' button.</P>
+<P>
+<H3><A NAME="putting it all together">Putting It All Together</A></H3>
+<P>We have now done all the hard work.  To construct the required template
+pages __cisco, Q_cisco and E_cisco, we simply have to refer to our
+template fragments with some extra HTML creating a form.</P>
+<P>
+<H4><A NAME="__cisco">__cisco</A></H4>
+<P>The initial page, defined by the template file ``__cisco'', can look
+something like:</P>
+<PRE>
+    &lt;HTML&gt;
+    &lt;HEAD&gt;
+    &lt;TITLE&gt;Search a sample mailing list&lt;/TITLE&gt;
+    &lt;/HEAD&gt;
+    &lt;BODY BACKGROUND=&quot;/bgblend.gif&quot;&gt;
+    &lt;FONT FACE=&quot;arial,helvetica&quot; SIZE=2&gt;</PRE>
+<PRE>
+    &lt;H2&gt;Search a sample mailing list&lt;/H2&gt;</PRE>
+<PRE>
+    &lt;FORM METHOD=POST&gt;
+    &lt;ntv-include /usr/local/nextrieve/collection/cisco/templates/cisco-basicbuttons&gt;
+    &lt;/FORM&gt;
+    &lt;CENTER&gt;</PRE>
+<PRE>
+    &lt;P&gt;
+    &lt;FONT FACE=&quot;arial,helvetica&quot; SIZE=&quot;2&quot;&gt;
+    &lt;CENTER&gt;&lt;FONT SIZE=3&gt;&lt;B&gt;A sample mailing list&lt;/B&gt;&lt;/FONT&gt;&lt;/CENTER&gt;
+    &lt;/P&gt;
+    &lt;P&gt;
+    One can talk about what the mailing list is all about, for example.
+    Or you can delete this section entirely.
+    &lt;/P&gt;</PRE>
+<PRE>
+    &lt;BR CLEAR=ALL&gt;&lt;P&gt;&lt;HR WIDTH=90% SIZE=3 NOSHADE&gt;&lt;P&gt;
+    &lt;CENTER&gt;&lt;FONT SIZE=1&gt;
+        Copyright &amp;copy; 1998, Your company, all rights reserved.
+    &lt;/FONT&gt;&lt;CENTER&gt;</PRE>
+<PRE>
+    &lt;/FONT&gt;
+    &lt;/BODY&gt;
+    &lt;/HTML&gt;</PRE>
+<P>The critical element is the &lt;form&gt; element:</P>
+<PRE>
+    &lt;FORM METHOD=POST&gt;
+    &lt;ntv-include /usr/local/nextrieve/collection/cisco/templates/cisco-basicbuttons&gt;
+    &lt;/FORM&gt;
+    &lt;CENTER&gt;</PRE>
+<P>Here, we simply include the content of ``cisco-basicbuttons'' to define
+our simple search controls.</P>
+<P>
+<H4><A NAME="q_cisco">Q_cisco</A></H4>
+<P>When we're displaying a page of results we want to show our basic
+search controls with the addition of a link to go to an ``advanced'' search
+page, plus we want to show our current search results.  Our Q_cisco
+template can look something like:</P>
+<PRE>
+    &lt;HTML&gt;
+    &lt;HEAD&gt;
+    &lt;TITLE&gt;Search a sample mailing list&lt;/TITLE&gt;
+    &lt;/HEAD&gt;
+    &lt;BODY BACKGROUND=&quot;/bgblend.gif&quot;&gt;
+    &lt;FONT FACE=&quot;arial,helvetica&quot; SIZE=2&gt;</PRE>
+<PRE>
+    &lt;H2&gt;Search a sample mailing list&lt;/H2&gt;</PRE>
+<PRE>
+    &lt;FORM METHOD=POST&gt;
+    &lt;ntv-include /usr/local/nextrieve/collection/cisco/templates/cisco-basicbuttons&gt;</PRE>
+<PRE>
+    &lt;FONT SIZE=-1&gt;
+        &lt;A HREF=&quot;&lt;ntv-script&gt;?adv&amp;vblq=&lt;ntv-search&gt;&quot;&gt;
+            Advanced Search options
+        &lt;/A&gt;
+    &lt;/FONT&gt;
+    &lt;/FORM&gt;</PRE>
+<PRE>
+    &lt;BR&gt; &lt;BR&gt;
+    &lt;ntv-loophead&gt;
+    &lt;P&gt;
+    Hits &lt;ntv-hits-offset&gt; to &lt;ntv-hits-limit&gt; of &lt;ntv-hits-total&gt;:
+    &lt;/P&gt;</PRE>
+<PRE>
+    &lt;ntv-loop&gt;
+    &lt;ntv-include /usr/local/nextrieve/collection/cisco/templates/cisco-basichit&gt;
+    &lt;/ntv-loop&gt;</PRE>
+<PRE>
+    &lt;ntv-include /usr/local/nextrieve/collection/cisco/templates/cisco-basicpages&gt;</PRE>
+<PRE>
+    &lt;BR CLEAR=ALL/&gt;</PRE>
+<PRE>
+    &lt;P&gt;&lt;HR WIDTH=90% SIZE=3 NOSHADE&gt;&lt;/P&gt;
+    &lt;P&gt;
+    &lt;CENTER&gt;
+        &lt;FONT SIZE=1&gt;
+        Powered by &lt;A HREF=&quot;http://www.nexial.com/&quot; TARGET=_top&gt;NexTrieve&lt;/A&gt;
+        &lt;/FONT&gt;
+    &lt;CENTER&gt;
+    &lt;/P&gt;</PRE>
+<PRE>
+    &lt;/FONT&gt;
+    &lt;/BODY&gt;
+    &lt;/HTML&gt;</PRE>
+<P>The &lt;FORM&gt; element is as before, with the addition of the link:</P>
+<PRE>
+    &lt;FONT SIZE=-1&gt;
+        &lt;A HREF=&quot;&lt;ntv-script&gt;?adv&amp;vblq=&lt;ntv-search&gt;&quot;&gt;
+            Advanced Search options
+        &lt;/A&gt;
+    &lt;/FONT&gt;</PRE>
+<P>&lt;ntv-script&gt; is replaced with the name of the current script.
+Using ``adv'' implies that the ``advanced'' search pages should be used.
+Also, as a consequence of how we will make our advanced page, we
+initialize a variable ``vblq'' with the current search text (if any)
+so that the advanced search text box will preserve any user-entered
+search input.</P>
+<P>To display our results, we use:</P>
+<PRE>
+    &lt;ntv-loophead&gt;
+    &lt;P&gt;
+    Hits &lt;ntv-hits-offset&gt; to &lt;ntv-hits-limit&gt; of &lt;ntv-hits-total&gt;:
+    &lt;/P&gt;</PRE>
+<PRE>
+    &lt;ntv-loop&gt;
+    &lt;ntv-include /usr/local/nextrieve/collection/cisco/templates/cisco-basichit&gt;
+    &lt;/ntv-loop&gt;</PRE>
+<P>After the &lt;ntv-loophead&gt; construct it is possible to use result-related
+elements.  We indicate the range and total number of hits using
+&lt;ntv-hits-offset&gt;, &lt;ntv-hits-limit&gt; and &lt;ntv-hits-total&gt;.</P>
+<P>The &lt;ntv-loop&gt;...&lt;/ntv-loop&gt; construct substitutes its content once
+for each hit being displayed.  In this case, the content is defined
+by the included template file cisco-basichit.</P>
+<P>To display our page-buttons after the result list, we simply include the
+cisco-basicpages template by using:</P>
+<PRE>
+    &lt;ntv-include /usr/local/nextrieve/collection/cisco/templates/cisco-basicpages&gt;</PRE>
+<P>
+<H4><A NAME="e_cisco">E_cisco</A></H4>
+<P>If the user has entered a query for which no results were found, we
+want to display an appropriate page.</P>
+<P>Our E_cisco template can look something like:</P>
+<PRE>
+    &lt;HTML&gt;
+    &lt;HEAD&gt;
+    &lt;TITLE&gt;Search a sample mailing list&lt;/TITLE&gt;
+    &lt;/HEAD&gt;
+    &lt;BODY BACKGROUND=&quot;/bgblend.gif&quot;&gt;
+    &lt;FONT FACE=&quot;arial,helvetica&quot; SIZE=2&gt;</PRE>
+<PRE>
+    &lt;H2&gt;Search a sample mailing list&lt;/H2&gt;</PRE>
+<PRE>
+    &lt;FORM METHOD=POST&gt;
+    &lt;ntv-include /usr/local/nextrieve/collection/cisco/templates/cisco-basicbuttons&gt;
+    &lt;FONT SIZE=-1&gt;
+        &lt;A HREF=&quot;&lt;ntv-script&gt;?adv&amp;vblq=&lt;ntv-search&gt;&quot;&gt;
+            Advanced Search options
+        &lt;/A&gt;
+    &lt;/FONT&gt;
+    &lt;/FORM&gt;</PRE>
+<PRE>
+    &lt;P&gt;
+    No results were found.
+    &lt;/P&gt;
+    &lt;P&gt;
+    Try changing your words, using a fuzzy search, or unchecking
+    &lt;I&gt;subjects only&lt;/I&gt; if it is checked.
+    &lt;/P&gt;
+    &lt;P&gt;
+    More helpful advice can be added here.
+    &lt;/P&gt;</PRE>
+<PRE>
+    &lt;BR CLEAR=ALL&gt;&lt;P&gt;&lt;HR WIDTH=90% SIZE=3 NOSHADE&gt;&lt;P&gt;
+    &lt;CENTER&gt;
+        &lt;FONT SIZE=1&gt;
+            Powered by &lt;A HREF=&quot;/&quot; TARGET=_top&gt;NexTrieve&lt;/A&gt;
+        &lt;/FONT&gt;
+    &lt;CENTER&gt;
+    &lt;/FONT&gt;
+    &lt;/BODY&gt;
+    &lt;/HTML&gt;</PRE>
+<P>This contains a &lt;FORM&gt; element as in the normal query-results page (the
+``Q_cisco'' template) but, instead of results, indicates that no results were
+found and indicates what to do to fix the search.</P>
+<P>
+<H2><A NAME="advanced">Advanced</A></H2>
+<P>We now have a set of templates that allow simple searching.  We allow
+fuzzy and exact searches on subjects-only and subjects-and-body-text.
+The subject line of each result is a link giving us the full mail message.
+We have preview text in our results, and nice colored blocks around our
+dates.
+We have nice page numbers at the bottom of our result pages.</P>
+<P>In our ``advanced'' pages we will allow more search options.  For this example
+we will allow:</P>
+<UL>
+<LI>
+The number of hits being displayed to be changed from the default value of 10.
+<P></P>
+<LI>
+The total number of hits being processed to be changed.
+<P></P>
+<LI>
+The fuzzy level to be changed for fuzzy searches.
+<P></P>
+<LI>
+The minimum length a word in the preview text must have to be highlighted to
+be changed.
+<P></P>
+<LI>
+The use of a ``radio'' mode control for choosing between fuzzy and exact
+searching.
+<P></P>
+<LI>
+A collection of check boxes to be used
+to choose particular date ranges for mail messages.
+<P></P>
+<LI>
+The use of two text boxes to restrict the byte-length of returned
+mail messages to be within a certain range.
+<P></P></UL>
+<P>Some of these features are only marginally useful in this example, but they
+do show the underlying ntvultralite constructs.</P>
+<P>Click <A HREF="tutweb-sa.gif" target="_blank">here</A> for an example image showing an advanced-search
+page.</P>
+<P>
+<H3><A NAME="advanced buttons">Advanced Buttons</A></H3>
+<P>As in the ``simple'' case discussed above, we have a number of template
+fragments that are reused amongst the required files _Acisco, QAcisco
+and EAcisco.  In fact, we only make one additional template fragment, which
+we will call ``cisco-advbuttons''.</P>
+<P>It can contain:</P>
+<PRE>
+    &lt;table&gt;
+    &lt;tr&gt;
+    &lt;td&gt;
+    &lt;input type=&quot;checkbox&quot;
+           name=&quot;vbldateold&quot;
+           value=&quot;checked&quot; &lt;ntv-vbl vbldateold&gt;&gt; &amp;lt; 1990
+    &lt;/td&gt;
+    &lt;td&gt;
+    &lt;input type=&quot;checkbox&quot;
+           name=&quot;vbldate1990s&quot;
+           value=&quot;checked&quot; &lt;ntv-vbl vbldate1990s&gt;&gt; 1990's
+    &lt;/td&gt;
+    &lt;td&gt;
+    &lt;input type=&quot;checkbox&quot;
+           name=&quot;vbldate2000s&quot;
+           value=&quot;checked&quot; &lt;ntv-vbl vbldate2000s&gt;&gt; 2000's
+    &lt;/td&gt;
+    &lt;td&gt;
+    &lt;input type=&quot;checkbox&quot;
+           name=&quot;vbldate2000&quot;
+           value=&quot;checked&quot; &lt;ntv-vbl vbldate2000&gt;&gt; 2000
+    &lt;/td&gt;
+    &lt;td&gt;
+    &lt;input type=&quot;checkbox&quot;
+           name=&quot;vbldate2001&quot;
+           value=&quot;checked&quot; &lt;ntv-vbl vbldate2001&gt;&gt; 2001
+    &lt;/td&gt;
+    &lt;td&gt;
+    &lt;input type=&quot;checkbox&quot;
+           name=&quot;vbldate2002&quot;
+           value=&quot;checked&quot; &lt;ntv-vbl vbldate2002&gt;&gt; 2002
+    &lt;/td&gt;
+    &lt;/tr&gt;</PRE>
+<PRE>
+    &lt;tr&gt;
+    &lt;td&gt;
+    &lt;input type=&quot;checkbox&quot;
+           name=&quot;vbldateall&quot;
+           value=&quot;checked&quot; &lt;ntv-vbl vbldateall&gt;&gt; Everything
+    &lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;/table&gt;</PRE>
+<PRE>
+    &lt;ntv-ctl-state-adv&gt;</PRE>
+<PRE>
+    &lt;TABLE BORDER=0&gt;
+    &lt;TR&gt; &lt;TD&gt; &lt;B&gt;Message Length:&lt;/B&gt; &lt;/TD&gt;
+        &lt;TD&gt;
+        from &lt;input type=&quot;text&quot;
+                    size=&quot;10&quot;
+                    name=&quot;vbllengthstart&quot;
+                    value=&quot;&lt;ntv-vbl vbllengthstart&gt;&quot;&gt;
+        to &lt;input type=&quot;text&quot;
+                  size=&quot;10&quot;
+                  name=&quot;vbllengthend&quot;
+                  value=&quot;&lt;ntv-vbl vbllengthend&gt;&quot;&gt;
+        &lt;/TD&gt;
+    &lt;/TR&gt;
+    &lt;TR&gt;&lt;TD&gt;&lt;B&gt;Total hits:&lt;/B&gt;&lt;/TD&gt;&lt;TD&gt;&lt;ntv-ctl-totalhits&gt;&lt;/TD&gt;&lt;/TR&gt;
+    &lt;TR&gt;&lt;TD&gt;&lt;B&gt;Hits to display:&lt;/B&gt;&lt;/TD&gt;&lt;TD&gt;&lt;ntv-ctl-displayedhits&gt;&lt;/TD&gt;&lt;/TR&gt;
+    &lt;TR&gt;&lt;TD&gt;&lt;B&gt;Fuzziness:&lt;/TD&gt; &lt;TD&gt;&lt;ntv-ctl-fuzzyfactor&gt;&lt;/TD&gt;&lt;/TR&gt;
+    &lt;TR&gt;&lt;TD&gt;&lt;B&gt;Highlighting:&lt;/B&gt;&lt;/TD&gt;&lt;TD&gt;&lt;ntv-ctl-highlight&gt;&lt;/TD&gt;&lt;/TR&gt;
+    &lt;/TABLE&gt;</PRE>
+<PRE>
+    &lt;P&gt;&lt;HR WIDTH=90% SIZE=3 NOSHADE&gt;&lt;/P&gt;</PRE>
+<PRE>
+    &lt;BR&gt;
+    &lt;input type=&quot;text&quot; name=&quot;vblq&quot; value=&quot;&lt;ntv-vbl vblq&gt;&quot;&gt;
+    &lt;ntv-ctl-submit VALUE=&quot; Go &quot;&gt;
+    &lt;BR&gt;
+    &lt;input
+        type=&quot;checkbox&quot;
+        NAME=&quot;vblsubjectsonly&quot;
+        VALUE=&quot;checked&quot;
+        &lt;ntv-vbl vblsubjectsonly&gt;
+        &gt;
+    &lt;I&gt;Subjects only&lt;/I&gt;
+    &lt;BR&gt;
+    &lt;ntv-ctl-moderadio-fuzzy 1&gt; &lt;I&gt;Fuzzy&lt;/I&gt; 
+    &lt;ntv-ctl-moderadio-fuzzy 0&gt; &lt;I&gt;Exact&lt;/I&gt; 
+    &lt;BR&gt;
+    &lt;input type=&quot;checkbox&quot; name=&quot;vblall&quot; value=&quot;checked&quot; &lt;ntv-vbl vblall&gt;&gt;
+        &lt;I&gt;All words&lt;/I&gt;
+    &lt;BR&gt;</PRE>
+<PRE>
+    &lt;BR&gt;
+    &lt;FONT SIZE=-1&gt;
+        &lt;A HREF=&quot;&lt;ntv-script&gt;?q=&lt;ntv-vbl vblq&gt;&quot;&gt;
+            Simple search
+        &lt;/A&gt;
+    &lt;/FONT&gt;
+    &lt;BR&gt;</PRE>
+<P>Here we have a number of different elements.  We start with defining
+some checkboxes in a table that we use for different mail message date ranges.
+Each checkbox definition is of the form:</P>
+<PRE>
+    &lt;input type=&quot;checkbox&quot;
+           name=&quot;vbldateold&quot;
+           value=&quot;checked&quot; &lt;ntv-vbl vbldateold&gt;&gt; &amp;lt; 1990</PRE>
+<P>The name of the checkbox starts with ``vbl'', indicating that it is an
+ntvultralite ``variable''.  As was the case for the ``vblsubjectsonly'' variable
+in the simple search case above, the value of the variable set by the checkbox
+is simply ``checked''.  This is for ease of substitution back into new
+HTML pages to set the checkbox to a ``checked'' state if the user had
+previously checked it.</P>
+<P>For these date-related checkboxes, each variable will represent a date range.
+To advise ntvultralite how to use this variable,
+we would add the following lines
+in cisco.res in the &lt;ultralite&gt; section:</P>
+<PRE>
+    &lt;vblsub name=&quot;vbldateold&quot; text=&quot;date &amp;lt; 19900000&quot;/&gt;
+    &lt;vbluse name=&quot;vbldateold&quot;   type=&quot;constraint&quot; class=&quot;any&quot;/&gt;</PRE>
+<P>The first element, &lt;vblsub&gt;, indicates that no matter what the value 
+of ``vbldateold'' is (it is actually ``checked''), replace it internally with
+the text ``date &lt; 19900000''.</P>
+<P>The second element, &lt;vbluse&gt;, indicates that this text fragment is part
+of a constraint, and should be or'd together with other variables in the
+same ``any'' class.  This allows the user to choose multiple date ranges
+indicating mail messages from <EM>any</EM> of the date ranges specified are
+valid.</P>
+<P>These &lt;vblsub&gt; and &lt;vbluse&gt; elements are repeated for each of the date
+checkbox variables defined.</P>
+<P>Following the date checkboxes in the cisco-advbuttons template fragment
+file, we have:</P>
+<PRE>
+    &lt;ntv-ctl-state-adv&gt;</PRE>
+<P>This is substituted with a hidden control named ``adv'', which simply preserves
+the ``advanced'' state of our searches.  Without a control named ``adv''
+on the form, the search result page would revert back to the ``simple'' form
+automatically.</P>
+<P>Following this, we have a table presenting a miscellaneous collection
+of extra fields:</P>
+<P>We allow the client to restrict the allowable length of returned messages.
+This is done with two text-fields:</P>
+<PRE>
+    from &lt;input type=&quot;text&quot;
+                size=&quot;10&quot;
+                name=&quot;vbllengthstart&quot;
+                value=&quot;&lt;ntv-vbl vbllengthstart&gt;&quot;&gt;
+    to &lt;input type=&quot;text&quot;
+              size=&quot;10&quot;
+              name=&quot;vbllengthend&quot;
+              value=&quot;&lt;ntv-vbl vbllengthend&gt;&quot;&gt;</PRE>
+<P>The field giving the lower bound on message length is called ``vbllengthstart'',
+The field giving the upper bound on message length is called ``vbllengthend''.
+Note that both these checkboxes are initialized with a value taken
+from the variable, preserving user-entered information between page updates.</P>
+<P>To indicate to ntvultralite what to do with these variables, we add the
+following elements to the &lt;ntvultralite&gt; section in cisco.res:</P>
+<PRE>
+    &lt;vblsub name=&quot;vbllengthstart&quot; text=&quot;length &amp;gt;= &amp;lt;ntv-value&amp;gt;&quot;/&gt;
+    &lt;vblsub name=&quot;vbllengthend&quot; text=&quot;length &amp;lt;= &amp;lt;ntv-value&amp;gt;&quot;/&gt;</PRE>
+<PRE>
+    &lt;vblrange name1=&quot;vbllengthstart&quot; name2=&quot;vbllengthend&quot;/&gt;
+    &lt;vbluse name=&quot;vbllengthstart&quot; type=&quot;constraint&quot; class=&quot;all&quot;/&gt;
+    &lt;vbluse name=&quot;vbllengthend&quot; type=&quot;constraint&quot; class=&quot;all&quot;/&gt;</PRE>
+<P>The first two &lt;vblsub&gt; elements are converting any non-empty value to
+an expression comparing the length attribute to the value entered.  A
+value of ``2048'' entered in the first text box (named vbllengthstart) will
+get converted internally into:</P>
+<PRE>
+    length &gt;= 2048</PRE>
+<P>for example.</P>
+<P>The &lt;vblrange&gt; element indicates that the two named variables, vbllengthstart
+and vbllengthend, are to be considered part of a range specification.  As
+such, if both variables are set, a single result is used which
+combines them with appropriate ()'s and &amp; characters to create an
+expression defining this range.</P>
+<P>Finally, the two &lt;vbluse&gt; elements indicate that both ``vbllengthstart''
+and ``vbllengthend'' are to be used when constructing a constraint
+and that they should <EM>all</EM> be true.  If we used ``any'' here, the user
+would get messages that matched any date specification entered OR
+any message length specification, probably not what was wanted.</P>
+<P>This is followed by a few miscellaneous controls:</P>
+<DL>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dtotalhits%3E">&lt;ntv-ctl-totalhits&gt;</A></STRONG><BR>
+<DD>
+This automatically creates a text box allowing the client to enter
+a value for the maximum number of hits to process for a query.
+An absolute limit of this value can be specified in the resource file
+with the &lt;hitlimit total=``...''/&gt; element.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Ddisplayedhits%3E">&lt;ntv-ctl-displayedhits&gt;</A></STRONG><BR>
+<DD>
+This automatically creates a text box allowing the client to enter
+a value for the number of hits to display per page of results.
+An absolute limit of this value can be specified in the resource file
+with the &lt;hitlimit displayed=``...''/&gt; element.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dfuzzyfactor%3E">&lt;ntv-ctl-fuzzyfactor&gt;</A></STRONG><BR>
+<DD>
+This automatically creates a text box allowing the client to enter
+a fuzziness value for any fuzzy search performed.  The value entered
+should be an integer value between 0 and 3 inclusive.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dhighlight%3E">&lt;ntv-ctl-highlight&gt;</A></STRONG><BR>
+<DD>
+This automatically constructs a text box allowing the client to enter
+the minimum number of characters a word must have in a preview before
+it is highlighted if it is considered relevant to the search query.
+<P></P></DL>
+<P>These miscellanous controls are followed by controls similar to the
+simple search buttons discussed above.  There are two differences:</P>
+<UL>
+<LI>
+We use radio buttons to distinguish between fuzzy and exact searches.
+In this way the client can see both options, and choose the most suitable.
+These radio buttons are constructed with:
+<PRE>
+    &lt;ntv-ctl-moderadio-fuzzy 1&gt; &lt;I&gt;Fuzzy&lt;/I&gt; 
+    &lt;ntv-ctl-moderadio-fuzzy 0&gt; &lt;I&gt;Exact&lt;/I&gt;</PRE>
+<P></P>
+<LI>
+We allow the user to check an ``all words'' checkbox, indicating that
+all words should be present in any returned documents.  Note that this
+checkbox is only relevant for exact-type searches.  This checkbox
+is defined as:
+<PRE>
+    &lt;input type=&quot;checkbox&quot; name=&quot;vblall&quot; value=&quot;checked&quot; &lt;ntv-vbl vblall&gt;&gt;
+        &lt;I&gt;All words&lt;/I&gt;</PRE>
+<P>As a consequence of this ``all words'' checkbox, we have changed the
+definition of the search-text text box to be</P>
+<PRE>
+    &lt;input type=&quot;text&quot; name=&quot;vblq&quot; value=&quot;&lt;ntv-vbl vblq&gt;&quot;&gt;</PRE>
+<P>Ie, the entered search text is now placed in a variable ``vblq''.  The
+definition of how to use the ``vblall'' and ``vblq'' variables is speicifed
+as follows in the &lt;ultralite&gt; section of cisco.res:</P>
+<PRE>
+    &lt;vblsub name=&quot;vblall&quot; text=&quot;all&quot;/&gt;
+    &lt;vbluse name=&quot;vblq&quot; type=&quot;text&quot; class=&quot;&amp;lt;ntv-vbl vblall&amp;gt;&quot;/&gt;</PRE>
+<P>We indicate that internally, any non-empty value of ``vblall'' is converted
+to ``all''.  The use of the search-text variable ``vblq'' is defined to be
+the value of vblall, namely ``all'' or empty.  If the value is empty,
+a default of ``any'' is applied.</P>
+<P>Ie, if the user checks the ``All words'' checkbox, the entered text will
+be treated as ``all'' words must be present in returned documents.
+If the checkbox is not checked,
+``any'' of the words are allowed to be present in returned documents.</P>
+<P></P></UL>
+<P>Finally, we define a link to take us back to the ``simple'' form of
+the search page, using:</P>
+<PRE>
+    &lt;A HREF=&quot;&lt;ntv-script&gt;?q=&lt;ntv-vbl vblq&gt;&quot;&gt;Simple search&lt;/A&gt;</PRE>
+<P>Note that we assign ``q'' (the simple search query) from our value
+of the ``vblq'' variable, to preserve user-entered data between the
+``advanced'' and ``simple'' pages.</P>
+<P>
+<H3><A NAME="putting it all together">Putting it all Together</A></H3>
+<P>For the ``advanced'' search pages, we create three more template files.</P>
+<P>
+<H4><A NAME="_acisco">_Acisco</A></H4>
+<P>Similar to the ``__cisco'' template file above
+for the simple case, this template can contain:</P>
+<PRE>
+    &lt;HTML&gt;
+    &lt;HEAD&gt;
+    &lt;TITLE&gt;Search a sample mailing list&lt;/TITLE&gt;
+    &lt;/HEAD&gt;
+    &lt;BODY BACKGROUND=&quot;/bgblend.gif&quot;&gt;
+    &lt;FONT FACE=&quot;arial,helvetica&quot; SIZE=2&gt;</PRE>
+<PRE>
+    &lt;H2&gt;Search a sample mailing list&lt;/H2&gt;</PRE>
+<PRE>
+    &lt;FORM METHOD=POST&gt;</PRE>
+<PRE>
+    &lt;ntv-include /usr/local/nextrieve/collection/cisco/templates/cisco-advbuttons&gt;
+    &lt;/FORM&gt;</PRE>
+<PRE>
+    &lt;BR CLEAR=ALL&gt;&lt;P&gt;&lt;HR WIDTH=90% SIZE=3 NOSHADE&gt;&lt;P&gt;
+    &lt;CENTER&gt;
+        &lt;FONT SIZE=1&gt;
+            Copyright &amp;copy; 1998, Your company, all rights reserved.
+        &lt;/FONT&gt;
+    &lt;CENTER&gt;
+    &lt;/FONT&gt;
+    &lt;/BODY&gt;
+    &lt;/HTML&gt;</PRE>
+<P>
+<H4><A NAME="qacisco">QAcisco</A></H4>
+<P>Similar to the ``Q_cisco'' template file above
+for the simple case, this template can contain:</P>
+<PRE>
+    &lt;HTML&gt;
+    &lt;HEAD&gt;
+    &lt;TITLE&gt;Search a sample mailing list&lt;/TITLE&gt;
+    &lt;/HEAD&gt;
+    &lt;BODY BACKGROUND=&quot;/bgblend.gif&quot;&gt;
+    &lt;FONT FACE=&quot;arial,helvetica&quot; SIZE=2&gt;</PRE>
+<PRE>
+    &lt;H2&gt;Search a sample mailing list&lt;/H2&gt;</PRE>
+<PRE>
+    &lt;FORM METHOD=POST&gt;</PRE>
+<PRE>
+    &lt;ntv-include /usr/local/nextrieve/collection/cisco/templates/cisco-advbuttons&gt;
+    &lt;/FORM&gt;</PRE>
+<PRE>
+    &lt;ntv-loophead&gt;
+    &lt;P&gt;
+    Hits &lt;ntv-hits-offset&gt; to &lt;ntv-hits-limit&gt; of &lt;ntv-hits-total&gt;:
+    &lt;/P&gt;</PRE>
+<PRE>
+    &lt;ntv-loop&gt;
+    &lt;ntv-include /usr/local/nextrieve/collection/cisco/templates/cisco-basichit&gt;
+    &lt;/ntv-loop&gt;</PRE>
+<PRE>
+    &lt;ntv-include /usr/local/nextrieve/collection/cisco/templates/cisco-basicpages&gt;</PRE>
+<PRE>
+    &lt;BR CLEAR=ALL/&gt;</PRE>
+<PRE>
+    &lt;P&gt;&lt;HR WIDTH=90% SIZE=3 NOSHADE&gt;&lt;/P&gt;
+    &lt;P&gt;
+    &lt;CENTER&gt;
+        &lt;FONT SIZE=1&gt;
+        Powered by &lt;A HREF=&quot;http://www.nexial.com/&quot; TARGET=_top&gt;NexTrieve&lt;/A&gt;
+        &lt;/FONT&gt;
+    &lt;CENTER&gt;
+    &lt;/P&gt;</PRE>
+<PRE>
+    &lt;/FONT&gt;
+    &lt;/BODY&gt;
+    &lt;/HTML&gt;</PRE>
+<P>
+<H4><A NAME="eacisco">EAcisco</A></H4>
+<P>Similar to the ``E_cisco'' template file above
+for the simple case, this template can contain:</P>
+<PRE>
+    &lt;HTML&gt;
+    &lt;HEAD&gt;
+    &lt;TITLE&gt;Search a sample mailing list&lt;/TITLE&gt;
+    &lt;/HEAD&gt;
+    &lt;BODY BACKGROUND=&quot;/bgblend.gif&quot;&gt;
+    &lt;FONT FACE=&quot;arial,helvetica&quot; SIZE=2&gt;</PRE>
+<PRE>
+    &lt;H2&gt;Search a sample mailing list&lt;/H2&gt;</PRE>
+<PRE>
+    &lt;FORM METHOD=POST&gt;</PRE>
+<PRE>
+    &lt;ntv-include /usr/local/nextrieve/collection/cisco/templates/cisco-advbuttons&gt;
+    &lt;/FORM&gt;</PRE>
+<PRE>
+    &lt;P&gt;
+    No results were found.
+    &lt;/P&gt;
+    &lt;P&gt;
+    Try changing your words, using a fuzzy search, or unchecking
+    &lt;I&gt;subjects only&lt;/I&gt; if it is checked.
+    &lt;/P&gt;
+    &lt;P&gt;
+    More helpful advice can be added here.
+    &lt;/P&gt;</PRE>
+<PRE>
+    &lt;BR CLEAR=ALL&gt;&lt;P&gt;&lt;HR WIDTH=90% SIZE=3 NOSHADE&gt;&lt;P&gt;
+    &lt;CENTER&gt;
+        &lt;FONT SIZE=1&gt;
+            Copyright &amp;copy; 1998, Your company, all rights reserved.
+        &lt;/FONT&gt;
+    &lt;CENTER&gt;
+    &lt;/FONT&gt;
+    &lt;/BODY&gt;
+    &lt;/HTML&gt;</PRE>
+<P>
+<HR>
+<H1><A NAME="debugging ntvultralite">DEBUGGING NTVULTRALITE</A></H1>
+<P>Debugging any HTML providing process in a web-based environment can be
+difficult.</P>
+<P>Here are a couple of tips to help overcome any problems.</P>
+<P>
+<H2><A NAME="running ntvultralite standalone">Running ntvultralite ``standalone''</A></H2>
+<P>If, when you connect to the initial search page or perform a search,
+you simply get a browser error message saying an error has occurred
+you are basically staring at a ``black box''.</P>
+<P>Normally if ntvultralite encounters a problem it will construct
+valid HTML indicating the problem.  To verify that ntvultralite is,
+indeed, printing something sensible, you can temporarily replace the
+CGI script under cgi-bin with test-cgi (which comes from apache).
+For reference, this test-cgi script looks like:</P>
+<PRE>
+    #!/bin/sh</PRE>
+<PRE>
+    # disable filename globbing
+    set -f</PRE>
+<PRE>
+    echo Content-type: text/plain
+    echo</PRE>
+<PRE>
+    echo CGI/1.0 test script report:
+    echo</PRE>
+<PRE>
+    echo argc is $#. argv is &quot;$*&quot;.
+    echo</PRE>
+<PRE>
+    echo SERVER_SOFTWARE = $SERVER_SOFTWARE
+    echo SERVER_NAME = $SERVER_NAME
+    echo GATEWAY_INTERFACE = $GATEWAY_INTERFACE
+    echo SERVER_PROTOCOL = $SERVER_PROTOCOL
+    echo SERVER_PORT = $SERVER_PORT
+    echo REQUEST_METHOD = $REQUEST_METHOD
+    echo HTTP_ACCEPT = &quot;$HTTP_ACCEPT&quot;
+    echo PATH_INFO = &quot;$PATH_INFO&quot;
+    echo PATH_TRANSLATED = &quot;$PATH_TRANSLATED&quot;
+    echo SCRIPT_NAME = &quot;$SCRIPT_NAME&quot;
+    echo QUERY_STRING = &quot;$QUERY_STRING&quot;
+    echo REMOTE_HOST = $REMOTE_HOST
+    echo REMOTE_ADDR = $REMOTE_ADDR
+    echo REMOTE_USER = $REMOTE_USER
+    echo AUTH_TYPE = $AUTH_TYPE
+    echo CONTENT_TYPE = $CONTENT_TYPE
+    echo CONTENT_LENGTH = $CONTENT_LENGTH</PRE>
+<PRE>
+    echo --
+    cat
+    echo --</PRE>
+<P>Note the last three lines that have been added to advise of the content
+of standard input.</P>
+<P>If this script is run from a browser, you will see a definition of all
+the environment variables passed to the command, and the content of its
+standard input.</P>
+<P>These environment variables can be set manually (normally by prefixing
+each line with ``export ''), followed by manually setting the NTVBASE and
+NTVNAME variables.  The standard-input content can be placed in a file.
+Then, ntvultralite can be run directly with:
+    ntvultralite &lt; standardinputfile</P>
+<P>It will produce the HTTP stream that would normally go to the browser, and
+you can verify that it is correct or not.</P>
+
+</BODY>
+
+</HTML>

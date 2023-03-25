@@ -1,0 +1,90 @@
+#!/bin/sh 
+
+# Where will core files end up?  Look for the basedir value in the resource
+# file.
+
+if [ "$NTV_RESOURCE" = "" ]
+then
+    echo No NTV_RESOURCE variable set.  This variable is required.
+    exit 1
+fi
+
+coredir=`fgrep basedir $NTV_RESOURCE | sed -e 's/.* //'`
+corefile="$coredir/core"
+
+# Save our pid under the indexdir directory...
+# This means we'll get killed automatically via searchnl stop.
+indexdir=`fgrep indexdir $NTV_RESOURCE | sed -e 's/.* //'`
+mypidfile=$indexdir/pid.d.$$.ntv
+
+# Loop.  We never stop unless we restart more than 5 times in 5 minutes
+# without a core.
+maxcount=5
+maxcounttime=300
+
+count=0
+lastrestart=`date +%s`
+
+while [ true ]
+do
+    rm -f $corefile
+    echo $$ > $mypidfile
+
+    # Run the command.
+    $*
+
+    # It's a daemon.  Sleep a few seconds, then examine the pid file.
+    sleep 3
+    dpidfile=`ls -1tr $indexdir/pid*.ntv | tail -1`
+    if [ "$dpidfile" = "" -o ! -s "$dpidfile" ]
+    then
+        echo Problem daemonising $* ?
+	exit 1
+    fi
+
+    dpid=`cat $dpidfile`
+    if [ "$dpid" -eq $$ ]
+    then
+        echo Problem daemonising $* ?
+	exit 1
+    fi
+
+    # Keep looping while the daemon process is alive...
+    while [ `ps -p $dpid | wc -l` -gt 1 ]
+    do
+	# echo ok
+	sleep 20
+    done
+    # echo nok
+
+    # Remove pid file to avoid confusion...
+    rm $dpidfile
+
+    # Core file?
+    if [ -s $corefile ]
+    then
+	mv $corefile $coredir/nextriev-core-`date +%Y%m%d-%H:%M:%S`
+	# echo mv $corefile $coredir/nextriev-core-`date +%Y%m%d-%H:%M:%S`
+	count=0
+	lastrestart=`date +%s`
+    else
+        # Are we stopping really often?  Probably a wrong argument...
+	# echo no core.
+	timenow=`date +%s`
+	nowmin=`expr $timenow / $maxcounttime`
+        lastmin=`expr $lastrestart / $maxcounttime`
+	if [ $lastmin -eq $nowmin ]
+	then
+	    count=`expr $count + 1`
+	    if [ $count -gt $maxcount ]
+	    then
+	        echo Too many retries -- terminating at `date`
+	        exit 1
+	    fi
+	else
+	    # Reset our per-minute counter.
+	    count=0
+	    lastrestart=`date +%s`
+	fi
+    fi
+done

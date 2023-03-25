@@ -1,0 +1,21 @@
+
+<TABLE CELLSPACING=0 CELLPADDING=0>
+<TR>
+<TD WIDTH=32> <FONT FACE="arial" SIZE=2><B><ntv-hit-count></B></FONT> </TD>
+<TD WIDTH=32>&nbsp;</TD>
+<TD>
+<FONT FACE="arial" SIZE=2><A HREF="%%NTVHTTPPREFIX%%<ntv-hit-linkattr filename>" TARGET="_blank"><B><ntv-hit-printattr title "(no title)"></B></A></FONT>
+</TD>
+</TR>
+<ntv-vbleq! vbltitlesonly checked>
+<!-- a preview line. -->
+<TR>
+<TD>&nbsp;</TD>
+<TD>&nbsp;</TD>
+<TD>
+<FONT FACE="arial" SIZE=2><ntv-hit-preview></FONT>
+</TD>
+</TR>
+</ntv-vbleq>
+</TABLE>
+<BR>

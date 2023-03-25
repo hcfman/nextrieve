@@ -1,0 +1,71 @@
+#!/usr/bin/perl
+
+#-------------------------------------------------------------------------
+
+=head1 docseq
+
+Very basic filter to surround a stream with a <?xml processing instruction and
+a <ntv:docseq> container for use with NexTrieve.  Removes any <?xml processing
+instructions from the stream.  Usually used as an input filter
+for NexTrieve indexing.
+
+Does not "know" anything about the encoding of the stream being supplied:
+default assumed encoding is "ISO-8859-1".  Any other encoding can be specified
+with a parameter.
+
+=over 2
+
+=head2 Usage
+
+Convert content of mailbox to xml, check for From:, To: and Subject: headers
+and convert From: and To: into attributes and Subject: into a text type, and
+make sure the right stuff is put around it.  Assume ISO-8859-1 encoding.
+
+ mailbox2xml mailbox | docseq > xml
+
+Concatenate the contents of file xml1, xml2, xml3 and xml4 (encoded in UTF-8)
+and make sure that they are contained in a <ntv:docseq> container so that it
+can be indexed by NexTrieve.
+
+ cat xml1 xml2 xml3 xml4 | docseq utf-8 | ntvindex
+
+=cut
+
+#-------------------------------------------------------------------------
+
+# Make sure we pre-declare everything
+
+use strict;
+
+# Set the encoding or use default
+
+my $encoding = shift || 'iso-8859-1';
+
+# If there are arguments specified or just a user trying it out
+#  Show the POD documentation
+#  And exit
+
+if (-t STDIN and -t STDOUT) {
+  system( "perldoc $0" );
+  exit;
+}
+
+# Start the XML output
+
+print <<EOD;
+<?xml version="1.0" encoding="$encoding"?>
+<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+EOD
+
+# For all of the lines
+#  Pass the line through if it is not a processing instruction
+
+while (<STDIN>) {
+  print unless m#^<\?xml#;
+}
+
+# Print the rest of this XML stream
+
+print <<EOD;
+</ntv:docseq>
+EOD

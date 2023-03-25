@@ -1,0 +1,27 @@
+
+=head1 NAME
+
+ntvcheck - Check the integrity of a nextrieve text index.
+
+=head1 SYNOPSIS
+
+ntvcheck [--xml] idxdir
+
+=head1 DESCRIPTION
+
+B<ntvcheck> will check the content of the nextrieve text index found in
+the directory I<idxdir>.  It will read the content of the index, decompress
+all its hit-lists performing range checks as it goes.
+
+If any problems are encountered, rather obvious error messages are produced.
+Note that there is currently no "repair" facility if errors are
+encountered.  If errors are encountered, it normally means you have
+to rebuild the index from scratch.
+
+The --xml option will cause B<ntvcheck> to output an <indexcreation>
+section describing the structure fo the text index instead of performing
+a check.
+
+=head1 SEE ALSO
+
+    ntvindex(1), ntvsearch(1), ntvsearchd(1), ntvresources(5), ntvcached(1).

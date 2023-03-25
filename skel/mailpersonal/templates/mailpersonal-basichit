@@ -1,0 +1,28 @@
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER="0">
+<TR>
+<TD WIDTH="32" ALIGN="LEFT"> <FONT FACE="arial" SIZE=2><B><ntv-hit-count></B></FONT> </TD>
+
+<TD>
+<TABLE BORDER=0 CELLSPACING=0 WIDTH=80 HEIGHT=16>
+<TR>
+<TD ALIGN="CENTER" <ntv-include %%NTVCHROOTBASE%%/%%NTVNAME%%/templates/%%NTVNAME%%-datemap>><FONT FACE="arial,helvetica" SIZE="1"><B><ntv-hit-printdateattr 1 date "no date"></B></FONT></TD>
+</TR>
+</TABLE>
+</TD>
+
+<TD WIDTH="15">&nbsp;</TD>
+<TD WIDTH="80%">
+<FONT FACE="arial" SIZE=2><A HREF="%%NTVHTTPPREFIX%%%%NTVNAME%%show?mailbox=<ntv-hit-linkattr mailbox>&offset=<ntv-hit-linkattr offset>&length=<ntv-hit-linkattr length>&subject=<ntv-hit-printattr subject "(no subject)">" TARGET="launch"><B><ntv-hit-printattr subject "(no subject)"></B></A></FONT>
+</TD>
+</TR>
+<TR>
+<TD>&nbsp;</TD>
+<TD COLSPAN="3"><FONT FACE="arial" SIZE=2>From: <ntv-hit-printattr from></FONT></TD>
+</TR>
+</TABLE>
+<ntv-vbleq! vblsubjectsonly checked>
+<!-- a preview line. -->
+<P>
+<FONT FACE="arial" SIZE=2><ntv-hit-preview></FONT>
+</ntv-vbleq>
+</P>

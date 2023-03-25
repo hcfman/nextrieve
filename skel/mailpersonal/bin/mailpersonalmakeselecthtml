@@ -1,0 +1,97 @@
+#!%%NTVPERL%%
+
+%monthnames = (
+    '01', 'Jan',
+    '02', 'Feb',
+    '03', 'Mar',
+    '04', 'Apr',
+    '05', 'May',
+    '06', 'Jun',
+    '07', 'Jul',
+    '08', 'Aug',
+    '09', 'Sep',
+    '10', 'Oct',
+    '11', 'Nov',
+    '12', 'Dec'
+    );
+
+$INDEXBASE = '%%NTVBASE%%/%%NTVNAME%%';
+$DATABASE = '%%NTVNAME%%';
+
+sub error {
+    local( $format, @list ) = @_;
+
+    $message = sprintf( $format, @list );
+
+    $message = "$!" ? "$message: $!\n" : "$message\n";
+    print $message;
+    exit( 1 );
+}
+
+chdir $INDEXBASE ||
+    &error( "Can't change to $INDEXBASE" );
+
+opendir( DIR, "archive" ) ||
+    &error( "Can't open archive" );
+@filelist = grep( /^${DATABASE}-\d\d\d\d\d\d/, readdir( DIR ) );
+closedir DIR;
+
+for ( @filelist ) {
+    ( $year, $month ) = m%^${DATABASE}-(\d\d\d\d)(\d\d)%;
+    $yearMonth{ "$year$month" } = 1;
+}
+
+@lastMonths = reverse sort keys %yearMonth;
+
+#
+# Find the last twelve, prepare for marking cmdfiles
+#
+$i = 0;
+$limit = $#lastMonths > 11 ? 11 : $#lastMonths;
+while ( $i <= $#lastMonths ) {
+    ( $year ) = $lastMonths[ $i ] =~ /^(\d\d\d\d)/;
+    if ( $i <= $limit ) {
+	$months{ $lastMonths[ $i ] } = 1;
+    }
+    $years{ $year } = 1;
+
+    $i++;
+}
+
+@attributes = ( sort keys %years, sort keys %months );
+print <<EOF;
+<TABLE BORDER="3" CELLSPACING="3" BGCOLOR="#9696C3"><TR><TD>
+<TABLE>
+EOF
+
+$count = 0;
+for $i ( @attributes, "allabove" ) {
+    print "<TR>" if $count % 4 == 0;
+    print "<TD>&nbsp;</TD>" if $count % 4 != 0;
+    if ( $i eq 'allabove' ) {
+	print "<TD><INPUT NAME=\"vblallabove\" TYPE=\"checkbox\" VALUE=\"checked\" <ntv-vbl vblallabove>></TD><TD>";
+    } else {
+	print "<TD><INPUT TYPE=\"checkbox\" NAME=\"vbldt$i\" VALUE=\"checked\" <ntv-vbl vbldt$i>></TD><TD>";
+    }
+    if ( $i =~ m/(\d\d\d\d)(\d\d)/ ) {
+	print $monthnames{ $2 }, " $1";
+    } else {
+	( $loopmodify = $i ) =~ s/^Y//;
+	print $loopmodify eq 'allabove' ? "Everything" : $loopmodify;
+    }
+    print "</TD>";
+    $count++;
+
+    print "</TR>\n" if $count % 4 == 0;
+}
+
+print "</TR>\n" if $count % 4 != 0;
+
+print <<EOF;
+</TABLE>
+</TD>
+</TR>
+</TABLE>
+EOF
+
+exit 0;

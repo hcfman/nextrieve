@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# An index (full or incremental) was done.  Just remove any incremental
+# XML lying around.
+
+rm -f "%%NTVBASE%%/%%NTVNAME%%/archive/inc.xml"

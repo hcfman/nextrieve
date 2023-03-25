@@ -1,0 +1,15 @@
+
+<ntv-ctl-search size="40" VALUE="<ntv-search>">
+<ntv-ctl-submit VALUE=" Go ">
+<BR>
+<ntv-ctl-fuzzybutton>
+<I>Fuzzy</I>
+<BR>
+<input
+    type="checkbox"
+    NAME="vblsubjectsonly"
+    VALUE="checked"
+    <ntv-vbl vblsubjectsonly>
+    >
+<I>Subjects only</I>
+<BR>

@@ -1,0 +1,22 @@
+#!%%NTVPERL%%
+
+$BASEDIR = '%%NTVBASEDIR%%';
+
+print <<EOF;
+Content-type: text/html
+
+<HTML>
+<HEAD>
+<TITLE>%%NTVNAME%% HTML example</TITLE>
+</HEAD>
+<BODY>
+<H2 ALIGN="CENTER">%%NTVNAME%% HTML example</H2>
+<P>
+Displaying files is currently not supported.
+See mailsimpleshow for an example.
+</P>
+</BODY>
+</HTML>
+EOF
+
+exit 0

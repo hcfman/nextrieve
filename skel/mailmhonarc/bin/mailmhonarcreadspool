@@ -1,0 +1,117 @@
+#!%%NTVPERL%% -I%%NTVBASE%%/%%NTVNAME%%/bin
+
+use %%NTVNAME%%error;
+use File::Find;
+
+sub wanted {
+    my( $dir );
+
+    return 0 if ! -f || !/^msg\d+\.html$/;
+    ( $dir = $File::Find::dir ) =~ s%^\./%%;
+    if ( $_ gt $lastIndexed{ $dir } ) {
+	print OUT "$dir/$_\n";
+	$topLastIndexed{ $dir } = $_
+	    if $_ gt $topLastIndexed{ $dir };
+    }
+    return 1;
+}
+
+sub loadLastIndexed {
+    my ( $dir, $file );
+
+    if ( open ( IN, '%%NTVBASE%%/%%NTVNAME%%/archive/lastindexed' ) ) {
+	while ( chop( $line  = <IN> ) ) {
+	    ( $dir, $file ) = $line =~ m%^(.*)/(.*)$%;
+	    $lastIndexed{ $dir } = $file;
+	}
+	close IN;
+
+	%topLastIndexed = %lastIndexed;
+    }
+}
+
+
+sub saveLastIndexed {
+    open ( OUT, '> %%NTVBASE%%/%%NTVNAME%%/archive/lastindexed' ) || return;
+    for $i ( keys %topLastIndexed ) {
+	print OUT "$i/$topLastIndexed{ $i }\n";
+    }
+    close OUT;
+}
+
+
+exit 1 if -f '%%NTVBASE%%/%%NTVNAME%%/runblocked';
+
+# First attempt at absorbing mail messages from spool to mailboxes
+# in archive.
+# We optionally generate XML for an incremental index, which we append
+# to archive/inc.xml.
+
+opendir( DIR, "%%NTVBASE%%/%%NTVNAME%%/spool" ) ||
+    ntverror( "Can't read directory %%NTVBASE%%/%%NTVNAME%%/spool: $!\n" );
+
+@files = grep( /^\d\d\d\d\d\d\d\d-\d\d\d\d\d\d-\d+$/, readdir( DIR ) );
+closedir( DIR );
+
+exit 1 if $#files == -1;
+
+for $mail ( @files ) {
+    ( $year, $month ) = $mail =~ /^(\d\d\d\d)(\d\d)/;
+    $mbx = "%%NTVBASE%%/%%NTVNAME%%/archive/$year$month.mbx";
+
+    open( IN, "%%NTVBASE%%/%%NTVNAME%%/spool/$mail" ) ||
+	ntverror( "Can't open %%NTVBASE%%/%%NTVNAME%%/spool/$mail: $!\n" );
+    my $save = $/;
+    undef $/;
+    $data = <IN>;
+    close IN;
+    $/ = $save;
+
+    # Append to "to be processed" mail archive
+    open( OUT, ">> $mbx" ) ||
+	ntverror( "Can't append to $mbx: $!\n" );
+    print OUT $data;
+    close OUT;
+
+    # Append to permanent mail archive
+    $mbx = "%%NTVBASE%%/%%NTVNAME%%/archive/%%NTVNAME%%-$year$month.mbx";
+    open( OUT, ">> $mbx" ) ||
+	ntverror( "Can't append to kim-$mbx: $!\n" );
+    print OUT $data;
+    close OUT;
+
+    # Remove from spool if all good
+    unlink "%%NTVBASE%%/%%NTVNAME%%/spool/$mail" ||
+	ntverror( "Can't unlink %%NTVBASE%%/%%NTVNAME%%/spool/$mail: $!\n" );
+}
+
+opendir( DIR, "%%NTVBASE%%/%%NTVNAME%%/archive" ) ||
+    ntverror( "Can't read directory %%NTVBASE%%/%%NTVNAME%%/archive: $!" );;
+@files = grep( /^\d\d\d\d\d\d\.mbx$/, readdir( DIR ) );
+closedir( DIR );
+
+for $mail ( @files ) {
+    ( $year, $month ) = $mail =~ /^(\d\d\d\d)(\d\d)/;
+
+    mkdir "%%NTVBASEDIR%%/$year$month", 0755;
+    chdir "%%NTVBASEDIR%%/$year$month" ||
+	ntverror( "Can't change to %%NTVBASEDIR%%/$year$month" );
+    system( "%%NTVMHONARC%% -add %%NTVBASE%%/%%NTVNAME%%/archive/$mail" );
+    unlink "%%NTVBASE%%/%%NTVNAME%%/archive/$mail" ||
+	ntverror( "Can't remove %%NTVBASE%%/%%NTVNAME%%/archive/$mail: $!\n" );
+}
+
+# Generate incremental XML
+chdir "%%NTVBASEDIR%%" ||
+    ntverror( "Can't change to %%NTVBASEDIR%%: $!\n" );
+
+&loadLastIndexed;
+
+open( OUT, "|%%NTVINST%%/%%VERSION%%/bin/filters/ntvmhonarc2ntvml >> %%NTVBASE%%/%%NTVNAME%%/archive/inc.xml" ) ||
+    ntverror( "Can't spawn filter: $!\n" );
+
+find( \&wanted, '.' );
+close OUT;
+&saveLastIndexed;
+
+exit 0;

@@ -1,0 +1,320 @@
+
+=head1 NAME
+
+ntvdtds - NexTrieve DTD summaries
+
+=head1 DESCRIPTION
+
+A summary of the DTDs used by various parts of the nextrieve system
+are described here.
+
+It should be noted that in general a complete DTD cannot be specified;
+the allowable XML depends on the attributes attached to the text
+index by the administrator.
+
+=head2 Indexer XML DTD
+
+    <!DOCTYPE ntv:docseq
+        [
+            <!ELEMENT ntv:docseq (document*)>
+            <!ELEMENT document (attributes?, text?)>
+            <!ELEMENT attributes ANY>
+            <!ELEMENT text ANY>
+       ]>
+
+=head2 Query XML DTD
+
+    <!DOCTYPE ntv:query
+        [
+            <!ELEMENT ntv:query (indexname?,
+	                         constraint?,
+				 texttype*,
+				 qany?,
+				 qall?,
+				 qnot?)>
+            <!ELEMENT indexname (#PCDATA)>
+            <!ELEMENT constraint (#PCDATA)>
+            <!ELEMENT texttype EMPTY>
+            <!ELEMENT qany (#PCDATA)>
+            <!ELEMENT qall (#PCDATA)>
+            <!ELEMENT qnot (#PCDATA)>
+    
+            <!ATTLIST ntv:query
+                        id                CDATA #IMPLIED
+			longform          (0|1) #IMPLIED
+                        firsthit          CDATA #IMPLIED
+                        displayedhits     CDATA #IMPLIED
+                        totalhits         CDATA #IMPLIED
+                        type              (fuzzy|exact|doclevel) #IMPLIED
+                        fuzzylevel        CDATA #IMPLIED
+                        fuzzyvariation    CDATA #IMPLIED
+                        fuzzywordweight   CDATA #IMPLIED
+                        textrate          (0|1) #IMPLIED
+                        highlightlength   CDATA #IMPLIED
+                        showpreviews      (0|1) #IMPLIED
+                        showattributes    (0|1) #IMPLIED>
+            <!ATTLIST texttype
+                        name              CDATA #REQUIRED
+                        weight            CDATA #IMPLIED>
+        ]>
+
+=head2 Query Result XML DTD -- Long Form
+
+    <!DOCTYPE ntv:hitlist
+        [
+            <!ELEMENT ntv:hitlist (hdr, h*)>
+            <!ELEMENT header (error*, warning*, server?, cached?)>
+            <!ELEMENT hit (attributes?, preview?)>
+            <!ELEMENT error (#PCDATA)>
+            <!ELEMENT warning (#PCDATA)>
+            <!ELEMENT server (#PCDATA)>
+            <!ELEMENT cached EMPTY>
+            <!ELEMENT preview ANY>
+            <!ELEMENT attributes ANY>
+            <!ELEMENT B (#PCDATA)>
+            <!ATTLIST header
+                        id            CDATA #IMPLIED
+                        firsthit      CDATA #IMPLIED
+                        displayedhits CDATA #IMPLIED
+                        totalhits     CDATA #IMPLIED>
+            <!ATTLIST hit
+                        docid         CDATA #REQUIRED
+                        score         CDATA #IMPLIED
+                        percent       CDATA #IMPLIED>
+       ]>
+
+=head2 Query Result XML DTD -- Short Form
+
+    <!DOCTYPE ntv:hl
+        [
+            <!ELEMENT ntv:hl (hdr, h*)>
+            <!ELEMENT hdr (err*, warn*, server?, cached?)>
+            <!ELEMENT h (a?, p?)>
+            <!ELEMENT err (#PCDATA)>
+            <!ELEMENT warn (#PCDATA)>
+            <!ELEMENT server (#PCDATA)>
+            <!ELEMENT cached EMPTY>
+            <!ELEMENT p ANY>
+            <!ELEMENT a ANY>
+            <!ELEMENT B (#PCDATA)>
+            <!ATTLIST hdr
+                        id CDATA #IMPLIED
+                        fh CDATA #IMPLIED
+                        dh CDATA #IMPLIED
+                        th CDATA #IMPLIED>
+            <!ATTLIST h
+                        dn CDATA #REQUIRED
+                        sc CDATA #IMPLIED
+                        pc CDATA #IMPLIED>
+       ]>
+
+=head2 Caching Server Configuration File
+
+    <!DOCTYPE ntv:cacheconfig
+        [
+            <!ELEMENT ntv:cacheconfig (physicalindex+,
+	                               defaultlogicalindex,
+				       generalconfig)>
+            <!ELEMENT physicalindex (logicalindex+, server+)>
+            <!ELEMENT logicalindex EMPTY>
+            <!ELEMENT server EMPTY>
+            <!ELEMENT defaultlogicalindex EMPTY>
+            <!ELEMENT generalconfig (connections?, cache?, log?)>
+            <!ELEMENT connections EMPTY>
+            <!ELEMENT cache EMPTY>
+            <!ELEMENT log EMPTY>
+    
+            <!ATTLIST physicalindex
+                        name CDATA #REQUIRED>
+            <!ATTLIST logicalindex
+                        name CDATA #REQUIRED
+                        constraint CDATA #IMPLIED>
+            <!ATTLIST server
+                        host CDATA #REQUIRED
+                        maxqueries CDATA #IMPLIED>
+            <!ATTLIST defaultlogicalindex
+                        name CDATA #REQUIRED>
+            <!ATTLIST connections
+                        clients CDATA #IMPLIED
+                        maxreadtime CDATA #IMPLIED>
+            <!ATTLIST cache
+                        size CDATA #IMPLIED>
+            <!ATTLIST log
+                        file CDATA #IMPLIED
+                        options CDATA #IMPLIED>
+        ]>
+
+=head2 NexTrieve Resource File
+
+    <!DOCTYPE ntv:resource
+	[
+	    <!ELEMENT ntv:resource (
+			    indexdir?,
+			    logfile?,
+			    cache?,
+			    indexcreation?,
+			    indexing?,
+			    searching?,
+			    ultralite*)>
+	    <!ELEMENT indexdir  EMPTY>
+	    <!ELEMENT logfile  EMPTY>
+	    <!ELEMENT cache  EMPTY>
+	    <!ELEMENT indexcreation (
+			    exact?,
+			    fuzzy?,
+			    texttype*,
+			    attribute*,
+			    utf8data?)>
+	    <!ELEMENT indexing (
+			    unknowntext?,
+			    nestedtext?,
+			    unknownattrs?,
+			    nestedattrs?)>
+	    <!ELEMENT searching (
+			    highlight?,
+			    hitlistxml?,
+			    threads?,
+			    fuzzytune?,
+			    degrade?,
+			    querylog?)>
+	    <!ELEMENT ultralite (
+			    attrmap*,
+			    fuzzybutton*,
+			    server?,
+			    vblsub*,
+			    vblrange*,
+			    vbluse*,
+			    emitok?,
+			    log?,
+			    execallow?,
+			    hitlimit?,
+			    switchedtemplate*,
+			    selectname*,
+			    attributetemplate*,
+			    logicalindex?)>
+	    <!ELEMENT exact EMPTY>
+	    <!ELEMENT fuzzy EMPTY>
+	    <!ELEMENT texttype EMPTY>
+	    <!ELEMENT attribute EMPTY>
+	    <!ELEMENT utf8data EMPTY>
+	    <!ELEMENT unknowntext EMPTY>
+	    <!ELEMENT nestedtext EMPTY>
+	    <!ELEMENT unknownattrs EMPTY>
+	    <!ELEMENT nestedattrs EMPTY>
+	    <!ELEMENT highlight EMPTY>
+	    <!ELEMENT hitlistxml EMPTY>
+	    <!ELEMENT threads EMPTY>
+	    <!ELEMENT fuzzytune EMPTY>
+	    <!ELEMENT degrade EMPTY>
+	    <!ELEMENT querylog EMPTY>
+	    <!ELEMENT attrmap EMPTY>
+	    <!ELEMENT fuzzybutton EMPTY>
+	    <!ELEMENT server EMPTY>
+	    <!ELEMENT vblsub EMPTY>
+	    <!ELEMENT vblrange EMPTY>
+	    <!ELEMENT vbluse EMPTY>
+	    <!ELEMENT emitok EMPTY>
+	    <!ELEMENT log EMPTY>
+	    <!ELEMENT execallow EMPTY>
+	    <!ELEMENT hitlimit EMPTY>
+	    <!ELEMENT switchedtemplate EMPTY>
+	    <!ELEMENT selectname EMPTY>
+	    <!ELEMENT attributetemplate EMPTY>
+	    <!ELEMENT logicalindex EMPTY>
+
+	    <!ATTLIST indexdir
+			name CDATA #REQUIRED>
+	    <!ATTLIST logfile
+			name CDATA #REQUIRED>
+	    <!ATTLIST cache
+			size CDATA #REQUIRED>
+	    <!ATTLIST exact
+			accentaction (distinct|merge|both) #IMPLIED>
+	    <!ATTLIST fuzzy
+			accentaction (distinct|merge|both) #IMPLIED>
+	    <!ATTLIST texttype
+			name CDATA #REQUIRED>
+	    <!ATTLIST attribute
+			name CDATA #REQUIRED
+			type (flag|number|string) #REQUIRED
+			key (key-unique|key-duplicates|notkey) #REQUIRED
+			nvals (1|"*") #REQUIRED>
+	    <!ATTLIST utf8data
+			classfile CDATA #IMPLIED
+			foldfile CDATA #IMPLIED
+			decompfile CDATA #IMPLIED>
+	    <!ATTLIST unknowntext
+			logaction (log|"!log"|stop) #IMPLIED
+			indexaction (ignore|default) #IMPLIED>
+	    <!ATTLIST nestedtext
+			logaction (log|"!log"|stop) #IMPLIED
+			indexaction (ignore|inherit) #IMPLIED>
+	    <!ATTLIST unknownattrs
+			logaction (log|"!log"|stop) #IMPLIED>
+	    <!ATTLIST nestedattrs
+			logaction (log|"!log"|stop) #IMPLIED>
+	    <!ATTLIST highlight
+			name CDATA #IMPLIED
+			on CDATA #IMPLIED
+			off CDATA #IMPLIED>
+	    <!ATTLIST hitlistxml
+			form (long|short) #REQUIRED>
+	    <!ATTLIST threads
+			connector CDATA #IMPLIED
+			worker CDATA #IMPLIED
+			core CDATA #IMPLIED>
+	    <!ATTLIST fuzzytune
+			level CDATA #REQUIRED
+			variation CDATA #REQUIRED>
+	    <!ATTLIST degrade
+			forward CDATA #IMPLIED
+			backward CDATA #IMPLIED>
+	    <!ATTLIST querylog
+			path CDATA #IMPLIED
+			thruput CDATA #IMPLIED>
+	    <!ATTLIST ultralite
+			name CDATA #IMPLIED>
+	    <!ATTLIST attrmap
+			name CDATA #REQUIRED
+			text CDATA #REQUIRED>
+	    <!ATTLIST fuzzybutton
+			level (0|1|2|3) #REQUIRED
+			text CDATA #REQUIRED>
+	    <!ATTLIST server
+			name CDATA #REQUIRED>
+	    <!ATTLIST vblsub
+			name CDATA #REQUIRED
+			text CDATA #REQUIRED>
+	    <!ATTLIST vblrange
+			name1 CDATA #REQUIRED
+			name2 CDATA #REQUIRED>
+	    <!ATTLIST vbluse
+			name CDATA #REQUIRED
+			type (constraint|text) #REQUIRED
+			class CDATA #REQUIRED>
+	    <!ATTLIST emitok
+			value (0|1) #REQUIRED>
+	    <!ATTLIST log
+			value (0|1) #REQUIRED>
+	    <!ATTLIST execallow
+			value (0|1) #REQUIRED>
+	    <!ATTLIST hitlimit
+			total CDATA #IMPLIED
+			displayed CDATA #IMPLIED>
+	    <!ATTLIST switchedtemplate
+			keyword CDATA #REQUIRED
+			templatedir CDATA #REQUIRED>
+	    <!ATTLIST selectname
+			attrname CDATA #REQUIRED
+			text CDATA #REQUIRED>
+	    <!ATTLIST attributetemplate
+			attrname CDATA #REQUIRED
+			templatedir CDATA #REQUIRED>
+	    <!ATTLIST logicalindex
+			name CDATA #REQUIRED>
+	]>
+
+=head1 SEE ALSO
+
+    ntvsearch(1), ntvsearchd(1), ntvresourcefile(1), ntvqueryxml(5),
+    ntvindexerxml(5), ntvhitlistxml(5)

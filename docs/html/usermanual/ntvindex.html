@@ -1,0 +1,176 @@
+<HTML>
+<HEAD>
+<TITLE>Creating an Index with Ntvindex</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">Creating an Index with Ntvindex</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvindex.html#synopsis">SYNOPSIS</A></LI>
+		<LI><A HREF="ntvindex.html#description">DESCRIPTION</A></LI>
+		<LI><A HREF="ntvindex.html#indexer xml">Indexer XML</A></LI>
+		<LI><A HREF="ntvindex.html#character encoding">Character Encoding</A></LI>
+		<LI><A HREF="ntvindex.html#options">OPTIONS</A></LI>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="synopsis">SYNOPSIS</A></H2>
+<PRE>
+ ntvindex -[?vV] [-L logfile] [-I indexdir] [-R resfile]
+          [filelist...]</PRE>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P><STRONG>ntvindex</STRONG> adds text to a NexTrieve text index, creating the index
+if necessary.</P>
+<P>The text index is defined by a <EM>resource file</EM>, specified with
+the <STRONG>NTV_RESOURCE</STRONG> environment variable, or by using the <CODE>-R</CODE> option.
+A critical element in this resource file
+is the &lt;indexcreation&gt; element,
+whose content is to determining the structure of the
+text index.  This is used by ntvindex to create the index.</P>
+<P>A definition of what the resource file contains can be found
+<A HREF="ntvresourcefile.html" target="_blank">here</A>.</P>
+<P>The files in <EM>filelist...</EM> should each contain an XML definition of what
+to index.  A filename of ``-'' indicates to use standard input.</P>
+<P>A definition of what the XML for the indexer looks like
+can be found <A HREF="ntvindexerxml.html" target="_blank">here</A>.  A short functional summary of this
+XML can be found in the next section.</P>
+<P>After a text index has been created or updated, you may wish to
+optimize search access to it by running <STRONG>ntvopt</STRONG>, an optimizer.
+A description of how to run the optimizer can be found <A HREF="ntvopt.html" target="_blank">here</A>.</P>
+<P>A description of <STRONG>ntvcheck</STRONG>, a tool for checking the integrity of
+a nextrieve text index can be found <A HREF="ntvcheck.html" target="_blank">here</A>.</P>
+<P>
+<H2><A NAME="indexer xml">Indexer XML</A></H2>
+<P>This section gives a very fast overview of
+the allowable structure of the XML that can be given to the indexer.</P>
+<P>The XML given to the indexer specifies the attributes and content of
+a sequence of documents that will be indexed.</P>
+<P>Each document contains a possibly zero-length sequence of attributes,
+and text to be indexed.</P>
+<P>The text to be indexed can have particular named sections or ``textypes''
+present.</P>
+<P>The structure of the XML closely follows the above notes, and can
+be summarized with an example:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;ntv:docseq xmlns:ntv=&quot;http://www.nextrieve.com/1.0&quot;&gt;</PRE>
+<PRE>
+        &lt;document&gt;
+            &lt;attributes&gt;
+                &lt;titleattr&gt;A document title -- not searchable.&lt;/titleattr&gt;
+                &lt;flagattr/&gt; &lt;!-- the flag &quot;flagattr&quot; is marked &quot;on&quot;. --&gt;
+                &lt;numberattr&gt;45&lt;/numberattr&gt;
+            &lt;/attributes&gt;
+            &lt;text&gt;
+                Normal document text.
+                &lt;title&gt;
+                    Text in the document title that is searchable --
+                    a special text type that must be declared in the
+                    resource file.
+                &lt;/title&gt;
+                More normal document text.  This is just default text.
+            &lt;/text&gt;
+        &lt;/document&gt;</PRE>
+<PRE>
+        &lt;document&gt;
+            &lt;!- the content of a second document... --&gt;
+            ...
+        &lt;/document&gt;</PRE>
+<PRE>
+    &lt;/ntv:docseq&gt;</PRE></FONT></TD></TR></TABLE></PRE>
+<P>In the example above there are two &lt;document&gt; elements, defining two
+documents to index.</P>
+<P>In the first document, three attributes are being set.  <STRONG>titleattr</STRONG>
+is a string attribute, <STRONG>flagattr</STRONG> is a flag attribute being set to ``on''
+(or present), and <STRONG>numberattr</STRONG> is a numeric attribute being set to the value
+45.</P>
+<P>To be valid, these attributes and types must be declared in the resource
+file using appropriate &lt;attribute&gt; elements
+at the time the text index is created.</P>
+<P>The text to be indexed for the first document is present in the &lt;text&gt;
+element.  It can be seen that there is a nested &lt;title&gt; element containing
+a document title.  To be valid, this must also be declared in the resource
+file using an appropriate &lt;texttype&gt; element.  Other text present in the
+&lt;text&gt; element is default text, and is always valid.</P>
+<P>Having a separate text type such as &lt;title&gt; allows a user to search
+only title-tagged text, for example.</P>
+<P>
+<H2><A NAME="character encoding">Character Encoding</A></H2>
+<P><STRONG>ntvindex</STRONG> uses the publicly available <EM>expat</EM> library to analyze the
+XML being indexed.  As such, it is possible to use the built-in character
+encodings understood by <EM>expat</EM>, namely:</P>
+<UL>
+<LI>
+ISO-8859-1
+<P></P>
+<LI>
+UTF-8
+<P></P>
+<LI>
+UTF-16
+<P></P>
+<LI>
+US-ASCII
+<P></P></UL>
+<P>These encodings can be used directly by using, for example:</P>
+<PRE>
+    &lt;?xml version=&quot;1.0&quot; encoding=&quot;ISO-8859-1&quot;?&gt;</PRE>
+<P>at the start of the XML stream being indexed.</P>
+<P>If the documents to be indexed are in another character set, they must
+be translated to one of the above as the XML for them is generated.</P>
+<P>It should be noted that all the information is stored in the nextrieve
+text index in UTF-8 form, not simply in the encoding presented
+to <STRONG>ntvindex</STRONG>.</P>
+<P>
+<H2><A NAME="options">OPTIONS</A></H2>
+<DL>
+<DT><STRONG><A NAME="item_%2DR_resfile"><CODE>-R</CODE> resfile</A></STRONG><BR>
+<DD>
+<EM>resfile</EM> specifies the location of the <EM>resource file</EM> describing the
+text index to be indexed.  This overrides any NTV_RESOURCE environment
+variable that is set.
+<P></P>
+<DT><STRONG><A NAME="item_%2DI_indexdir"><CODE>-I</CODE> indexdir</A></STRONG><BR>
+<DD>
+The <EM>indexdir</EM> specified overrides any <EM>indexdir</EM> line in the resource
+file.  <EM>indexdir</EM> specifies the directory where the *.ntv files are located
+that
+comprise the text index.  This option is useful where there are
+several physical text indexes using the same schema which defined in a single
+resource file.
+<P></P>
+<DT><STRONG><A NAME="item_%2DL_logfile"><CODE>-L</CODE> logfile</A></STRONG><BR>
+<DD>
+<EM>logfile</EM> explicitly overrides any <EM>logfile</EM> line in a resource file
+and any NTV_ERRORLOG environment variable.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dv"><CODE>-v</CODE></A></STRONG><BR>
+<DD>
+``Verbose'' mode -- each document that is indexed will cause a line to be
+output by <STRONG>ntvindex</STRONG> indicating the number of documents in the text index,
+and an approximiate total amount of text indexed.
+<P></P>
+<DT><STRONG><A NAME="item_%2D%3F"><CODE>-?</CODE></A></STRONG><BR>
+<DD>
+Write extended help information to standard output and exit.
+<P></P>
+<DT><STRONG><A NAME="item_%2DV"><CODE>-V</CODE></A></STRONG><BR>
+<DD>
+Write version information to standard output and exit.
+<P></P></DL>
+
+</BODY>
+
+</HTML>

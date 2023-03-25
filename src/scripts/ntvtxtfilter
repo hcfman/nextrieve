@@ -1,0 +1,103 @@
+#!/bin/sh
+
+# Very simple filter that expects a series of *.txt filenames
+# presented on stdin.
+#
+# It runs some simple commands on each one, massaging the output to produce
+# XML suitable for NexTrieve indexing.  We pass all ISO-8859-1 characters.
+#
+
+NTVINST=/usr/local/nextrieve
+VERSION=2.0.0
+
+ntvtr="$NTVINST/$VERSION/bin/filters/ntvtr -e iso-8859-1"
+
+#
+# Options: [-r] [-f filenameattr] [-t titleattr] [-T titletext]
+# -f to output filename as attribute.
+# -t to output title text (first line of text) as attribute.
+# -T to output title text (first line of text) as text.
+#
+
+[ ! -z "$NTVRAW" -a "$NTVRAW" != "0" ] && raw=1
+
+while [ -z "$bad" -a ! -z "$1" ]; do
+    case "$1" in
+    -\?|-h)
+        bad=1;;
+    -D) header=1; shift;;
+    -r) raw=1; shift;;
+    -f) fattr="$1"; shift; shift;;
+    -t) tattr="$1"; shift; shift;;
+    -T) ttext="$1"; shift; shift;;
+    *)  echo "Unknown argument '$param'."
+        bad=1;;
+    esac
+done
+
+[ ! -z "$bad" ] \
+    && { echo 'usage: [-Dhr] [-f fnameattr] [-t titleattr] [-T titletext]';
+         exit 1;
+       }
+
+[ ! -z "$raw" ] && { header=; fattr=; tattr=; }
+
+if [ ! -z "$header" ]; then
+    echo '<?xml version="1.0" encoding="utf-8"?>'
+    echo '<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">'
+fi
+
+while true
+do
+    if [ ! -z "$raw" ]; then
+	cat > /tmp/rawin$$
+	inline="/tmp/rawin$$"
+    else
+	read inline
+    fi
+
+    # Any '<' char indicating attributes?
+    xmlattrs="`echo $inline | sed -e '/</!d' -e 's/^[^<]*</</'`"
+    if [ -z "$xmlattrs" ]
+    then
+	filename="$inline"
+    else
+	filename="`echo $inline | sed -e 's/ *<.*//'`"
+    fi
+
+    if [ ! -s "$filename" ]; then
+	[ ! -z "$raw" ] && break;
+	continue;
+    fi
+
+    [ -z "$raw" ] && echo '<document>'
+    [ ! -z "$fattr" ] && xmlattrs="<$fattr>$filename</$fattr>$xmlattrs"
+    $ntvtr < "$filename" > /tmp/tmp$$
+    if [ ! -z "$tattr$ttext" ]; then
+	# Get first line of text as title...
+	title="`sed -e '/^./q' < /tmp/tmp$$`"
+    fi
+    [ ! -z "$tattr" ] && xmlattrs="<$tattr><![CDATA[$title]]></$tattr>$xmlattrs"
+    [ ! -z "$xmlattrs" ] && echo "<attributes>$xmlattrs</attributes>"
+    [ -z "$raw" ] && echo -n "<text>"
+    [ ! -z "$ttext" ] && echo -n "<$ttext><![CDATA[$title]]></$ttext>"
+    echo -n "<![CDATA["
+    if [ ! -z "$tattr$ttext" ]; then
+	sed -e 1d < /tmp/tmp$$
+    else
+	cat /tmp/tmp$$
+    fi | sed -e 's/]]>/]]]]><![CDATA[>/g'
+    echo -n "]]>"
+
+    if [ -z "$raw" ]
+    then
+	echo '</text></document>'
+    else
+	rm -f /tmp/rawin$$
+	break
+    fi
+done
+
+[ ! -z "$header" ] && echo '</ntv:docseq>'
+
+rm -f /tmp/tmp$$ /tmp/title$$ /tmp/rawin$$

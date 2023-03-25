@@ -1,0 +1,308 @@
+<HTML>
+<HEAD>
+<TITLE>Query XML</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">Query XML</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvqueryxml.html#description">DESCRIPTION</A></LI>
+		<LI><A HREF="ntvqueryxml.html#attributes">Attributes</A></LI>
+		<LI><A HREF="ntvqueryxml.html#nested elements">Nested Elements</A></LI>
+		<UL>
+
+			<LI><A HREF="ntvqueryxml.html#<constraint>...</constraint>">&lt;constraint&gt;...&lt;/constraint&gt;</A></LI>
+			<LI><A HREF="ntvqueryxml.html#<texttype/>">&lt;texttype/&gt;</A></LI>
+			<LI><A HREF="ntvqueryxml.html#<indexname>...</indexname>">&lt;indexname&gt;...&lt;/indexname&gt;</A></LI>
+			<LI><A HREF="ntvqueryxml.html#<qall>, <qnot>, <qany>">&lt;qall&gt;, &lt;qnot&gt;, &lt;qany&gt;</A></LI>
+		</UL>
+
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P>Search queries submitted to a nextrieve search engine are in
+XML form.  The DTD describing the format of nextrieve query XML
+can be found <A HREF="ntvdtds.html" target="_blank">here</A>.</P>
+<P>A nextrieve query is implemented as an &lt;ntv:query&gt; container.
+There are a number of optional attributes of this container defining
+various search options, and there are a number of optional nested
+elements in this container giving further text-based options.</P>
+<P>Any text attached to the &lt;ntv:query&gt; container itself is considered
+general query text.</P>
+<P>Note that you can generate example nextrieve query XML by using
+ntvquerygen.  A description of ntvquerygen can be found <A HREF="ntvquerygen.html" target="_blank">here</A>.</P>
+<P>
+<H2><A NAME="attributes">Attributes</A></H2>
+<P>The attributes that can be applied to the top-level &lt;ntv:query&gt; element
+are as follows:</P>
+<DL>
+<DT><STRONG><A NAME="item_firsthit%3D%27n%27"><STRONG>firsthit='<EM>n</EM>'</STRONG></A></STRONG><BR>
+<DD>
+The 1-based offset of the first hit to return in the complete nominal
+list of results.  A default of ``1'' is used.
+<P></P>
+<DT><STRONG><A NAME="item_displayedhits%3D%27n%27"><STRONG>displayedhits='<EM>n</EM>'</STRONG></A></STRONG><BR>
+<DD>
+The number of hits to return out of the complete nominal list of results.
+A default of all the hits is used.
+<P></P>
+<DT><STRONG><A NAME="item_totalhits%3D%27n%27"><STRONG>totalhits='<EM>n</EM>'</STRONG></A></STRONG><BR>
+<DD>
+The maximum size of the complete nominal list of results.  A default of
+1000 is used.
+<P></P>
+<DT><STRONG><A NAME="item_type%3D%27searchtype%27"><STRONG>type='<EM>searchtype</EM>'</STRONG></A></STRONG><BR>
+<DD>
+<EM>searchtype</EM> can be either ``fuzzy'' for a fuzzy search, or ``exact'' for
+an exact search.  A default of ``fuzzy'' is applied.
+<P>It should be noted that if the target text index only has one form
+of index (either only exact, or only fuzzy), the type of search specified
+here will be changed automatically if it doesn't match the index.
+A warning is issued in this case in the result header.</P>
+<P></P>
+<DT><STRONG><A NAME="item_fuzzylevel%3D%27level%27"><STRONG>fuzzylevel='<EM>level</EM>'</STRONG></A></STRONG><BR>
+<DD>
+The fuzzy level for a fuzzy search.  <EM>level</EM> should have a value in
+the range 0 to 3 inclusive.  A default value of 1 is used if a fuzzy
+search is performed.  This attribute has no effect on an exact search.
+<P></P>
+<DT><STRONG><A NAME="item_longform%3D%27n%27"><STRONG>longform='<EM>n</EM>'</STRONG></A></STRONG><BR>
+<DD>
+If <EM>n</EM> is 0, a short-form of the result list will be returned, otherwise
+a long form will be returned.  The only difference is in the length
+of the element names.
+<P>A default value is found in the resource file of the target text index.
+If nothing is specified there, a value of ``1'' is used.</P>
+<P></P>
+<DT><STRONG><A NAME="item_showattributes%3D%27n%27"><STRONG>showattributes='<EM>n</EM>'</STRONG></A></STRONG><BR>
+<DD>
+If <EM>n</EM> is non-zero, attribute information (if any) will be returned
+in the result list.  If <EM>n</EM> is ``0'', no attribute information will be
+returned.
+<P>By default, a value of ``1'' is used.</P>
+<P></P>
+<DT><STRONG><A NAME="item_showpreviews%3D%27n%27"><STRONG>showpreviews='<EM>n</EM>'</STRONG></A></STRONG><BR>
+<DD>
+If <EM>n</EM> is non-zero, preview text will be returned in the result list.
+If <EM>n</EM> is ``0'' no preview text will be returned.
+<P>By default, a value of ``1'' is used.</P>
+<P></P>
+<DT><STRONG><A NAME="item_id%3D%27id%2Dstring%27"><STRONG>id='<EM>id-string</EM>'</STRONG></A></STRONG><BR>
+<DD>
+If present, <EM>id-string</EM> will be returned as the value of the ``id''
+attribute of the &lt;header&gt; element in the returned result list.
+<P>As a consequence of specifying an ``id'' attribute, the connection to
+a nextrieve search server (either ntvsearchd or ntvcached) will remain
+open, as the use of an ``id'' in this way allows the client to submit
+multiple queries and associate later results with queries.</P>
+<P>See the section ``Permanent Query Connections'' below.</P>
+<P></P>
+<DT><STRONG><A NAME="item_highlightlength%3D%22n%22"><STRONG>highlightlength=``<EM>n</EM>''</STRONG></A></STRONG><BR>
+<DD>
+The value <EM>n</EM> specifies the minimum length a word in returned preview
+text of a result list must have before it is highlighted if it is deemed
+relevane to the original query.
+<P>Note that highlightlength is only relevant for fuzzy searches.</P>
+<P>A default value of ``3'' is applied.</P>
+<P></P></DL>
+<P>
+<H2><A NAME="nested elements">Nested Elements</A></H2>
+<P>There are a number of containers that can appear inside a &lt;ntv:query&gt;
+container.</P>
+<P>
+<H3><A NAME="<constraint>...</constraint>">&lt;constraint&gt;...&lt;/constraint&gt;</A></H3>
+<P>A ``constraint'' is an expression that restricts the set of documents
+that are searched.  The expression describes various attributes
+and the values they must have for a document to be valid.  It does not
+operate on the text of a document.</P>
+<P>An attribute of a document in a nextrieve text index is a named quantity
+having a boolean (flag), numeric or string typed value.  The set of
+allowable attributes in any particular text index is specified by
+&lt;attribute&gt; elements in its resource file.  A discussion of the
+content of nextrieve resource files can be found <A HREF="ntvresourcefile.html" target="_blank">here</A>.</P>
+<P>By default, if no constraint is used, all documents can be returned.</P>
+<P>The valid operators in a constraint expression consist of:</P>
+<DL>
+<DT><STRONG><A NAME="item_%26">&amp;</A></STRONG><BR>
+<DD>
+Logical ``and'' operation.
+<P></P>
+<DT><STRONG><A NAME="item_%7C">|</A></STRONG><BR>
+<DD>
+Logical ``or'' operation.
+<P></P>
+<DT><STRONG><A NAME="item_%21">!</A></STRONG><BR>
+<DD>
+Logical ``not'' operation.
+<P></P>
+<DT><STRONG><A NAME="item_%3C%2C_%3C%3D%2C_%3D%2C_%21%3D%2C_%3E%3D%2C_%3E">&lt;, &lt;=, =, !=, &gt;=, &gt;</A></STRONG><BR>
+<DD>
+Comparison operators.
+<P></P>
+<DT><STRONG><A NAME="item_%28%2C_%29">(, )</A></STRONG><BR>
+<DD>
+Parentheses for changing precedence.
+<P></P>
+<DT><STRONG><A NAME="item_in">in</A></STRONG><BR>
+<DD>
+Using ``attrname in (val1, val2...)'' is shorthand for using
+<PRE>
+    (attrname = val1 | attrname = val2...)</PRE>
+<P></P>
+<DT><STRONG><A NAME="item_like">like</A></STRONG><BR>
+<DD>
+The ``like'' operator allows the comparison of a string valued attribute
+against a simple regular expression.  The simple regular expression
+can contain '*' (match any sequence of characters) and '?' (match
+exactly a single character).
+Eg:
+<PRE>
+    filename like &quot;fred&quot;</PRE>
+<P>will match all documents having a filename attribute containing the
+text ``fred'' anywhere, eg, ``/tmp/fred'', ``/tmp/fred/jack''.</P>
+<PRE>
+    filename like &quot;fre*d&quot;</PRE>
+<P>will match ``fred'', ``fread'' and ``fredd''</P>
+<PRE>
+    filename like &quot;fre?d&quot;</PRE>
+<P>will match ``fread'' and ``fredd'' but not ``fred''.</P>
+<P></P></DL>
+<P>As of the current NexTrieve release, operations on multi-valued attributes
+(one where a single document
+can have multiple values of this attribute attached, like keywords)
+cannot be used in a constraint.</P>
+<P>Attributes are referenced by name.  A flag type attribute cannot be compared
+to anything; it provides a boolean value directly.  Other attribute types must
+be compared against a value to return a boolean value.</P>
+<P>Eg, if the following attributes are defined in the resource file:</P>
+<PRE>
+    &lt;attribute name=&quot;political&quot; type=&quot;flag&quot;   key=&quot;notkey&quot; nvals=&quot;1&quot;/&gt;
+    &lt;attribute name=&quot;date&quot;      type=&quot;number&quot; key=&quot;notkey&quot; nvals=&quot;1&quot;/&gt;</PRE>
+<P>some example constraints are:</P>
+<PRE>
+    &lt;constraint&gt; political                          &lt;/constraint&gt;
+    &lt;constraint&gt; political &amp;amp; date &amp;gt; 20010131 &lt;/constraint&gt;
+    &lt;constraint&gt; !political                         &lt;/constraint&gt;</PRE>
+<P>It should be noted that string based comparisons are performed in 
+a case-sensitive fashion, while the ``like'' operator runs
+case-insensitively.</P>
+<P>Also, a string value must be specified with surrounding single
+or double quotes.</P>
+<P>
+<H3><A NAME="<texttype/>">&lt;texttype/&gt;</A></H3>
+<P>It is possible to restrict the textual part of a search to named
+``text type'' regions.  Text types are declared in the resource
+file for the text index using the &lt;texttype name=``<EM>texttypename</EM>''/&gt;
+container.</P>
+<P>Inside a query, text type restrictions on the search are defined by a
+sequence of:</P>
+<PRE>
+    &lt;texttype name=&quot;ttname&quot; weight=&quot;ttweight&quot;/&gt;</PRE>
+<P>elements.  <EM>ttname</EM> indicates the text type, with special values of:</P>
+<DL>
+<DT><STRONG><A NAME="item_%27%27">''</A></STRONG><BR>
+<DD>
+Ie, empty.  This indicates the ``unnamed'' text type which is present by
+default when the top-level &lt;text&gt; element of a document is indexed.
+Ie, this represents the ``default'' text; excluding all other text marked
+with a specific text type.
+<P></P>
+<DT><STRONG><A NAME="item_%27%2A%27">'*'</A></STRONG><BR>
+<DD>
+This indicates the weight <EM>ttweight</EM> is to be applied to all other text
+types defined in the text index, without having to know their names.
+<P></P></DL>
+<P>The <EM>ttweight</EM> value is a weight expressed as a percentage, 100 being
+the ``normal'' or ``default'' value.  This weight indicates how the importance
+of words found in a text type of <EM>ttname</EM> relate to words found in
+other text types.  A weight of ``0'', for example, indicates that the
+nominated text type is not to be searched.  A weight of ``200'' indicates
+that words found in text of that type are to be thought of as worth
+twice as much as words found in other text types that have (the default)
+values of 100.</P>
+<P>The sequence of &lt;texttype&gt; containers is applied in the order they are
+presented in the query.  By default (if no &lt;texttype&gt; elements
+are present) all text types are searched.</P>
+<P>When the first &lt;texttype&gt; container is encountered, it restricts
+the search to search <EM>only</EM> that nominiated text type.  Following
+&lt;texttype&gt; elements add to the set of allowable text types.</P>
+<P>Assigning a weight of ``0'' also indicates that a text type is not
+to be searched.</P>
+<P>Some examples can help:</P>
+<UL>
+<LI>
+<PRE>
+    &lt;texttype name=&quot;title&quot;/&gt;</PRE>
+<P>Only search titles.  All other text is excluded from the search.</P>
+<LI>
+<PRE>
+    &lt;texttype name=&quot;title&quot; weight=&quot;200&quot;/&gt;&lt;texttype name=&quot;*&quot;/&gt;</PRE>
+<P>Search all text types, with words found in the title having twice the
+scoring weight of words found in other text types.</P>
+<LI>
+<PRE>
+    &lt;texttype name=&quot;title&quot;/&gt;&lt;texttype name=&quot;&quot;/&gt;</PRE>
+<P>Search only title text and default (untyped) text.</P>
+<LI>
+<PRE>
+    &lt;texttype name=&quot;*&quot;/&gt;&lt;texttype name=&quot;&quot; weight=&quot;0&quot;/&gt;</PRE>
+<P>Search all text types <EM>except</EM> the default (untyped) text type.</P>
+</UL>
+<P>
+<H3><A NAME="<indexname>...</indexname>">&lt;indexname&gt;...&lt;/indexname&gt;</A></H3>
+<P>The content of an &lt;indexname&gt; element is the name of a ``logical index''
+to search.  This container is examined by a nextrieve caching server
+(ntvcached) which can manage multiple ``logical'' text indexes being present
+in a single ``physical'' text index.  It does this by modifiying the user
+constraint (if any) with an additional constraint specific to the logical
+index being searched.</P>
+<P>More information regarding logical indexes managed by ntvcached can be
+found <A HREF="ntvcached.html" target="_blank">here</A>.</P>
+<P>
+<H3><A NAME="<qall>, <qnot>, <qany>">&lt;qall&gt;, &lt;qnot&gt;, &lt;qany&gt;</A></H3>
+<P>These are specific query-text containers:</P>
+<PRE>
+    &lt;qall&gt;all words&lt;/qall&gt;
+    &lt;qnot&gt;none of the words&lt;/qnot&gt;
+    &lt;qany&gt;one or more of these words&lt;/qany&gt;</PRE>
+<P>In addition to the ``general'' text container, &lt;ntv:query&gt; itself:</P>
+<PRE>
+    &lt;ntv:query&gt;+general -text here&lt;/ntv:query&gt;</PRE>
+<P>``General search text'' can be entered in the &lt;ntv:query&gt; top level container.
+To indicate that a word <EM>must</EM> be present in returned documents, it should
+be prefixed with '+'.  To indicate that a word is <EM>prohibited</EM> for appearing
+in returned documents, it should be prefixed with '-'.  Other words in the
+query may or may not be in returned documents.</P>
+<P>It should be noted that the '+'/'-' inclusion and exclusion characters
+are only applied on <EM>exact</EM> searches.  With a fuzzy search, words prefixed
+with '+' are considered to be the same as unprefixed words, and words
+prefixed with '-' are simply not included in the search terms.  A document
+returned as the result of a fuzzy search
+may still include words prefixed with '-', and might not contain a word
+prefixed with '+'.</P>
+<P>The specific text containers &lt;qall&gt;, &lt;qnot&gt; and &lt;qany&gt; represent collections
+of words of solely the above categories.  Words within &lt;qall&gt; are equivalent
+to those in &lt;ntv:query&gt; prefixed with '+'.  Words within &lt;qnot&gt; are
+equivalent to those in &lt;ntv:query&gt; prefixed with '-', and words within &lt;qany&gt;
+are equivalent to unprefixed words.  It is not necessary to prefix
+words in these specific text containers; in fact, such prefixing is ignored.</P>
+<P>The use of specific text containers such as this makes it easier to manage
+search forms that have different fields for ``all words'',
+``some words'' and ``none of the words'', for example.  It also make it easier
+to manage cases where there is a single text box with an ``all words'' button.</P>
+
+</BODY>
+
+</HTML>

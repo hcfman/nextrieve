@@ -1,0 +1,59 @@
+#!%%NTVPERL%% -I%%NTVBASE%%/%%NTVNAME%%/bin
+
+use %%NTVNAME%%error;
+
+exit 1 if -f '%%NTVBASE%%/%%NTVNAME%%/runblocked';
+
+# First attempt at absorbing mail messages from spool to mailboxes
+# in archive.
+# We optionally generate XML for an incremental index, which we append
+# to archive/inc.xml.
+
+$xml = 0;
+$xml = 1 if $ARGV[ 0 ] eq '-xml';
+
+opendir( DIR, "%%NTVBASE%%/%%NTVNAME%%/archive" ) ||
+    ntverror( "Can't read directory %%NTVBASE%%/%%NTVNAME%%/spool: $!\n" );
+
+@files = grep( /^%%NTVNAME%%-\d\d\d\d\d\d.inc.mbx$/, readdir( DIR ) );
+closedir( DIR );
+
+for $mail ( @files ) {
+    ( $year, $month ) = $mail =~ /^%%NTVNAME%%-(\d\d\d\d)(\d\d)/;
+    $mbx = "%%NTVBASE%%/%%NTVNAME%%/archive/%%NTVNAME%%-$year$month.mbx";
+
+    if ( $xml ) {
+
+	if ( !open( OUT, "|-" ) ) {
+	    close OUT;
+	    close STDOUT;
+	    open( STDOUT, ">> %%NTVBASE%%/%%NTVNAME%%/archive/inc.xml" ) ||
+		ntverror( "Can't append to %%NTVBASE%%/%%NTVNAME%%/archive/inc.xml: $!\n" );
+	    exec "%%NTVINST%%/%%VERSION%%/filters/ntvmailbox2ntvml",
+		'-n', '-b',
+		'-a', 'to', 'cc', 'from', 'subject', '-d', 'date', '-t',
+		'subject', '-c', "%%NTVNAME%%-$year$month.mbx", '-o', "$mbx";
+	}
+	print OUT "%%NTVBASE%%/%%NTVNAME%%/archive/$mail\n";
+	close OUT;
+    }
+
+    # Slurp mail in
+    open( IN, "%%NTVBASE%%/%%NTVNAME%%/archive/$mail" ) ||
+	ntverror( "Can't open %%NTVBASE%%/%%NTVNAME%%/archive/$mail: $!\n" );
+    undef $/;
+    $data = <IN>;
+    close IN;
+
+    # Append to mail archive
+    open( OUT, ">> $mbx" ) ||
+	ntverror( "Can't append to $mbx: $!\n" );
+    print OUT $data;
+    close OUT;
+
+    # Remove from spool if all good
+    unlink "%%NTVBASE%%/%%NTVNAME%%/archive/$mail" ||
+	ntverror( "Can't unlink %%NTVBASE%%/%%NTVNAME%%/archive/$mail: $!\n" );
+}
+
+exit 0;

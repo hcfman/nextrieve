@@ -1,0 +1,69 @@
+#
+# Hacked Makefile for nextrieve -- automake will eventually be used
+# to generate a nice one if possible.
+# 
+
+SUBDIRS=src
+
+VERSION=2.0.28
+bindir = ${exec_prefix}/bin
+prefix = /data2/local/nextrieve
+exec_prefix = ${prefix}
+includedir = ${prefix}/include
+libdir = ${exec_prefix}/lib
+
+
+all:
+	if [ ! -d objects ]; then mkdir objects; fi
+	if [ ! -d bin ]; then mkdir bin; fi
+	if [ ! -s zlib-1.1.3/Makefile ]; \
+	    then cd zlib-1.1.3; ./configure ; cd ..; fi
+	cd zlib-1.1.3; $(MAKE); cd ..
+	if [ ! -s expat-1.95.1/Makefile ]; \
+	    then cd expat-1.95.1; ./configure; cd ..; fi
+	cd expat-1.95.1; $(MAKE); cd ..
+	-@for d in $(SUBDIRS); do cd $$d; $(MAKE) all; cd ..; done
+
+install:
+	-@for d in $(SUBDIRS); do cd $$d; $(MAKE) install; cd ..; done
+	cp -r docs $(prefix)/$(VERSION)
+	find $(prefix)/$(VERSION)/docs -name CVS -exec rm -rf {} ';' -prune
+	find $(prefix)/$(VERSION)/docs \
+	    '(' -name '*.sh' -o -name '*.pod' -o -name '*x~~' ')' \
+	    -exec rm -f {} ';'
+	find $(prefix)/$(VERSION)/docs/manpages -name '*.gif' -exec rm -f {} ';'
+	cp -r skel $(prefix)/$(VERSION)
+	find $(prefix)/$(VERSION)/skel -name CVS -exec rm -rf {} ';' -prune
+	# Update the NTVINST and VERSION settings in files...
+	for f in `find $(prefix) -type f -size -1000 -exec fgrep -l NTVINST= {} ';'`; do \
+	    echo $$f...; \
+	    sed -e 's!NTVINST=.*!NTVINST="$(prefix)"!' \
+	        -e 's!VERSION=.*!VERSION="$(VERSION)"!' \
+		< $$f > $$f.tmp; \
+	    cp $$f.tmp $$f; \
+	    rm -f $$f.tmp; \
+	done
+	for f in `find $(prefix)/$(VERSION)/bin/perl -type f -exec fgrep -l -e %%NTVINST%% -e %%VERSION%% {} ';'`; do \
+	    echo $$f...;  \
+	    sed -e 's!%%NTVINST%%!$(prefix)!g' \
+	        -e 's!%%VERSION%%!$(VERSION)!g' \
+		< $$f > $$f.tmp; \
+	    cp $$f.tmp $$f; \
+	    rm -f $$f.tmp; \
+	done
+	chmod +x $(prefix)/$(VERSION)/bin/*
+
+clean:
+	-@for d in $(SUBDIRS); do cd $$d; $(MAKE) clean; cd ..; done
+	cd zlib-1.1.3; $(MAKE) clean; cd ..
+	cd expat-1.95.1; $(MAKE) clean; cd ..
+
+depend:
+	-@for d in $(SUBDIRS); do cd $$d; $(MAKE) depend; cd ..; done
+
+# Normally only run prior to an archive commit if the documentation's changed.
+docupdate: 
+	cd docs; \
+	for u in `find . -name update.sh -print`; do \
+	    ( cd `dirname $$u`; ./update.sh ); \
+	done

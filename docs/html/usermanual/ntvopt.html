@@ -1,0 +1,75 @@
+<HTML>
+<HEAD>
+<TITLE>Optimizing an Index with Ntvopt</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">Optimizing an Index with Ntvopt</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvopt.html#synopsis">SYNOPSIS</A></LI>
+		<LI><A HREF="ntvopt.html#description">DESCRIPTION</A></LI>
+		<LI><A HREF="ntvopt.html#options">OPTIONS</A></LI>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="synopsis">SYNOPSIS</A></H2>
+<P>ntvopt [--tempdir=tmpdir] [--nwaymerge=n] [--opt=n] idxdir</P>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P><STRONG>ntvopt</STRONG> optimizes a nextrieve text index found in <EM>idxdir</EM> for
+later searching.  This operation is recommended if the text index is large,
+as it will reduce the number of disk seeks for typical searches.</P>
+<P>To perform the optimizing operation, <STRONG>ntvopt</STRONG> needs to have enough
+space for approximately <EM>two more</EM> copies of the ref*.ntv files found
+in <EM>idxdir</EM> (one copy is a working copy, another copy is the final
+destination copy).</P>
+<P>The original *.ntv files under <EM>idxdir</EM> are not modified by this operation,
+but <EM>ntvopt</EM> will leave several files named '*-opt.ntv' in <EM>idxdir</EM>
+after its operation.  To use this ``optimized'' copy of the text index,
+it is suggested that you use the small ``ntvidx-useopt.sh'' shell script.
+This shell script will rename the current *.ntv files to have names
+suffixed with ``-orig.ntv'', and then rename the ``-opt.ntv'' suffixed files
+to become *.ntv files.</P>
+<P>The script ``ntvidx-restore.sh'' will perform the reverse file-naming
+operation.</P>
+<P>If there is not enough space under <EM>idxdir</EM> to hold two further copies
+of the ref* files, you can use the --tempdir switch to have the
+working copies placed on another disk partition.  In this way, you only
+need space under <EM>idxdir</EM> for approximately <EM>one</EM> extra copy of the ref*
+files, and space under the other partition for another working copy.</P>
+<P>To perform its operation, <STRONG>ntvopt</STRONG> will perform one or more merges of
+different files.  The number of files that will be merged at one time
+is, by default, 16.  This can be modified with the --nwaymerge parameter.</P>
+<P>Finally, <STRONG>ntvopt</STRONG> can be told how much memory to use for its
+operations with --opt=n.  <EM>n</EM> is the number of megabytes of memory to use
+for its internal buffering; a default of 10 is used.</P>
+<P>
+<H2><A NAME="options">OPTIONS</A></H2>
+<DL>
+<DT><STRONG><A NAME="item_%2D%2Dtempdir%3Dtmpdir">--tempdir=tmpdir</A></STRONG><BR>
+<DD>
+Place working copies of files under <EM>tmpdir</EM> rather than <EM>idxdir</EM>.
+<P></P>
+<DT><STRONG><A NAME="item_%2D%2Dnwaymerge%3Dn">--nwaymerge=n</A></STRONG><BR>
+<DD>
+Merge <EM>n</EM> files at a time rather than the default 16.
+<P></P>
+<DT><STRONG><A NAME="item_%2D%2Dopt%3Dn">--opt=n</A></STRONG><BR>
+<DD>
+Use <EM>n</EM> megabytes of memory for internal buffering.
+<P></P></DL>
+
+</BODY>
+
+</HTML>

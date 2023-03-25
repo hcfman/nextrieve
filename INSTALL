@@ -1,0 +1,44 @@
+
+
+WHAT'S HERE?
+
+    bin/		Compiled programs.
+    docs/		Manpage and HTML documentation.
+    expat-1.95.1/	Jame Clark's most excellent XML reading library.
+    lib/		Compiled libraries.
+    obj/		Compiled objects.
+    skel/		HTML skeletons for use by ntvultralite.
+    src/		Program sources.
+    zlib-1.1.3/		The most excellent zlib data compression library.
+
+INSTALLATION
+
+To install the system in its default location of /usr/local/nextrieve, use
+    ./configure
+    make depend
+    make
+    make install
+
+Main configure options and their defaults are:
+    --prefix=/usr/local/nextrieve
+	Where NexTrieve gets installed.
+    --enable-threads=yes
+	If threads are to be used in the search daemon, ntvsearchd.
+
+Note that the expat and zlib libraries have their own "./configure" scripts.
+If, during make, a Makefile file is not found under either one of these
+directories, its configure will be automatically run without arguments
+to create one.
+
+If you intend to index PDF documents, you should have pdftotext installed to
+perform basic to-text conversion.  Check out http://www.foolabs.com/xpdf if
+you don't already have it.  It should be version 1.00 or later, or one that
+otherwise understands the '-enc UTF-8' switch.  To test that it's correctly
+installed, run the filter manually, eg:
+    echo document.pdf | ntvpdffilter
+
+If you intend to index DOC documents, you should have antiword installed to
+perform basic to-text conversion.  Check out http://www.winfield.demon.nl if
+you don't already have it.  To test that it's correctly installed, run
+the filter manually, eg:
+    echo document.doc | ntvdocfilter

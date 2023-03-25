@@ -1,0 +1,28 @@
+
+/* Define as 1 if <semaphore.h> exists. */
+#undef HAVE_SEMAPHORE_H
+
+/* Define as 1 if <sys/types.h> exists. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define as 1 if we have wcscoll. */
+#undef HAVE_WCSCOLL
+
+/* Define as 1 if we can use threads. */
+#undef CAN_USE_THREADS
+
+/* Define as 1 if we've got sin_len in sockaddr_in. */
+#undef HAVE_STRUCT_SOCKADDR_IN_SIN_LEN
+
+#undef HAVE_STRUCT_SOCKADDR_IN_SIN_PORT
+
+#if defined(CAN_USE_THREADS) && defined(USE_THREADS)
+#define USING_THREADS 1
+#define _REENTRANT 1
+#define THREAD_SAFE 1
+#define _THREAD_SAFE 1
+#endif
+
+#if !defined(__FreeBSD__) && defined(HAVE_SEMAPHORE_H)
+#define USING_SEMAPHORE_H
+#endif

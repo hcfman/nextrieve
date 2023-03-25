@@ -1,0 +1,777 @@
+<HTML>
+<HEAD>
+<TITLE>Getting Started Quickly</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">Getting Started Quickly</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<LI><A HREF="tutgettingstarted.html#overview">OVERVIEW</A></LI>
+	<LI><A HREF="tutgettingstarted.html#using ntvmakenewwebindex">USING NTVMAKENEWWEBINDEX</A></LI>
+	<UL>
+
+		<LI><A HREF="tutgettingstarted.html#the questions">The Questions</A></LI>
+		<UL>
+
+			<LI><A HREF="tutgettingstarted.html#collection directory">Collection Directory</A></LI>
+			<LI><A HREF="tutgettingstarted.html#the index name">The Index Name</A></LI>
+			<LI><A HREF="tutgettingstarted.html#cgi script directory">CGI Script Directory</A></LI>
+			<LI><A HREF="tutgettingstarted.html#perl pathname">Perl Pathname</A></LI>
+			<LI><A HREF="tutgettingstarted.html#which template">Which Template</A></LI>
+			<LI><A HREF="tutgettingstarted.html#ccompiler">C-Compiler</A></LI>
+			<LI><A HREF="tutgettingstarted.html#http/1.0 200 ok">HTTP/1.0 200 OK</A></LI>
+			<LI><A HREF="tutgettingstarted.html#client operation">Client Operation</A></LI>
+			<LI><A HREF="tutgettingstarted.html#templatespecific questions">Template-Specific Questions</A></LI>
+			<LI><A HREF="tutgettingstarted.html#chroot">CHROOT</A></LI>
+			<LI><A HREF="tutgettingstarted.html#permissions">Permissions</A></LI>
+		</UL>
+
+		<LI><A HREF="tutgettingstarted.html#what has been set up">What Has Been Set Up</A></LI>
+		<LI><A HREF="tutgettingstarted.html#maintenance operations">Maintenance Operations</A></LI>
+	</UL>
+
+	<LI><A HREF="tutgettingstarted.html#creating a standalone database from first principles">CREATING A STANDALONE DATABASE FROM FIRST PRINCIPLES</A></LI>
+	<UL>
+
+		<LI><A HREF="tutgettingstarted.html#what do you want to index, and where">What do You Want to Index, and Where?</A></LI>
+		<LI><A HREF="tutgettingstarted.html#create the resource file">Create the Resource File</A></LI>
+		<LI><A HREF="tutgettingstarted.html#set your environment">Set Your Environment</A></LI>
+		<LI><A HREF="tutgettingstarted.html#create your xml to be indexed">Create Your XML to be Indexed</A></LI>
+	</UL>
+
+	<LI><A HREF="tutgettingstarted.html#adding more documents">ADDING MORE DOCUMENTS</A></LI>
+	<LI><A HREF="tutgettingstarted.html#starting a standalone search server">STARTING A STANDALONE SEARCH SERVER</A></LI>
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H1><A NAME="overview">OVERVIEW</A></H1>
+<P>This tutorial is really a walk-through of some simple operations to help
+you get started using the nextrieve indexer and searcher at a very basic
+level.  It assumes that the nextrieve utilities have already been installed.</P>
+<P>This tutorial is in two parts.</P>
+<P>The first part uses a helper script, ntvmakenewwebindex, to automatically
+create a resource file and associated HTML templates to index either
+web pages or mailboxes and search them in a web server environment.</P>
+<P>The second part uses more fundamental principles to create a text index
+for searching at an XML level.</P>
+<P>
+<HR>
+<H1><A NAME="using ntvmakenewwebindex">USING NTVMAKENEWWEBINDEX</A></H1>
+<P>The ntvmakenewwebindex script asks a number of simple questions that
+allow you to easily set up a NexTrieve text index and associated HTML
+templates to allow searching of HTML pages or mailboxes with a web
+server.</P>
+<P>The text index will be created under a nominated collection directory.
+Ntvultralite is used to accept user queries for searching, and for
+providing HTML pages displaying the results.  Ntvultralite is executed
+from a small cgi-bin script that sets up parameters appropriate for
+the index being searched.  As this script is located in the cgi-bin
+directory of your web server, ntvmakenewwebindex should be executed by a
+user with permissions allowing the script to be created there.</P>
+<P>See the ntvultralite documentation for further details on the functioning
+of ntvultralite.</P>
+<P>
+<H2><A NAME="the questions">The Questions</A></H2>
+<P>Ntvmakenewebindex asks a number of questions during creation of the
+text index architecture, and these questions are discussed below, one
+section to a question.</P>
+<P>
+<H3><A NAME="collection directory">Collection Directory</A></H3>
+<P>The ``collection directory'', the first question asked by the 
+ntvmakenewwebindex script,
+is simply a directory in which your indexes will be stored.  By default
+the directory ``collection'' under your NexTrieve installation directory
+will be used.</P>
+<P>If a directory other than the default is used, one must run later
+``maintenance commands'' (such as ntvfullreindex) with additional
+information indicating the directory.  A collection 
+directory of
+/home/fred/mycollection would be specified with either:</P>
+<PRE>
+    NTVBASE=/home/fred/mycollection ntvfullreindex ...</PRE>
+<P>or</P>
+<PRE>
+    ntvfullreindex -B /home/fred/mycollection ...</PRE>
+<P>
+<H3><A NAME="the index name">The Index Name</A></H3>
+<P>The name of the index should be a simple word.  This name is used to
+create a subdirectory under the collection directory containing the index,
+and will also be the name of the cgi-bin script created automatically
+to allow web-access to the index.</P>
+<P>A name of ``testidx'' is used in this discussion.</P>
+<P>
+<H3><A NAME="cgi script directory">CGI Script Directory</A></H3>
+<P>To allow web access to the index a small perl script or C-program will be
+created in a cgi-bin directory used by your web server.  The cgi-bin
+directory is specified here.</P>
+<P>The default installation location for apache, for example, is
+/usr/local/apache/cgi-bin.</P>
+<P>You must have write access to this directory in order to create the
+script there.</P>
+<P>
+<H3><A NAME="perl pathname">Perl Pathname</A></H3>
+<P>A number of scripts require perl for their operation, and the pathname of
+the perl to use is specified here.  ``/usr/bin/perl'' is used by
+default.</P>
+<P>
+<H3><A NAME="which template">Which Template</A></H3>
+<P>As of this writing there is a choice of the following simple indexing and
+viewing templates.</P>
+<DL>
+<DT><STRONG><A NAME="item_htmlsimple">htmlsimple</A></STRONG><BR>
+<DD>
+This provides a simple way to index and view HTML files.
+<P>For simple searching there is a search text box with fuzzy and title-only
+checkboxes.</P>
+<P>For advanced searching there are additional controls: an all-words checkbox
+(indicating all words must be present for an exact search), number of hits
+to display per page, the total number of hits to process and the fuzzy level
+for fuzzy searches.</P>
+<P>Screen snaphots have been taken of <A HREF="tutgs-html-simple.gif" target="_blank">simple</A> and
+<A HREF="tutgs-html-advanced.gif" target="_blank">advanced</A> searching.</P>
+<P>It should be noted that it is possible to index HTML pages, *.DOC files
+and *.PDF files with this index with currently available filters.</P>
+<P>For *.DOC files the filter ntvdocfilter is used.  This relies on the freely
+available application ``antiword'' being installed correctly.  Ntvdocfilter
+will use antiword with the ``-m UTF-8.txt'' switch -- this implies that
+the UTF-8.txt file (which comes with the antiword distribution) must
+be correctly installed in either the ~/.antiword directory of the user
+doing the indexing, or in the antiword global directory (normally
+/usr/share/antiword).</P>
+<P>For *.PDF files the filter ntvpdffilter is used.  This relies on the freely
+available application ``pdftotext''.  Note that you must have a version of
+pdftotext installed that understands the '-enc UTF-8' switch.  Version 1.00
+or later should be fine.</P>
+<P></P>
+<DT><STRONG><A NAME="item_mailsimple">mailsimple</A></STRONG><BR>
+<DD>
+This provides a simple way to index and view textual
+mailbox files containing email messages.
+<P>The controls have the equivalent functionality of the htmlsimple
+controls.</P>
+<P>Screen snaphots have been taken of <A HREF="tutgs-mst-simple.gif" target="_blank">simple</A> and
+<A HREF="tutgs-mst-advanced.gif" target="_blank">advanced</A> searching.</P>
+<P></P>
+<DT><STRONG><A NAME="item_mailpersonal">mailpersonal</A></STRONG><BR>
+<DD>
+This provides an extended way to index and view mail messages
+in mailbox files.
+<P>For simple searching, there is a text box for the search terms, with
+radio controls allowing fuzzy, exact and exact-all-words searches.
+There is also a subjects-only textbox.</P>
+<P>In addition, there is the ability to restrict the search by date, by
+using checkboxes gleaned from the dates of mail messages that have been
+indexed.  These checkboxes are created by running the ``adjust'' script
+of the mail archive.  Ie, if ``mymail'' is being used as the name of
+the index under a collection ``/tmp/mycollection'', the checkboxes are
+created through the use of the script ``/tmp/mycollection/mymail/mymailadjust''.
+This script can be run periodically; typically either once a month, or once
+for every index operation, depending on your preference.</P>
+<P>With advanced searching, the single text box for search terms is replaced
+by a text boxes for each of ``all'', ``any'' and ``not'' search terms (where
+all words, any of the words and none of the words respectively must be
+in returned documents).  There is a fuzzy and exact radio control and
+a subjects-only checkbox.  In addition there are controls allowing
+the specification of the number of hits
+to display per page, the total number of hits to process and the fuzzy level
+for fuzzy searches.</P>
+<P>There are also text boxes allowing the specification of a simple pattern
+for requiring or excluding text in various fields of returned emails, the 
+fields being the subject, from and to fields.</P>
+<P>Screen snaphots have been taken of <A HREF="tutgs-mpt-simple.gif" target="_blank">simple</A> and
+<A HREF="tutgs-mpt-advanced.gif" target="_blank">advanced</A> searching.</P>
+<P></P>
+<DT><STRONG><A NAME="item_mailmhonarc">mailmhonarc</A></STRONG><BR>
+<DD>
+This provides an extended way to index and view mail messages
+archived by mhonarc.
+<P>For simple searching the controls are as before; there is a text box
+for the search terms, with
+radio controls allowing fuzzy, exact and exact-all-words searches.
+There is also a subjects-only textbox, and checkboxes restricting the date
+range of the search.</P>
+<P>With advanced searching there are controls similar to mailextra1 controls:
+text boxes for ``all'', ``any'' and ``not'' words, a subjects-only checkbox and
+date restriction checkboxes, and an exact and fuzzy radio control.</P>
+<P>In addition, there are further text boxes allowing simple patterns to be
+entered for restricting the messages returned by matching against the
+from text and subject text of the message:</P>
+<DL>
+<DT><STRONG><A NAME="item_From_includes">From includes</A></STRONG><BR>
+<DD>
+The From field of the message must include the specified pattern.
+<P></P>
+<DT><STRONG><A NAME="item_From_excludes">From excludes</A></STRONG><BR>
+<DD>
+The From field of the message cannot include the specified pattern.
+<P></P>
+<DT><STRONG><A NAME="item_Subject_includes">Subject includes</A></STRONG><BR>
+<DD>
+The Subject field of the message must include the specified pattern.
+<P></P>
+<DT><STRONG><A NAME="item_Subject_excludes">Subject excludes</A></STRONG><BR>
+<DD>
+The Subject field of the message cannot include the specified pattern.
+<P></P></DL>
+<P>Screen snaphots have been taken of <A HREF="tutgs-mhonarc-simple.gif" target="_blank">simple</A> and
+<A HREF="tutgs-mhonarc-advanced.gif" target="_blank">advanced</A> searching.</P>
+</DL>
+<P>Each type of template is, in fact, a subdirectory under the
+``skel'' directory in the NexTrieve installation directory.  Contained in each
+subdirectory are the raw HTML templates and scripts appropriate for the
+type of indexing being done (either HTML pages or mailboxes).  When 
+a template is chosen, the files from the appropriate subdirectory are
+copied to the appropriate destination under the target ``collection'' directory,
+having appropriate substitutions performed along the way.</P>
+<P>
+<H3><A NAME="ccompiler">C-Compiler</A></H3>
+<P>There is a tiny script that will be created automatically under
+the cgi-bin directory that will invoke ntvultralite with
+parameters appropriate to the index being searched.</P>
+<P>This ``script'' can either be a perl script or a C program.  If a C program
+is preferred, enter the location of your C compiler here -- the
+``textidx.c'' file (which will be left in the cgi-bin directory) will
+be automatically compiled to create ``testidx''.</P>
+<P>If the C compiler location is left blank, ``testidx'' under the cgi-bin
+directory will be created containing a perl script.</P>
+<P>
+<H3><A NAME="http/1.0 200 ok">HTTP/1.0 200 OK</A></H3>
+<P>The next question indicates whether ntvultralite should emit
+an ``HTTP/1.0 200 OK'' line or not.  By default ntvultralite does not
+emit such a line.</P>
+<P>
+<H3><A NAME="client operation">Client Operation</A></H3>
+<P>The subsequent question ``will ntvultralite be operating as a client?''
+relates to the two modes of operation permitted by ntvultralite.</P>
+<P>For simplest operation enter a blank line, indicating that ntvultralite
+will directly interrogate the index files.</P>
+<P>As the size of your text index increases, it makes more sense to choose
+``client/server'' mode by entering an address of the form:</P>
+<PRE>
+    hostname:portnumber</PRE>
+<P>eg</P>
+<PRE>
+    localhost:7000</PRE>
+<P>This indicates that instead of interrogating the text index files
+directly, ntvultralite will communicate with an ntvsearchd search daemon
+that should be permanently running on the nominated host, listening on
+the nominated port.  In this way ntvultralite can provide search results
+in a timely manner, reducing other large startup overheads.</P>
+<P>For example, if ``testidx'' under ``/home/fred/mycollection'' is very large,
+you might decide to run the ntvsearchd daemon on port 7000 of localhost:</P>
+<PRE>
+    ntvsearchd -A localhost -P 7000 \
+        -R /home/fred/mycollection/testidx/testidx.res</PRE>
+<P>Then indicate to ntvultralite that it should communicate with this
+daemon by either entering:</P>
+<PRE>
+    localhost:7000</PRE>
+<P>to the above question, or, after the fact, adding the line:</P>
+<PRE>
+    &lt;server name=&quot;localhost:7000&quot;/&gt;</PRE>
+<P>to the &lt;ultralite&gt; section of the /home/fred/mycollection/testidx/testidx.res
+resource file.</P>
+<P>
+<H3><A NAME="templatespecific questions">Template-Specific Questions</A></H3>
+<P>There are a number of questions that depend on the type of index
+being constructed.</P>
+<P>Briefly, if ``htmlsimple'' was chosen, a directory will be asked for
+from which all HTML files to be indexed can be found.  Also, if the HTML
+files are directly accessable from the web server with the addition of
+a simple prefix, that prefix can be specified here.</P>
+<P>If you're creating an initial example just to see how things look, you
+might consider using /usr/local/apache/htdocs for example if you have
+apache installed.</P>
+<P>If ``mailsimple'' or ``mailextra1'' was chosen, the mail address of an
+administrator is wanted, along with what sendmail should be used to send
+any emails.</P>
+<P>
+<H3><A NAME="chroot">CHROOT</A></H3>
+<P>If the ntvultralite system is to be running under a chroot
+environment, the path to the chroot is specified here.</P>
+<P>Note that to run under the specified chroot, you must be using a
+nextrieve that has been installed under the chroot, and the collection
+directory must be under the chroot.</P>
+<P>
+<H3><A NAME="permissions">Permissions</A></H3>
+<P>During normal operation, ntvultralite requires access to the logging
+directory ``logs'' under the text index directory.  The user and
+group ownership of this logs directory can be changed at this
+point if required if the installer is running as root.</P>
+<P>A typical choice when running on Linux is user and group ``nobody''.</P>
+<P>
+<H2><A NAME="what has been set up">What Has Been Set Up</A></H2>
+<P>Setting up an index ``testidx'' will have created a directory ``testidx''
+under the collection directory, and a script ``testidx'' under the cgi-bin
+directory.</P>
+<P>Inside the ``testidx'' directory there will be:</P>
+<DL>
+<DT><STRONG><A NAME="item_testidx%2Eres">testidx.res</A></STRONG><BR>
+<DD>
+The resource file which describes the text index (used for indexing
+and searching).  Also, in the &lt;ultralite&gt; section, are parameters used
+by ntvultralite when searching the index and creating resulting HTML
+web pages.
+<P></P>
+<DT><STRONG><A NAME="item_bin%2F">bin/</A></STRONG><BR>
+<DD>
+A number of script fragments are present defining how to perform
+indexing operations.  The more important ones are:
+<DL>
+<DT><STRONG><A NAME="item_testidxfullxml">testidxfullxml</A></STRONG><BR>
+<DD>
+This is always present.
+For an HTML index, this script is simply a ``find'' operation on the
+directory nominated during installation, locating all files matching
+the mask ``*.htm*''.  The names of these files are then given to the
+ntvhtml2ntvml script to have their content converted to indexable
+XML.
+<P>For a mailbox index, this script simply finds all ``*.mbx'' files in
+the archive area (testidx/archive) and gives these filenames to the
+ntvmailbox2ntvml script to be converted to indexable XML.</P>
+<P></P>
+<DT><STRONG><A NAME="item_testidxprepincxml%2C_testidxincxml">testidxprepincxml, testidxincxml</A></STRONG><BR>
+<DD>
+These are only present for a mailbox index and are used when an ``incremental
+index'' is performed.  Mail messages present in the incoming area
+(testidx/spool/) are
+converted to XML which is indexed, and the mail messages are then moved
+to the archive area (testidx/archive/).
+<P></P></DL>
+<DT><STRONG><A NAME="item_index%2F">index/</A></STRONG><BR>
+<DD>
+A subdirectory holding the actual *.ntv files comprising the index.
+These files will be present after the first indexing operation has been
+performed on the index.
+<P></P>
+<DT><STRONG><A NAME="item_index%2Enew%2F">index.new/</A></STRONG><BR>
+<DD>
+When a full reindex is performed the new index is created under the
+``index.new'' subdirectory.  After successful completion, the files under
+``index.new'' are moved to ``index''.
+<P></P>
+<DT><STRONG><A NAME="item_index%2Eold%2F">index.old/</A></STRONG><BR>
+<DD>
+After a successful full reindex operation hs been performed, the original
+text index is found under this subdirectory.
+<P></P>
+<DT><STRONG><A NAME="item_templates%2F">templates/</A></STRONG><BR>
+<DD>
+The HTML template pages used by ntvultralite are present here.  The
+function of these files is described completely in the ntvultralite
+documentation.
+<P></P>
+<DT><STRONG><A NAME="item_logs%2F">logs/</A></STRONG><BR>
+<DD>
+Various log files can be present here, depending on logging options
+in effect from either searching or ntvultralite operations.
+<P></P>
+<DT><STRONG><A NAME="item_archive/">archive/, spool/</A></STRONG><BR>
+<DD>
+These subdirectories are only present when a mailbox index has been 
+set up.
+<P>Incoming messages should be placed in the ``spool/'' directory (incoming
+messages can be placed here by following the instructions given
+during execution of ntvmakenewwebindex).  These messages are not
+searchable until an indexing operation (ntvfullreindex or ntvincreindex)
+has been performed, during which time the messages are moved from
+the spool/ directory to within mailbox files in the archive/ directory.</P>
+<P>All mailboxes under archive/ have been incorporated into the
+text index and are searchable.</P>
+<P></P></DL>
+<P>
+<H2><A NAME="maintenance operations">Maintenance Operations</A></H2>
+<P>It is possible to run a ``full reindex'' operation in which case
+all the source files comprising the text index are read and re-indexed.</P>
+<P>For an index ``testidx'' under the default collection directory, it suffices
+to use the command:</P>
+<PRE>
+    ntvfullreindex testidx</PRE>
+<P>If the ``testidx'' index is under a non-default colleciton directory
+/home/fred/mycollection, one should use:</P>
+<PRE>
+    NTVBASE=/home/fred/mycollection ntvfullreindex testidx</PRE>
+<P>For a ``mailsimple'' type text index, it is possible to ``incrementally
+reindex'' from the source files.  Mail messages present in the staging
+area are read and indexed into the already existing text index.
+These mail messages are then moved into an archive area.  One should use:</P>
+<PRE>
+    ntvincreindex testidx</PRE>
+<P>in such a case.</P>
+<P>After any re-indexing operation has been performed, if the index
+has been set up in ``client/server'' mode, the appropriate ntvsearchd
+process should be killed and restarted.</P>
+<P>
+<HR>
+<H1><A NAME="creating a standalone database from first principles">CREATING A STANDALONE DATABASE FROM FIRST PRINCIPLES</A></H1>
+<P>
+<H2><A NAME="what do you want to index, and where">What do You Want to Index, and Where?</A></H2>
+<P>The first step to take when creating a standalone database is to decide
+what you want to index.
+For this example
+we're intending to index documents that have normal
+body text, and ``title'' text.
+We will create the text database under the directory /tmp/test/.
+Each indexed document will have a couple of string attributes; it's filename
+and its title.  We don't want two documents in the text database to have the
+same filename -- if a second document is presented with a filename that's
+already used by a document in the text database, the existing document
+information in the database will be automatically marked as deleted.</P>
+<P>We will also classify
+documents as ``political'' or ``financial'', necessitating the use of two
+``flag'' attributes.</P>
+<P>
+<H2><A NAME="create the resource file">Create the Resource File</A></H2>
+<P>Create a ``resource file'' as a text file.  In this example, it will
+be created as /tmp/test/test.res.
+For this application it can simply contain:</P>
+<PRE>
+    &lt;ntv:resource xmlns:ntv=&quot;http://www.nextrieve.com/1.0&quot;&gt;
+        &lt;indexdir name=&quot;/tmp/test&quot;/&gt;
+        &lt;logfile name=&quot;/tmp/test/test-log.txt&quot;/&gt;</PRE>
+<PRE>
+        &lt;indexcreation&gt;
+            &lt;attribute name=&quot;filename&quot;
+                       type=&quot;string&quot; key=&quot;key-unique&quot; nvals=&quot;1&quot;/&gt;
+            &lt;attribute name=&quot;title&quot;
+                       type=&quot;string&quot; key=&quot;notkey&quot; nvals=&quot;1&quot;/&gt;
+            &lt;attribute name=&quot;political&quot;
+                       type=&quot;flag&quot; key=&quot;notkey&quot; nvals=&quot;1&quot;/&gt;
+            &lt;attribute name=&quot;financial&quot;
+                       type=&quot;flag&quot; key=&quot;notkey&quot; nvals=&quot;1&quot;/&gt;</PRE>
+<PRE>
+            &lt;texttype name=&quot;title&quot;/&gt;
+        &lt;/indexcreation&gt;
+    &lt;/ntv:resource&gt;</PRE>
+<P>
+<H2><A NAME="set your environment">Set Your Environment</A></H2>
+<P>To minimize the number of parameters given to later programs, set an
+environment variable defining the name of this resource file.</P>
+<PRE>
+    export NTV_RESOURCE=/tmp/test/test.res</PRE>
+<P>Also, make sure that ntvindex, ntvsearch and other nextrieve utilities
+are in your execution path.  Eg, if the nextrieve utilities have been installed
+under /usr/local/nextrieve, use:</P>
+<PRE>
+    PATH=&quot;$PATH:/usr/local/nextrieve/2.0.0/bin&quot;</PRE>
+<P>where the ``2.0.0'' is replaced by the version of NexTrieve that has been
+installed.</P>
+<P>It is now possible to create the index using ntvindex!</P>
+<P>
+<H2><A NAME="create your xml to be indexed">Create Your XML to be Indexed</A></H2>
+<P>For indexing, you must create an XML description of the document content to
+index.  As a test, create a text file containing the following XML for two short
+documents:</P>
+<PRE>
+    &lt;ntv:docseq xmlns:ntv=&quot;http://www.nextrieve.com/1.0&quot;&gt;
+    &lt;document&gt;
+        &lt;attributes&gt;
+            &lt;title&gt;title of doc one&lt;/title&gt;
+            &lt;filename&gt;filename-of-doc-one&lt;/filename&gt;
+            &lt;financial/&gt;
+        &lt;/attributes&gt;
+        &lt;text&gt;
+            &lt;title&gt;title text of doc one -- can be searched.&lt;/title&gt;
+            Normal body text of doc two -- can be searched.
+            This is a &quot;financial&quot; document.
+        &lt;/text&gt;
+    &lt;/document&gt;
+    &lt;document&gt;
+        &lt;attributes&gt;
+            &lt;title&gt;title of second document&lt;/title&gt;
+            &lt;filename&gt;filename-of-second-document&lt;/filename&gt;
+            &lt;political/&gt;
+        &lt;/attributes&gt;
+        &lt;text&gt;
+            &lt;title&gt;title text of second document -- can be searched.&lt;/title&gt;
+            Normal body text of second document -- can be searched.
+            This is a &quot;political&quot; document.
+        &lt;/text&gt;
+    &lt;/document&gt;
+    &lt;/ntv:docseq&gt;</PRE>
+<P>If this text file is called ``x'', use the following command to index the content:</P>
+<PRE>
+    ntvindex -v x</PRE>
+<P>Something like the following should be printed:</P>
+<PRE>
+    Fri Nov 23 11:45:46 2001: indexing &quot;-&quot; starting...
+    1 (2Kb)
+    2 (4Kb)
+    Fri Nov 23 11:45:46 2001: indexing done.
+    Fri Nov 23 11:45:46 2001: Flushing 168 low hits</PRE>
+<P>... and the database directory /tmp/test should now contain something like:</P>
+<PRE>
+    -rw-rw-r--    1 user   user         48 Nov 23 11:45 att0str.ntv
+    -rw-rw-r--    1 user   user         12 Nov 23 11:45 att0vals.ntv
+    -rw-rw-r--    1 user   user         42 Nov 23 11:45 att1str.ntv
+    -rw-rw-r--    1 user   user         12 Nov 23 11:45 att1vals.ntv
+    -rw-rw-r--    1 user   user       8220 Nov 23 11:45 da0.ntv
+    -rw-rw-r--    1 user   user          4 Nov 23 11:45 damap0.ntv
+    -rw-rw-r--    1 user   user       1310 Nov 23 11:45 idx.ntv
+    -rw-rw-r--    1 user   user       2056 Nov 23 11:45 rec.ntv
+    -rw-rw-r--    1 user   user       8192 Nov 23 11:45 ref0.ntv
+    -rw-rw-r--    1 user   user       2028 Nov 23 11:45 rfbmap0.ntv
+    -rw-rw-r--    1 user   user        273 Nov 23 11:44 test.res</PRE>
+<P>If you've indexed 100's of megabytes of information, you might want to
+``optimize'' the index for later searches.  Although it is not necessary
+for just these two documents, we will show its use as an example.
+Simply use:</P>
+<PRE>
+    ntvopt /tmp/test
+    $ ntvopt /tmp/test
+    READING rec.ntv
+        DONE: (0.003 sec)
+    READING idx.ntv
+        DONE: (0.000 sec)
+    SORTING dictionary...
+        DONE: (0.001 sec)
+    WRITING idx-opt.ntv
+        DONE: (0.000 sec)
+    SIZING/SORTING ref*.ntv
+    ....W(169)    DONE: (0.004 sec)
+    COMPRESSING TO NEW DB...
+    r(169)..</PRE>
+<PRE>
+        DONE: (0.006 sec)
+    $</PRE>
+<P>The /tmp/test directory should now contain:</P>
+<PRE>
+    $ ls -l /tmp/test
+    total 72
+    -rw-rw-r--    1 user   user         48 Nov 23 11:45 att0str.ntv
+    -rw-rw-r--    1 user   user         12 Nov 23 11:45 att0vals.ntv
+    -rw-rw-r--    1 user   user         42 Nov 23 11:45 att1str.ntv
+    -rw-rw-r--    1 user   user         12 Nov 23 11:45 att1vals.ntv
+    -rw-rw-r--    1 user   user       8220 Nov 23 11:45 da0.ntv
+    -rw-rw-r--    1 user   user          4 Nov 23 11:45 damap0.ntv
+    -rw-rw-r--    1 user   user       1310 Nov 23 11:46 idx-opt.ntv
+    -rw-rw-r--    1 user   user       1310 Nov 23 11:45 idx.ntv
+    -rw-rw-r--    1 user   user       2056 Nov 23 11:46 rec-opt.ntv
+    -rw-rw-r--    1 user   user       2056 Nov 23 11:45 rec.ntv
+    -rw-rw-r--    1 user   user       4096 Nov 23 11:46 ref0-opt.ntv
+    -rw-rw-r--    1 user   user       8192 Nov 23 11:45 ref0.ntv
+    -rw-rw-r--    1 user   user       2028 Nov 23 11:46 rfbmap0-opt.ntv
+    -rw-rw-r--    1 user   user       2028 Nov 23 11:45 rfbmap0.ntv
+    -rw-rw-r--    1 user   user        273 Nov 23 11:44 test.res</PRE>
+<P>To actually use the optimized index, all the files with names ending
+in <STRONG>-opt</STRONG> must be renamed to remove the <STRONG>-opt</STRONG>.  This can be done
+by using the supplied shell script, ntvidx-useopt.sh.  This script will also
+rename the original files to have a name containing <STRONG>-orig</STRONG>.</P>
+<PRE>
+    $ ntvidx-useopt.sh /tmp/test
+    mv rec.ntv rec-orig.ntv
+    mv rfbmap0.ntv rfbmap0-orig.ntv
+    mv ref0.ntv ref0-orig.ntv
+    mv idx-opt.ntv idx.ntv
+    mv rec-opt.ntv rec.ntv
+    mv ref0-opt.ntv ref0.ntv
+    mv rfbmap0-opt.ntv rfbmap0.ntv
+    $ ls -l /tmp/test
+    total 72
+    -rw-rw-r--    1 user   user         48 Nov 23 11:45 att0str.ntv
+    -rw-rw-r--    1 user   user         12 Nov 23 11:45 att0vals.ntv
+    -rw-rw-r--    1 user   user         42 Nov 23 11:45 att1str.ntv
+    -rw-rw-r--    1 user   user         12 Nov 23 11:45 att1vals.ntv
+    -rw-rw-r--    1 user   user       8220 Nov 23 11:45 da0.ntv
+    -rw-rw-r--    1 user   user          4 Nov 23 11:45 damap0.ntv
+    -rw-rw-r--    1 user   user       1310 Nov 23 11:45 idx-orig.ntv
+    -rw-rw-r--    1 user   user       1310 Nov 23 11:46 idx.ntv
+    -rw-rw-r--    1 user   user       2056 Nov 23 11:45 rec-orig.ntv
+    -rw-rw-r--    1 user   user       2056 Nov 23 11:46 rec.ntv
+    -rw-rw-r--    1 user   user       8192 Nov 23 11:45 ref0-orig.ntv
+    -rw-rw-r--    1 user   user       4096 Nov 23 11:46 ref0.ntv
+    -rw-rw-r--    1 user   user       2028 Nov 23 11:45 rfbmap0-orig.ntv
+    -rw-rw-r--    1 user   user       2028 Nov 23 11:46 rfbmap0.ntv
+    -rw-rw-r--    1 user   user        273 Nov 23 11:44 test.res</PRE>
+<P>At any stage if you want to check the integrity of the database, use
+ntvcheck.</P>
+<PRE>
+    $ ntvidx-useopt.sh /tmp/test
+    $ ntvcheck /tmp/test
+    READING rec.ntv
+        DONE: (0.002 sec)
+    READING rfbmap*.ntv
+        DONE: (0.000 sec)
+    READING ref*.ntv...
+    ..
+        DONE: (0.003 sec)
+    READING idx.ntv
+        DONE: (0.001 sec)
+    ANALYZING (3) FILES
+    .
+        DONE: (0.000 sec)
+    DECOMPRESSING (169) DOCUMENT LISTS
+    ..
+    (maxfragno=0)
+        DONE: (0.001 sec)
+    RANKACCEL FILE: /tmp/test/da0.ntv
+    $</PRE>
+<P>Now the database is ready for searching.</P>
+<P>To search for documents containing the exact word ``document'', use:</P>
+<PRE>
+    $ ntvquerygen -x document | ntvsearch
+    &lt;ntv:hitlist&gt;
+    &lt;header firsthit=&quot;1&quot; displayedhits=&quot;2&quot; totalhits=&quot;2&quot;&gt;&lt;/header&gt;
+    &lt;hit docid=&quot;2&quot; score=&quot;3757864959&quot;&gt;
+        &lt;preview&gt;&lt;b&gt;document&lt;/b&gt; -- can be searched. Normal body
+            text of second &lt;b&gt;document&lt;/b&gt; -- can be searched.
+        &lt;/preview&gt;
+        &lt;attributes&gt;
+            &lt;filename&gt;filename-of-second-document&lt;/filename&gt;
+            &lt;title&gt;title of second document&lt;/title&gt;
+            &lt;political/&gt;
+        &lt;/attributes&gt;
+    &lt;/hit&gt;
+    &lt;hit docid=&quot;1&quot; score=&quot;3489428479&quot;&gt;
+        &lt;preview&gt;&lt;b&gt;document&lt;/b&gt;. &lt;/preview&gt;
+        &lt;attributes&gt;
+            &lt;filename&gt;filename-of-doc-one&lt;/filename&gt;
+            &lt;title&gt;title of doc one&lt;/title&gt;
+            &lt;financial/&gt;
+        &lt;/attributes&gt;
+    &lt;/hit&gt;
+    &lt;/ntv:hitlist&gt;</PRE>
+<P>Line breaks and indenting have been inserted in the output for
+readability.  You can see that there are two ``hits'' for this search.
+Each hit is in a &lt;hit&gt;&lt;/hit&gt; container which, in turn, is inside a
+&lt;ntv:hitlist&gt;&lt;/ntv:hitlist&gt; (``hitlist'') container.
+The &lt;hdr&gt; container gives general information about the results.  It may
+contain &lt;warn&gt; or &lt;error&gt; containers if they are deemed necessary.  Eg,
+if you search for a word that does not exist in the dictionary:</P>
+<PRE>
+    $ ntvquerygen -x nonexistent | ntvsearch
+    &lt;ntv:hitlist&gt;
+    &lt;header&gt;
+        &lt;warning&gt;
+            Word &quot;nonexistent&quot; not found in dictionary
+        &lt;/warning&gt;
+    &lt;/header&gt;
+    &lt;/ntv:hitlist&gt;</PRE>
+<P>To perform the same search for ``document'', but only in the title text of
+documents, use:</P>
+<PRE>
+    $ ntvquerygen -T title -x document | ntvsearch
+    &lt;ntv:hitlist&gt;
+    &lt;header firsthit=&quot;1&quot; displayedhits=&quot;1&quot; totalhits=&quot;1&quot;&gt;&lt;/header&gt;
+    &lt;hit docid=&quot;2&quot; score=&quot;3757864959&quot;&gt;
+        &lt;preview&gt;&lt;b&gt;document&lt;/b&gt; -- can be searched. &lt;/preview&gt;
+        &lt;attributes&gt;
+            &lt;filename&gt;filename-of-second-document&lt;/filename&gt;
+            &lt;title&gt;title of second document&lt;/title&gt;
+            &lt;political/&gt;
+        &lt;/attributes&gt;
+    &lt;/hit&gt;
+    &lt;/ntv:hitlist&gt;</PRE>
+<P>As can be seen, only text from the title is shown in the preview and, in fact,
+only document title text has been searched.  Only one document contains the
+word ``document'' in the title.</P>
+<P>To search for the word ``document'' but only in those documents marked
+``political'', use:</P>
+<PRE>
+    $ ntvquerygen -c political -x document | ntvsearch
+    &lt;ntv:hitlist&gt;
+    &lt;header firsthit=&quot;1&quot; displayedhits=&quot;1&quot; totalhits=&quot;1&quot;&gt;&lt;/header&gt;
+    &lt;hit docid=&quot;2&quot; score=&quot;3757864959&quot;&gt;
+        &lt;preview&gt;&lt;b&gt;document&lt;/b&gt; -- can be searched. Normal body
+            text of second &lt;b&gt;document&lt;/b&gt; -- can be searched.
+        &lt;/preview&gt;
+        &lt;attributes&gt;
+            &lt;filename&gt;filename-of-second-document&lt;/filename&gt;
+            &lt;title&gt;title of second document&lt;/title&gt;
+            &lt;political/&gt;
+        &lt;/attributes&gt;
+    &lt;/hit&gt;
+    &lt;/ntv:hitlist&gt;</PRE>
+<P>Only one document has been returned.
+The ``-c'' option is used to apply any general ``constraint'' in fact, based
+on document attributes.</P>
+<P>To perform a ``fuzzy'' search, simply miss out the -x flag.</P>
+<PRE>
+    $ ntvquerygen documnt | ntvsearch
+    &lt;ntv:hitlist&gt;
+    &lt;header firsthit=&quot;1&quot; displayedhits=&quot;2&quot; totalhits=&quot;2&quot;&gt;
+        &lt;warning&gt;Word &quot;documnt&quot; not found in dictionary&lt;/warning&gt;
+    &lt;/header&gt;
+    &lt;hit docid=&quot;2&quot; score=&quot;37629&quot; percent=&quot;95&quot;&gt;
+        &lt;preview&gt;&lt;b&gt;document&lt;/b&gt; -- can be searched. Normal body
+            text of second &lt;b&gt;document&lt;/b&gt; -- can be searched.
+            This is a &quot;political&quot; &lt;b&gt;document.&lt;/b&gt;
+        &lt;/preview&gt;
+        &lt;attributes&gt;
+            &lt;filename&gt;filename-of-second-document&lt;/filename&gt;
+            &lt;title&gt;title of second document&lt;/title&gt;
+            &lt;political/&gt;
+        &lt;/attributes&gt;
+    &lt;/hit&gt;
+    &lt;hit docid=&quot;1&quot; score=&quot;37629&quot; percent=&quot;95&quot;&gt;
+        &lt;preview&gt;&lt;b&gt;document.&lt;/b&gt;&lt;/preview&gt;
+        &lt;attributes&gt;
+            &lt;filename&gt;filename-of-doc-one&lt;/filename&gt;
+            &lt;title&gt;title of doc one&lt;/title&gt;
+            &lt;financial/&gt;
+        &lt;/attributes&gt;
+    &lt;/hit&gt;
+    &lt;/ntv:hitlist&gt;</PRE>
+<P>In this the word we asked to search for is in error.  Even though the word
+does not exist in the dictionary, it is possible to find words
+<EM>similar</EM> to the word wanted.</P>
+<P>
+<HR>
+<H1><A NAME="adding more documents">ADDING MORE DOCUMENTS</A></H1>
+<P>To add more documents it suffices to simply run <STRONG>ntvindex</STRONG> again,
+giving it the XML description of the documents to add.  Then, optionally,
+<STRONG>ntvopt</STRONG> and/or <STRONG>ntvcheck</STRONG> can be run on the database.</P>
+<P>
+<HR>
+<H1><A NAME="starting a standalone search server">STARTING A STANDALONE SEARCH SERVER</A></H1>
+<P>Searching using nextrieve as described in the previous section requires
+starting the ntvsearch process each time in such a way that it ``loads''
+a description of the database and then performs the search.
+This is OK for small
+databases but, as databases get larger, the startup time of ntvsearch
+increases.</P>
+<P>An alternative is to have a permanently running server that starts
+just once and then serves many requests, significantly reducing the startup
+overhead.</P>
+<P>The nextrieve search server is called ntvsearchd, and is started with
+an ``address'' and ``port''.
+The ``address'' is usually ``localhost'', implying connections to the server
+can only be made from that host.  The ``port'' can be any valid TCP port
+number.  Eg:</P>
+<PRE>
+    $ ntvsearchd -A localhost -P 7777
+    $</PRE>
+<P>will start ntvsearchd as a permanently running process, listening on port
+number 7777.</P>
+<P>To perform a query using this server, run ntvsearch as described in the
+previous section, adding the parameters:</P>
+<PRE>
+    -A localhost -P 7777</PRE>
+<P>Specifying an address and port to ntvsearch
+indicates that it is a ``client'' process talking
+to the specified server.</P>
+<P>Eg:</P>
+<PRE>
+    $ ntvquerygen -T title -x document | ntvsearch -A localhost -P 7777
+    &lt;ntv:hitlist&gt;
+    &lt;header firsthit=&quot;1&quot; displayedhits=&quot;1&quot; totalhits=&quot;1&quot;&gt;&lt;/header&gt;
+    &lt;hit docid=&quot;2&quot; score=&quot;3757864959&quot;&gt;
+        &lt;preview&gt;&lt;b&gt;document&lt;/b&gt; -- can be searched. &lt;/preview&gt;
+        &lt;attributes&gt;
+            &lt;filename&gt;filename-of-second-document&lt;/filename&gt;
+            &lt;title&gt;title of second document&lt;/title&gt;
+            &lt;political/&gt;
+        &lt;/attributes&gt;
+    &lt;/hit&gt;
+    &lt;/ntv:hitlist&gt;</PRE>
+
+</BODY>
+
+</HTML>

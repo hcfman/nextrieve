@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Absorb any new mail messages, creating XML in an "incremental" XML
+# file.
+
+if %%NTVBASE%%/%%NTVNAME%%/bin/%%NTVNAME%%readspool; then
+    :;
+else
+    exit 1
+fi

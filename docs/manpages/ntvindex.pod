@@ -1,0 +1,213 @@
+
+=head1 NAME
+
+ntvindex - NexTrieve indexer
+
+=head1 SYNOPSIS
+
+ ntvindex -[?vV] [-L logfile] [-I indexdir] [-R resfile]
+          [filelist...]
+
+=head1 DESCRIPTION
+
+B<ntvindex> adds text to a NexTrieve text index, creating the index
+if necessary.
+
+The text index is defined by a I<resource file>, specified with
+the B<NTV_RESOURCE> environment variable, or by using the C<-R> option.
+A critical element in this resource file
+is the <indexcreation> element,
+whose content is to determining the structure of the
+text index.  This is used by ntvindex to create the index.
+
+A definition of what the resource file contains can be found
+###ntvresourcefile###.
+
+The files in I<filelist...> should each contain an XML definition of what
+to index.  A filename of "-" indicates to use standard input.
+
+A definition of what the XML for the indexer looks like
+can be found ###ntvindexerxml###.  A short functional summary of this
+XML can be found in the next section.
+
+After a text index has been created or updated, you may wish to
+optimize search access to it by running B<ntvopt>, an optimizer.
+A description of how to run the optimizer can be found ###ntvopt###.
+
+A description of B<ntvcheck>, a tool for checking the integrity of
+a nextrieve text index can be found ###ntvcheck###.
+
+=head2 Indexer XML
+
+This section gives a very fast overview of
+the allowable structure of the XML that can be given to the indexer.
+
+The XML given to the indexer specifies the attributes and content of
+a sequence of documents that will be indexed.
+
+Each document contains a possibly zero-length sequence of attributes,
+and text to be indexed.
+
+The text to be indexed can have particular named sections or "textypes"
+present.
+
+The structure of the XML closely follows the above notes, and can
+be summarized with an example:
+
+    TABLESTART
+    <ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">
+
+        <document>
+            <attributes>
+		<titleattr>A document title -- not searchable.</titleattr>
+		<flagattr/> <!-- the flag "flagattr" is marked "on". -->
+		<numberattr>45</numberattr>
+            </attributes>
+            <text>
+                Normal document text.
+                <title>
+                    Text in the document title that is searchable --
+		    a special text type that must be declared in the
+		    resource file.
+                </title>
+                More normal document text.  This is just default text.
+            </text>
+        </document>
+
+        <document>
+            <!- the content of a second document... -->
+	    ...
+        </document>
+
+    </ntv:docseq>TABLEEND
+
+In the example above there are two <document> elements, defining two
+documents to index.
+
+In the first document, three attributes are being set.  B<titleattr>
+is a string attribute, B<flagattr> is a flag attribute being set to "on"
+(or present), and B<numberattr> is a numeric attribute being set to the value
+45.
+
+To be valid, these attributes and types must be declared in the resource
+file using appropriate <attribute> elements
+at the time the text index is created.
+
+The text to be indexed for the first document is present in the <text>
+element.  It can be seen that there is a nested <title> element containing
+a document title.  To be valid, this must also be declared in the resource
+file using an appropriate <texttype> element.  Other text present in the
+<text> element is default text, and is always valid.
+
+Having a separate text type such as <title> allows a user to search
+only title-tagged text, for example.
+
+=head2 Character Encoding
+
+B<ntvindex> uses the publicly available I<expat> library to analyze the
+XML being indexed.  As such, it is possible to use the built-in character
+encodings understood by I<expat>, namely:
+
+=over
+
+=item *
+
+ISO-8859-1
+
+=item *
+
+UTF-8
+
+=item *
+
+UTF-16
+
+=item *
+
+US-ASCII
+
+=back
+
+These encodings can be used directly by using, for example:
+
+    <?xml version="1.0" encoding="ISO-8859-1"?>
+
+at the start of the XML stream being indexed.
+
+If the documents to be indexed are in another character set, they must
+be translated to one of the above as the XML for them is generated.
+
+It should be noted that all the information is stored in the nextrieve
+text index in UTF-8 form, not simply in the encoding presented
+to B<ntvindex>.
+
+=head1 OPTIONS
+
+=over
+
+=item C<-R> resfile
+
+I<resfile> specifies the location of the I<resource file> describing the
+text index to be indexed.  This overrides any NTV_RESOURCE environment
+variable that is set.
+
+=item C<-I> indexdir
+
+The I<indexdir> specified overrides any I<indexdir> line in the resource
+file.  I<indexdir> specifies the directory where the *.ntv files are located
+that
+comprise the text index.  This option is useful where there are
+several physical text indexes using the same schema which defined in a single
+resource file.
+
+=item C<-L> logfile
+
+I<logfile> explicitly overrides any I<logfile> line in a resource file
+and any NTV_ERRORLOG environment variable.
+
+=item C<-v>
+
+"Verbose" mode -- each document that is indexed will cause a line to be
+output by B<ntvindex> indicating the number of documents in the text index,
+and an approximiate total amount of text indexed.
+
+=item C<-?>
+
+Write extended help information to standard output and exit.
+
+=item C<-V>
+
+Write version information to standard output and exit.
+
+=back
+
+=head1 DIAGNOSTICS
+
+A list of diagnostics should go here.
+
+=head1 ENVIRONMENT
+
+=over
+
+=item NTV_RESOURCE
+
+The location of the resource file describing the text index.
+Can be overridden by the C<-R> option.
+
+=item NTV_ERRORLOG
+
+Where to log error messages.
+Overridden by a B<logfile> line in the resource file.
+Can be overridden by the C<-L> option.
+
+=back
+
+=head1 CAVEATS
+
+=head1 BUGS
+
+=head1 RESTRICTIONS
+
+=head1 SEE ALSO
+
+    ntvsearch(1), ntvsearchd(1), ntvresources(5), nextrieve-caching(1).

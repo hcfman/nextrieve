@@ -1,0 +1,193 @@
+<HTML>
+<HEAD>
+<TITLE>Caching Server Configuration File</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">Caching Server Configuration File</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvcachecfgxml.html#description">DESCRIPTION</A></LI>
+		<LI><A HREF="ntvcachecfgxml.html#<physicalindex>">&lt;physicalindex&gt;</A></LI>
+		<LI><A HREF="ntvcachecfgxml.html#<defaultlogicalindex>">&lt;defaultlogicalindex&gt;</A></LI>
+		<LI><A HREF="ntvcachecfgxml.html#<generalconfig>">&lt;generalconfig&gt;</A></LI>
+		<LI><A HREF="ntvcachecfgxml.html#examples">EXAMPLES</A></LI>
+		<LI><A HREF="ntvcachecfgxml.html#caveats">CAVEATS</A></LI>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P>The configuration file of <STRONG>ntvcached</STRONG> is in XML format.
+The DTD describing the format of this configuration file
+can be found <A HREF="ntvdtds.html" target="_blank">here</A>.</P>
+<P>A description of <STRONG>ntvcached</STRONG> can be found <A HREF="ntvcached.html" target="_blank">here</A>.</P>
+<P>The <STRONG>ntvcached</STRONG> configuration file is implemented as an
+&lt;ntv:cacheconfig&gt; container.  This container can contain possibly
+several &lt;physicalindex&gt; containers, each describing a ``physical''
+nextrieve text index that is being served by one or more nextrieve
+searche servers.  It can also contain an indication of the default
+``logical'' index to search, and other miscellaneous configuration
+information.</P>
+<P>At the top-level, the &lt;ntv:cacheconfig&gt; container looks like:</P>
+<PRE>
+    &lt;ntv:cacheconfig xmlns:ntv=&quot;http://www.nextrieve.com/1.0&quot;&gt;
+        &lt;physicalindex name=&quot;...&quot;&gt;
+            &lt;logicalindex .../&gt;
+            ...
+            &lt;server .../&gt;
+            ...
+        &lt;/physicalindex&gt;
+        ...</PRE>
+<PRE>
+        &lt;defaultlogicalindex.../&gt;</PRE>
+<PRE>
+        &lt;generalconfig&gt;
+            ...
+        &lt;/generalconfig&gt;
+    &lt;/ntv:cacheconfig&gt;</PRE>
+<P>
+<H2><A NAME="<physicalindex>">&lt;physicalindex&gt;</A></H2>
+<PRE>
+    &lt;physicalindex name=&quot;physname&quot;&gt;</PRE>
+<P>One &lt;physicalindex&gt; element is present for every physical nextrieve
+text index managed by this caching server.
+A ``physical'' text index is simply a directory containing the *.ntv files
+for a particular nextrieve text index.</P>
+<P>Each copy of a physical text index is served by one or
+more <STRONG>ntvsearchd</STRONG> (or <STRONG>ntvcached</STRONG>) servers.</P>
+<P>The <EM>physname</EM> attribute value is simply used as a tag for various information
+printed by <STRONG>ntvcached</STRONG> when asked to print its state.
+Typically it names the directory where the physical text index is located.</P>
+<P>Inside the &lt;physicalindex&gt; container, several other elements can be present:</P>
+<DL>
+<DT><STRONG><A NAME="item_%3Clogicalindex_name%3D%27logname%27_constraint%3D">&lt;<STRONG>logicalindex name='<EM>logname</EM>' constraint='<EM>constraint</EM>'</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+This defines a ``logical text index'' that is present in a physical
+text index.
+<P>If there are many small text indexes present, it is frequently more effective to
+construct a single physical text index that contains them all, as opposed
+to having many small text indexes, each being served separately.
+The logical text indexes are discriminated by using a simple constraint
+(normally just a single flag value) per logical index.
+The constraint is defined here as <EM>constraint</EM>.  When a query arrives
+for a particular logical text index, <STRONG>ntvcached</STRONG>
+knows how to augment any user-supplied constraint to restrict
+the query to be within the set of documents valid for the given logical
+text index.</P>
+<P>If no constraint attribute is specified for a particular &lt;logicalindex&gt;,
+the entire physical text index is searched.</P>
+<P>The name of this logical text index, ``logname'', can be provided as part of
+an incoming query using the</P>
+<PRE>
+    &lt;indexname&gt;logname&lt;/indexname&gt;</PRE>
+<P>container.  When using <STRONG>ntvultralite</STRONG>, an index name can be specified in
+the &lt;ntvultralite&gt; container of the resource file using the</P>
+<PRE>
+    &lt;logicalindex name=&quot;logname&quot;/&gt;</PRE>
+<P>element.</P>
+<P>There can be multiple &lt;logicalindex&gt; elements present within a single
+&lt;physicalindex&gt; container.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cserver_host%3D%27addr%3Aport%27_maxqueries%3D%2">&lt;<STRONG>server host='<EM>addr:port</EM>' maxqueries='<EM>n</EM>'</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+This indicates that a particular nextrieve search or caching server
+is listening on the address
+and port specified.  This server is expected to be searching on
+the appropriate physical text index.
+<P>There can be multiple &lt;server&gt; elements within a single &lt;physicalindex&gt;
+container, normally indicating servers
+on different machines that are serving from copies of the same physical
+text index.  <STRONG>ntvcached</STRONG> will give incoming requests to the server
+that is ``least busy'' at the time the request arrives.</P>
+<P>The <EM>maxqueries</EM> attribute indicates how many requests can be given
+to a particular server without receiving a response.  A default value of
+``1'' is used.  Higher values can be used to increase throughput.  Higher
+values should be used on machines that are more powerful than others.</P>
+<P></P></DL>
+<P>
+<H2><A NAME="<defaultlogicalindex>">&lt;defaultlogicalindex&gt;</A></H2>
+<PRE>
+    &lt;defaultlogicalindex name='defaultname'/&gt;</PRE>
+<P>The name of the default logical text index to use is specified.  If query
+XML arrives that does not contain any &lt;indexname&gt; element
+``defaultname'' is used.  If ``defaultname'' is not specified in this case,
+an error is returned to the query originator.</P>
+<P>
+<H2><A NAME="<generalconfig>">&lt;generalconfig&gt;</A></H2>
+<P>This container contains miscellaneous general configuration information.
+The elements permitted inside &lt;generalconfig&gt; are:</P>
+<DL>
+<DT><STRONG><A NAME="item_%3Cconnections_clients%3D%27n%27_maxreadtime%3D%27">&lt;<STRONG>connections clients='<EM>n</EM>' maxreadtime='<EM>secs</EM>' maxoutstandingqueries='<EM>nout</EM>'/</STRONG></A></STRONG><BR>
+<DD>
+The maximum number of simultaneous client connections to <STRONG>ntvcached</STRONG>
+is restricted to be ``n''.  A default value of 128 is used.
+<P>The ``maxreadtime'' value is the number of seconds for which a client connection
+can be open with no incoming query being received.  A default of 30 seconds
+is used.  If this time is passed, the connection is automatically closed.</P>
+<P>The ``maxoutstandingqueries'' value indicates the maximum number of requests
+that can be pending results inside <STRONG>ntvcached</STRONG>.  A default value of
+100 is used.  If this value is reached, further incoming queries are
+blocked until some queries have been served.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Ccache_size%3D%27n%27%2F%3E">&lt;<STRONG>cache size='<EM>n</EM>'</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+<EM>n</EM> indicates the number of <EM>hit lists</EM> that will be cached.
+A default value of 1000 is used.
+<P></P>
+<DT><STRONG><A NAME="item_%3Clog_file%3D%27logfile%27%2F%3E">&lt;<STRONG>log file='<EM>logfile</EM>'</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+Indicates the name of a file in which to log messages.  Note that if there
+is a problem accessing the caching server configuration file itself, a message
+is logged using the logfile (if any) specified in the resource file, or
+the NTV_ERRORLOG environment variable.
+<P></P></DL>
+<P>
+<H2><A NAME="examples">EXAMPLES</A></H2>
+<P>Example content of a simple caching server configuration file is
+as follows:</P>
+<PRE>
+    &lt;ntv:cacheconfig xmlns:ntv=&quot;http://www.nextrieve.com/1.0&quot;&gt;
+</PRE>
+<PRE>
+
+        &lt;physicalindex name=&quot;/tmp/test/*.ntv&quot;&gt;
+            &lt;logicalindex name=&quot;everything&quot;/&gt;
+            &lt;logicalindex name=&quot;gutenberg&quot; constraint=&quot;gutenberg&quot;/&gt;
+            &lt;logicalindex name=&quot;dictionary&quot; constraint=&quot;dictionary&quot;/&gt;
+            &lt;logicalindex name=&quot;shakespeare&quot; constraint=&quot;shakespeare&quot;/&gt;
+            &lt;server host=&quot;localhost:7777&quot; maxqueries=&quot;10&quot;/&gt;
+        &lt;/physicalindex&gt;</PRE>
+<PRE>
+
+        &lt;defaultlogicalindex name=&quot;everything&quot;/&gt;</PRE>
+<PRE>
+
+        &lt;generalconfig&gt;
+            &lt;connections
+                    clients=&quot;10&quot; maxreadtime=&quot;30&quot; maxoutstandingqueries=&quot;50&quot;/&gt;
+            &lt;cache size=&quot;1000&quot;/&gt;
+            &lt;log file=&quot;/tmp/caching-errorlog.txt&quot;/&gt;
+        &lt;/generalconfig&gt;</PRE>
+<PRE>
+
+    &lt;/ntv:cacheconfig&gt;</PRE>
+<P>
+<H2><A NAME="caveats">CAVEATS</A></H2>
+<P>As of this nextrieve release it is possible to have multiple logical
+text indexes in a single physical text index (discriminated by using
+a constraint), but it is not yet possible to perform an extended search
+where a single logical text index is split over multiple physical indexes.</P>
+
+</BODY>
+
+</HTML>

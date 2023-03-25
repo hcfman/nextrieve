@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Simple mail indexer.
+ERR=echo
+[ -x "%%NTVBASE%%/%%NTVNAME%%/bin/%%NTVNAME%%error" ] \
+    && ERR="%%NTVBASE%%/%%NTVNAME%%/bin/%%NTVNAME%%error"
+
+cd "%%NTVBASE%%/%%NTVNAME%%/archive" || err=1
+
+if [ ! -z "$err" ]; then
+    "$ERR" "Cannot change directory to '%%NTVBASE%%/%%NTVNAME%%/archive'"
+    exit 1
+fi
+
+# Convert all mailbox files to XML form.  We remove any "incremental" xml.
+rm -f inc.xml
+
+find . -name '*.mbx' -print \
+    | sed -e 's%^\./%%' \
+    | "%%NTVINST%%/%%VERSION%%/bin/filters/ntvmailfilter" \
+		    -D -a to -a from -a subject -d date -t subject \
+		    -m text/html='ntvhtmlfilter -r' \
+		    -f mailbox -o offset

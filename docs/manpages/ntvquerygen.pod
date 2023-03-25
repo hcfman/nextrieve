@@ -1,0 +1,131 @@
+
+=head1 NAME
+
+ntvquerygen - Generate query XML from parameters
+
+=head1 SYNPOSIS
+
+ ntvquerygen -[?xX]
+              [-i offset] [-d displayedhits] [-t totalhits]
+              [-v n] [-e {utf8|utf16|iso|ascii}]
+              [-f fuzziness] [-h highlight-length]
+              [-T texttype] [-sa[=0|1]] [-sp[=0|1]]
+              [-fww=n] [-fwv=n] [-D idxname]
+              [-c constraint]
+              [-any="text"] [-all="text"] [-not="text"]
+              [more query text...]
+
+=head1 DESCRIPTION
+
+B<ntvquerygen> allows the generationg of nextrieve query XML from
+parameters.  The query XML is printed to standard output.
+
+A definition of what the XML for a query looks like
+can be found ###ntvqueryxml###.
+
+An example usage (reformatted) is:
+
+    $ ntvquerygen hello
+    <?xml version="1.0" encoding="ISO-8859-1"?>
+    <ntv:query xmlns:ntv="http://www.nextrieve.com/1.0">hello</ntv:query>
+    $ ntvquerygen -x -T subjects -c financial blackbird
+    <?xml version="1.0" encoding="ISO-8859-1"?>
+    <ntv:query xmlns:ntv="http://www.nextrieve.com/1.0" type="exact">
+	<constraint>financial</constraint>
+	<texttype name="subjects" weight="100"/>
+	blackbird
+    </ntv:query>
+    $
+
+=head1 OPTIONS
+
+=over
+
+=item B<-?>
+
+Write extended help information to standard output and exit.
+
+=item B<-v 0|1>
+
+Sets the 'longform' query attribute, to have a long form of the
+hitlist returned.
+
+=item B<-x>
+
+Set the 'type="exact"' query attribute, indicating an exact search.
+
+=item B<-i offset>
+
+Set the 'firsthit="I<offset>"' query attribute, indicating the 1-based
+offset from where to return hits in the hitlist.
+
+=item B<-d displayed-hits>
+
+Set the 'displayedhits="I<displayed-hits>"' query attribute, indicating how
+many hits to return.
+
+=item B<-t total-hits>
+
+Set the 'totalhits="I<total-hits>"' query attribute, indicating the maximum
+number of hits to process.
+
+=item B<-e {utf8|utf16|iso|ascii}>'
+
+The encoding is indicated.  An initial line like
+
+    <?xml version="1.0" encoding="ISO-8859-1"?>
+
+is printed.  Note that this encoding is only applied to query XML
+-- the text present in the text index is always encoded with UTF-8.
+
+=item B<-f fuzziness>
+
+Set the 'fuzzylevel="I<fuzziness>"' query attribute (in the range 0 to 3
+inclusive), indicating the level of fuzziness for a fuzzy search.
+
+=item B<-h highlight-length>
+
+Set the 'highlightlength="I<highlight-length>"' query attribute,
+indicating the minimum length a word must have in the preview before
+it's highlighted if it's relevant to the fuzzy search query performed.
+
+=item B<-T I<texttype[=weightpercentage]>>
+
+Set a <texttype> element in the query container, indicating a texttype
+specification.  Special values for I<texttype> are empty ("")
+indicating the default text type, and "*" indicating "all other text types".
+
+=item B<-sa[=0|1]>
+
+Set the 'showattributes="I<n>"' query attribute, indicating whether
+attribute information should be returned with hits or not.
+
+=item B<-sp[=0|1]>
+
+Set the 'showpreview="I<n>"' query attribute, indicating whether
+preview information should be returned with hits or not.
+
+=item B<-D idxname>
+
+Set the <indexname> element in the query container, indicating what
+logical index to search if we're communicating with a nextrieve
+caching server.
+
+=item B<-c constraint>
+
+Set the <constraint> element in the query container, indicating a
+constraint to apply to the search.
+
+=item B<-any=text>, B<-all=text>, B<-not=text>, B<more query text>
+
+Set one of the <qany>, <qall>, or <qnot> elements in the query container,
+or place I<more query text> directly in the query container.
+
+These represent classes of text to search for.
+
+=back
+
+
+=head1 SEE ALSO
+
+    ntvsearch(1), ntvsearchd(1), ntvresources(5), ntvcached(1).

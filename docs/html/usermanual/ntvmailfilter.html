@@ -1,0 +1,247 @@
+<HTML>
+<HEAD>
+<TITLE>MAIL to index-XML filter</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">MAIL to index-XML filter</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvmailfilter.html#synopsis">SYNOPSIS</A></LI>
+		<LI><A HREF="ntvmailfilter.html#description">DESCRIPTION</A></LI>
+		<LI><A HREF="ntvmailfilter.html#options">OPTIONS</A></LI>
+		<LI><A HREF="ntvmailfilter.html#examples">EXAMPLES</A></LI>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="synopsis">SYNOPSIS</A></H2>
+<PRE>
+  ntvmailfilter [-f fnameattr] [-O initialoffset] [-o offsetattr]
+                [-k keyattr]
+                [-a hdr[=attr]]...
+                [-d hdr[=attr]]...
+                [-t hdr[=texttype]]...
+                [-m content-type=processor]...
+                [-M content-type;namespec=new-content-type]...
+                [-l maxlen] [-e defencoding] [-DFhz]</PRE>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P><STRONG>ntvmailfilter</STRONG> expects a series of filenames on stdin, each representing
+the name of a mailbox or file containing a mail message, and produces on
+stdout XML suitable for passing to ntvindex.</P>
+<P>Each mail message encountered is emitted in XML as a separate document
+with associated attributes.  See the note on multipart/digest below.</P>
+<P>Several MIME types are inherently understood.  Unknown MIME types have
+their content dropped.  It is possible to map between MIME types, and
+to associate an external handler for a particular MIME type.</P>
+<P>
+<H2><A NAME="options">OPTIONS</A></H2>
+<DL>
+<DT><STRONG><A NAME="item_%2Df_fnameattr"><CODE>-f</CODE> fnameattr</A></STRONG><BR>
+<DD>
+The name of the file being processed is emitted as the ``fnameattr'' attribute
+in documents generated from that file.
+<P></P>
+<DT><STRONG><A NAME="item_%2Do_offsetattr"><CODE>-o</CODE> offsetattr</A></STRONG><BR>
+<DD>
+The offset of the start of the message is emitted as a numeric attribute
+``offsetattr''.  Note that the start of the message is normally a ``From ''
+line, but may be the start of the file (offset 0) or the position
+of a MIME boundary (line starting with ``--'') containing the message.
+<P></P>
+<DT><STRONG><A NAME="item_%2DO_initialoffset"><CODE>-O</CODE> initialoffset</A></STRONG><BR>
+<DD>
+A seek on each input file is performed to this value before message
+processing starts.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dk_keyattr"><CODE>-k</CODE> keyattr</A></STRONG><BR>
+<DD>
+A key attribute is emitted for every message; a string attribute
+consisting of the name of the parent file and the message offset.
+<P></P>
+<DT><STRONG><A NAME="item_%2Da_hdr%5B%3Dattr%5D%2E%2E%2E"><CODE>-a</CODE> hdr[=attr]...</A></STRONG><BR>
+<DD>
+Each -a specifies a mapping from a message header line to
+an emitted attribute.  If [attr] is omitted, the value of ``hdr'' will
+be used as the attribute name.
+<P>Note that matching of header lines is performed in a case-insensitive
+fashion, while the attribute name is emitted case-sensitively.  Ie,
+both the following lines will match ``Subject:'' header lines, but will
+emit them as different attributes:</P>
+<PRE>
+    -a subject
+    -a Subject</PRE>
+<P></P>
+<DT><STRONG><A NAME="item_%2Dd_hdr%5B%3Dattr%5D"><CODE>-d</CODE> hdr[=attr]</A></STRONG><BR>
+<DD>
+The header specified represents a date field, which is processed
+and emitted as a number of the form YYYYMMDD.  Usually used as:
+<PRE>
+    -d date</PRE>
+<P></P>
+<DT><STRONG><A NAME="item_%2Dt_hdr%5B%3Dtexttype%5D%2E%2E%2E"><CODE>-t</CODE> hdr[=texttype]...</A></STRONG><BR>
+<DD>
+Each -t specifies that a given message header is to be emitted as
+a text container labelled &lt;texttype&gt;.  See the notes related to <CODE>-a</CODE>
+above.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dm_content%2Dtype%3Dprocessor%2E%2E%2E"><CODE>-m</CODE> content-type=processor...</A></STRONG><BR>
+<DD>
+When the MIME type specified by ``content-type'' is encountered, its processing
+is defined by the value of ``processor''.
+<P>``Processor'' can be one of the following keywords, otherwise it is taken
+to be the name of a program (and arguments) to execute to handle the
+MIME content.</P>
+<DL>
+<DT><STRONG><A NAME="item_DROP">DROP</A></STRONG><BR>
+<DD>
+The content is explicitly dropped.
+<P></P>
+<DT><STRONG><A NAME="item_PRINT">PRINT</A></STRONG><BR>
+<DD>
+The content is assumed to be directly usable (after being decoded
+according to the transfer-encoding) and will be transformed to UTF-8 for
+output.
+The text/plain MIME type falls into this category.
+<P></P>
+<DT><STRONG><A NAME="item_MESSAGE">MESSAGE</A></STRONG><BR>
+<DD>
+The content will be treated as an encapsulated mail message.
+The message/rfc822 MIME type falls into this category.
+<P></P>
+<DT><STRONG><A NAME="item_MPMIXED">MPMIXED</A></STRONG><BR>
+<DD>
+The content will be treated as a multipart/mixed MIME type.  Each
+container is processed and the content will become part of the content
+of the encapsulated mail message as far as indexing is concerned.
+<P></P>
+<DT><STRONG><A NAME="item_MPALTERNATIVE">MPALTERNATIVE</A></STRONG><BR>
+<DD>
+The content will be treated as a multipart/alternative MIME type.  Only
+the first container is processed, with the content becoming part of the
+content of the encapsulated mail message as far as indexing is
+concerned.
+<P></P>
+<DT><STRONG><A NAME="item_MPDIGEST">MPDIGEST</A></STRONG><BR>
+<DD>
+The content will be treated as a multipart/digest MIME type.  Each
+container defaults to a message/rfc822 MIME type.  The content of these
+messages becomes part of the encapsulated mail message as far as indexing
+is concerned unless the <A HREF="ntvmailfilter.html#item_%2Dz"><CODE>-z</CODE></A> option is also used.
+<P></P></DL>
+<P>If none of these keywords is used, the processor is assumed to be an
+external program that processes the content.  The processor should
+expect the raw decoded MIME content on stdin, and should produce UTF-8
+on stdout.</P>
+<P>A small number of special tokens can be used in the processor specification
+of such an external handler, that are replaced as follows:</P>
+<DL>
+<DT><STRONG><A NAME="item_%C%"><CODE>%C%</CODE></A></STRONG><BR>
+<DD>
+Replaced with the charset in effect.
+<P></P>
+<DT><STRONG><A NAME="item_%M%"><CODE>%M%</CODE></A></STRONG><BR>
+<DD>
+Replaced with the MIME type in effect.
+<P></P>
+<DT><STRONG><A NAME="item_%N%"><CODE>%N%</CODE></A></STRONG><BR>
+<DD>
+Replaced with the name (or filename) found associated with the MIME
+information.
+<P></P></DL>
+<DT><STRONG><A NAME="item_%2DM_content%2Dtype%5B%3Bnamespec%5D%3Dnew%2Dconte"><CODE>-M</CODE> content-type[;namespec]=new-content-type...</A></STRONG><BR>
+<DD>
+A mapping is specified between a MIME type with associated name, and
+another MIME type.  This is used in two situations:
+<UL>
+<LI>
+The MIME type is very generic, and the suffix of the filename distinguishes
+the content.
+<P></P>
+<LI>
+The MIME type would otherwise be treated badly according to the suffix of the
+filename.  Eg, a text/plain MIME type that actually contains a word document.
+<P></P></UL>
+<P>The namespec, if given, is a simple case-insensitive match, with a leading
+and/or
+trailing '*' allowed as a wildcard.  The match is performed on the
+name= parameter of the Content-Type header or, if not found, the
+filename= parameter of the Content-Disposition header.</P>
+<P>In all cases, a successful match implies that the MIME type of the
+content will be treated as ``new-content-type''.</P>
+<DT><STRONG><A NAME="item_%2Dl_maxlen"><CODE>-l</CODE> maxlen</A></STRONG><BR>
+<DD>
+A maximum length can be applied to string attributes.
+<P></P>
+<DT><STRONG><A NAME="item_%2De_defencoding"><CODE>-e</CODE> defencoding</A></STRONG><BR>
+<DD>
+A character encoding is specified that will be applied when none is
+otherwise given.  Note that the default is iso-8859-1 rather than the more
+technically correct us-ascii.  See also the <A HREF="ntvmailfilter.html#item_%2DF"><CODE>-F</CODE></A> option.
+<P></P>
+<DT><STRONG><A NAME="item_%2DD"><CODE>-D</CODE></A></STRONG><BR>
+<DD>
+A &lt;ntv:docseq&gt; container will be generated surrounding the filter output.
+This enables the output to be sent directly to ntvindex.
+<P></P>
+<DT><STRONG><A NAME="item_%2DF"><CODE>-F</CODE></A></STRONG><BR>
+<DD>
+A ``force'' flag that indicates that content with an unknown encoding should
+be forced to be the default encoding.  Normally such content is dropped.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dz"><CODE>-z</CODE></A></STRONG><BR>
+<DD>
+The <A HREF="ntvmailfilter.html#item_%2Dz"><CODE>-z</CODE></A> flag indicates that messages contained as part of MPDIGEST
+containers should be treated as separate documents, rather than having
+their content merged into the parent message.
+<P>Note that the parent message is always emitted but with -z it will
+probably be short.  Also note that with -z, the last message in the
+digest will also contain text from the end of the parent message.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%2Dh"><CODE>-h</CODE></A></STRONG><BR>
+<DD>
+Print some help information.
+<P></P></DL>
+<P>
+<H2><A NAME="examples">EXAMPLES</A></H2>
+<P>Typical simple usage:</P>
+<PRE>
+    ntvmailfilter -D -f mailbox -o offset \
+                  -a from -a to -a cc -d date -a subject \
+                  -t subject \
+                  &lt; mailbox-names | ntvindex ...</PRE>
+<P>Handling HTML, Word and PDF attachments with other NexTrieve filters:</P>
+<PRE>
+    ntvmailfilter -D -f mailbox -o offset \
+                  -a from -a to -a cc -d date -a subject \
+                  -t subject \
+                  -m 'text/html=ntvhtmlfilter -r' \
+                  -m 'application/msword=ntvdocfilter -r' \
+                  -m 'application/pdf=ntvpdffilter -r' \
+                  &lt; mailbox-names | ntvindex ...</PRE>
+<P>As above, but dropping JPEG images that appear as text/plain attachments,
+and mapping word documents in application/octet-stream attachments
+to be handled with the ntvdocfilter:</P>
+<PRE>
+    ntvmailfilter -D -f mailbox -o offset \
+                  -a from -a to -a cc -d date -a subject \
+                  -t subject \
+                  -M 'text/plain;*.jpg=junk/junk' \
+                  -m 'application/msword=ntvdocfilter -r' \
+                  -m 'application/pdf=ntvpdffilter -r' \
+                  -M 'application/octet-stream;*.doc=application/msword' \
+                  &lt; mailbox-names | ntvindex ...</PRE>
+
+</BODY>
+
+</HTML>

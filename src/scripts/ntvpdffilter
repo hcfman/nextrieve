@@ -1,0 +1,122 @@
+#!/bin/sh
+
+# Very simple filter that expects a series of *.pdf filenames
+# presented on stdin.
+#
+# It runs pdftotext on each one, massaging the output to produce
+# XML suitable for NexTrieve indexing.  Thus, pdftotext must be
+# installed.  Pdfinfo must also be installed if the -info option
+# is used to extract title information.
+#
+
+NTVINST=/usr/local/nextrieve
+VERSION=2.0.0
+
+pdftotext="pdftotext -enc UTF-8"
+pdfinfo="pdfinfo"
+ntvtr="$NTVINST/$VERSION/bin/filters/ntvtr -e utf8"
+
+
+#
+# Options: [-f filenameattr] [-t titleattr] [-T titletext] [-info]
+# -f to output filename as attribute.
+# -t to output title text (first line of text) as attribute.
+# -T to output title text (first line of text) as text.
+# -info: use pdfinfo to get the title text.
+#
+
+[ ! -z "$NTVRAW" -a "$NTVRAW" != "0" ] && raw=1
+
+while [ -z "$bad" -a ! -z "$1" ]; do
+    case "$1" in
+    -D) header=1; shift;;
+    -\?|-h) bad=1; shift;;
+    -r) raw=1; shift;;
+    -f) fattr="$1"; shift; shift;;
+    -t) tattr="$1"; shift; shift;;
+    -T) ttext="$1"; shift; shift;;
+    -info) useinfo=1; shift;;
+    *)  echo "Unknown argument '$param'."
+        bad=1;;
+    esac
+done
+
+[ ! -z "$bad" ] \
+    && { echo 'usage: [-Drh] [-f fnameattr] [-t titleattr] [-T titletext] [-info]';
+         exit 1;
+       }
+
+[ ! -z "$raw" ] && { header=; fattr=; tattr=; }
+
+if [ ! -z "$header" ]; then
+    echo '<?xml version="1.0" encoding="utf-8"?>'
+    echo '<ntv:docseq xmlns:ntv="http://www.nextrieve.com/1.0">'
+fi
+
+while true
+do
+    inline=
+    if [ ! -z "$raw" ]; then
+	cat > /tmp/rawin$$
+	inline="/tmp/rawin$$"
+    else
+	read inline
+    fi
+
+    [ -z "$inline" ] && break;
+
+    # Any '<' char indicating attributes?
+    xmlattrs="`echo $inline | sed -e '/</!d' -e 's/^[^<]*</</'`"
+    if [ -z "$xmlattrs" ]
+    then
+	filename="$inline"
+    else
+	filename="`echo $inline | sed -e 's/ *<.*//'`"
+    fi
+
+    if [ ! -s "$filename" ]; then
+	[ ! -z "$raw" ] && break;
+	continue;
+    fi
+
+    [ -z "$raw" ] && echo '<document>'
+    [ ! -z "$fattr" ] && xmlattrs="<$fattr>$filename</$fattr>$xmlattrs"
+    $pdftotext "$filename" /tmp/tmpraw$$
+    sed -e '/^ *$/d' < /tmp/tmpraw$$ | $ntvtr > /tmp/tmp$$
+    if [ ! -z "$tattr$ttext" ]; then
+	if [ -z "$useinfo" ]; then
+	    # Get first line of text as title...
+	    title="`sed -e '/^./q' < /tmp/tmp$$`"
+	else
+	    # Use pdfinfo to get the title...
+	    $pdfinfo "$filename" \
+		| grep -i "^title:" \
+		| sed -e 's/^[^ ]*  *//' > /tmp/title$$
+	    title="`cat /tmp/title$$`"
+	fi
+    fi
+    [ ! -z "$tattr" ] && xmlattrs="<$tattr><![CDATA[$title]]></$tattr>$xmlattrs"
+    [ ! -z "$xmlattrs" ] && echo "<attributes>$xmlattrs</attributes>"
+    [ -z "$raw" ] && echo -n "<text>"
+    [ ! -z "$ttext" ] && echo -n "<$ttext><![CDATA[$title]]></$ttext>"
+    echo -n "<![CDATA["
+    if [ ! -z "$tattr$ttext" ]; then
+	sed -e 1d < /tmp/tmp$$
+    else
+	cat /tmp/tmp$$
+    fi | sed -e 's/]]>/]]]]><![CDATA[>/g'
+    echo -n "]]>"
+
+    if [ -z "$raw" ]
+    then
+	echo '</text></document>'
+    else
+	rm -f /tmp/rawin$$
+	break
+    fi
+done
+
+rm -f /tmp/tmp$$ /tmp/tmpraw$$ /tmp/title$$
+
+[ ! -z "$header" ] && echo '</ntv:docseq>'
+exit 0

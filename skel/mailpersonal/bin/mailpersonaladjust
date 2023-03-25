@@ -1,0 +1,27 @@
+#!%%NTVPERL%%
+
+system( "%%NTVBASE%%/%%NTVNAME%%/bin/%%NTVNAME%%makeselecthtml > %%NTVBASE%%/%%NTVNAME%%/templates/%%NTVNAME%%-checkboxes" );
+system( "%%NTVBASE%%/%%NTVNAME%%/bin/%%NTVNAME%%makedatemap > %%NTVBASE%%/%%NTVNAME%%/templates/%%NTVNAME%%-datemap" );
+
+undef $/;
+open( IN, "%%NTVBASE%%/%%NTVNAME%%/bin/%%NTVNAME%%makeresources|" ) ||
+    die "Can't spawn %%NTVBASE%%/%%NTVNAME%%/bin/%%NTVNAME%%makeresources: $!\n";
+$resources = <IN>;
+close IN;
+
+open( IN, "%%NTVBASE%%/%%NTVNAME%%/%%NTVNAME%%.res" ) ||
+    die "Can't open %%NTVBASE%%/%%NTVNAME%%/%%NTVNAME%%.res: $!\n";
+$data = <IN>;
+close IN;
+
+$data =~ s/<!-- start checkboxes -->.*<!-- end checkboxes -->/<!-- start checkboxes -->$resources<!-- end checkboxes -->/s;
+
+open( OUT, "> %%NTVBASE%%/%%NTVNAME%%/new%%NTVNAME%%.res" ) ||
+    die "Can't create %%NTVBASE%%/%%NTVNAME%%/new%%NTVNAME%%.res: $!\n";
+print OUT $data;
+close OUT;
+
+unlink "%%NTVBASE%%/%%NTVNAME%%/%%NTVNAME%%.res";
+rename "%%NTVBASE%%/%%NTVNAME%%/new%%NTVNAME%%.res", "%%NTVBASE%%/%%NTVNAME%%/%%NTVNAME%%.res";
+
+exit 0;

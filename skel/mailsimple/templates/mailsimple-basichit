@@ -1,0 +1,25 @@
+
+<TABLE CELLSPACING=0 CELLPADDING=0>
+<TR>
+<TD WIDTH=32> <FONT FACE="arial" SIZE=2><B><ntv-hit-count></B></FONT> </TD>
+<TD ALIGN=CENTER><FONT FACE="arial" SIZE=2><B>
+    <ntv-hit-printattr date "no date">
+</B></FONT></TD>
+<TD WIDTH=32>&nbsp;</TD>
+<TD>
+<FONT FACE="arial" SIZE=2><A HREF="/cgi-bin/%%NTVNAME%%show?mailbox=<ntv-hit-linkattr mailbox>&offset=<ntv-hit-linkattr offset>&length=<ntv-hit-linkattr length>&subject=<ntv-hit-printattr subject "(no subject)">" TARGET="launch"><B><ntv-hit-printattr subject "(no subject)"></B></A></FONT>
+</TD>
+</TR>
+<ntv-vbleq! vblsubjectsonly checked>
+<!-- a preview line. -->
+<TR>
+<TD>&nbsp;</TD>
+<TD>&nbsp;</TD>
+<TD>&nbsp;</TD>
+<TD>
+<FONT FACE="arial" SIZE=2><ntv-hit-preview></FONT>
+</TD>
+</TR>
+</ntv-vbleq>
+</TABLE>
+<BR>

@@ -1,0 +1,38 @@
+#!%%NTVPERL%%
+
+$INDEXBASE = '%%NTVBASE%%/%%NTVNAME%%';
+$NTVNAME = '%%NTVNAME%%';
+
+chdir "$INDEXBASE/archive" || die "Can't change to $INDEXBASE/archive";
+
+%monthnames = (
+    'Jan', '01',
+    'Feb', '02',
+    'Mar', '03',
+    'Apr', '04',
+    'May', '05',
+    'Jun', '06',
+    'Jul', '07',
+    'Aug', '08',
+    'Sep', '09',
+    'Oct', '10',
+    'Nov', '11',
+    'Dec', '12'
+    );
+
+while ( <> ) {
+    if ( /^From .*:/ ) {
+        ( $month, $year ) = /^From\s+[^\s]+\s+... (...) .* (\d+)$/;
+        print "$NTVNAME-$year$monthnames{ $month }.mbx\n";
+        close OUT if $isopen;
+        open( OUT, ">> $NTVNAME-$year$monthnames{ $month }.mbx" ) ||
+            die "Can't create file $NTVNAME-$year$monthnames{ $month }.mbx: $!\n";
+        $isopen = 1;
+    }
+
+    print OUT;
+}
+
+close OUT;
+
+exit 0;

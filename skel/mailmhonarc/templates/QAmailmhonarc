@@ -1,0 +1,43 @@
+<HTML>
+<HEAD>
+<TITLE>Search the %%NTVNAME%% mailing list</TITLE>
+</HEAD>
+<BODY BACKGROUND="/bgblend.gif">
+<FONT FACE="arial,helvetica" SIZE=2>
+
+<H2>Search the %%NTVNAME%% mailing list</H2>
+
+<FORM METHOD="POST" ACTION="<ntv-script>">
+<ntv-include %%NTVCHROOTBASE%%/%%NTVNAME%%/templates/%%NTVNAME%%-checkboxes>
+<ntv-include %%NTVCHROOTBASE%%/%%NTVNAME%%/templates/%%NTVNAME%%-advbuttons>
+</FORM>
+
+<ntv-loophead>
+<P>
+<ntv-include %%NTVCHROOTBASE%%/%%NTVNAME%%/templates/%%NTVNAME%%-basicpages>
+</P>
+
+<P>
+Hits <ntv-hits-offset> to <ntv-hits-limit> of <ntv-hits-total>:
+</P>
+
+<ntv-loop>
+<ntv-include %%NTVCHROOTBASE%%/%%NTVNAME%%/templates/%%NTVNAME%%-basichit>
+</ntv-loop>
+
+<ntv-include %%NTVCHROOTBASE%%/%%NTVNAME%%/templates/%%NTVNAME%%-basicpages>
+
+<BR CLEAR=ALL/>
+
+<P><HR WIDTH=90% SIZE=3 NOSHADE></P>
+<P>
+<CENTER>
+    <FONT SIZE=1>
+    Powered by <A HREF="http://www.nextrieve.com/" TARGET=_top>NexTrieve</A>
+    </FONT>
+</CENTER>
+</P>
+
+</FONT>
+</BODY>
+</HTML>

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Does nothing -- there is nothing to prepare when indexing simple html.
+
+exit 0

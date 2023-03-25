@@ -1,0 +1,42 @@
+<HTML>
+<HEAD>
+<TITLE>Text Index Integrity Checking</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">Text Index Integrity Checking</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvcheck.html#synopsis">SYNOPSIS</A></LI>
+		<LI><A HREF="ntvcheck.html#description">DESCRIPTION</A></LI>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="synopsis">SYNOPSIS</A></H2>
+<P>ntvcheck [--xml] idxdir</P>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P><STRONG>ntvcheck</STRONG> will check the content of the nextrieve text index found in
+the directory <EM>idxdir</EM>.  It will read the content of the index, decompress
+all its hit-lists performing range checks as it goes.</P>
+<P>If any problems are encountered, rather obvious error messages are produced.
+Note that there is currently no ``repair'' facility if errors are
+encountered.  If errors are encountered, it normally means you have
+to rebuild the index from scratch.</P>
+<P>The --xml option will cause <STRONG>ntvcheck</STRONG> to output an &lt;indexcreation&gt;
+section describing the structure fo the text index instead of performing
+a check.</P>
+
+</BODY>
+
+</HTML>

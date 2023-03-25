@@ -1,0 +1,918 @@
+<HTML>
+<HEAD>
+<TITLE>HTML Template Filling</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">HTML Template Filling</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvultralite.html#synopsis">SYNOPSIS</A></LI>
+		<LI><A HREF="ntvultralite.html#description">DESCRIPTION</A></LI>
+		<LI><A HREF="ntvultralite.html#ntvultralitespecific resource information">Ntvultralite-Specific Resource Information</A></LI>
+		<LI><A HREF="ntvultralite.html#constructing the search query">Constructing the Search Query</A></LI>
+		<LI><A HREF="ntvultralite.html#variables">Variables</A></LI>
+		<LI><A HREF="ntvultralite.html#choosing templates">Choosing Templates</A></LI>
+		<LI><A HREF="ntvultralite.html#filling templates">Filling Templates</A></LI>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="synopsis">SYNOPSIS</A></H2>
+<P>NTVBASE=basedir NTVNAME=scriptname ntvultralite</P>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P><STRONG>ntvultralite</STRONG> is basically a template-filling process used as part
+of a web server.
+It is invoked
+in response to the web server receiving a POST or GET message from a browser.
+<STRONG>ntvultralite</STRONG> analyzes the message data received and constructs a query
+to be applied to a text index.
+This query can be processed directly by ntvultralite (which is possible if the
+text index is reasonably small and is directly accessable),
+or it can be sent to a nextrieve search server on the same or a different
+machine.</P>
+<P>The resulting XML hitlist is then analyzed and merged with appropriate
+HTML templates to produce the final resultant HTML.</P>
+<P><STRONG>ntvultralite</STRONG> is normally executed as part of a CGI script -- this script
+has all the information in its environment relating to the POST or GET
+request issued by the remote web user.  There is normally a small program
+under cgi-bin -- created automatically if the text index was installed
+with ntvmakenewwebindex -- that sets two other
+environment variables necessary for <STRONG>ntvultralite</STRONG> to work, namely:</P>
+<DL>
+<DT><STRONG><A NAME="item_NTVBASE">NTVBASE</A></STRONG><BR>
+<DD>
+A base directory.
+<P></P>
+<DT><STRONG><A NAME="item_NTVNAME">NTVNAME</A></STRONG><BR>
+<DD>
+A simple name discriminating between various different indexes that can be
+searched by ultralite processes or even different forms for the same
+index.
+<P></P></DL>
+<P>These two pieces of information, <STRONG>$NTVBASE</STRONG> and <STRONG>$NTVNAME</STRONG>, are
+used by <STRONG>ntvultralite</STRONG> to locate all the other information it needs.</P>
+<P>The resource file defining the text index information is assumed
+to be at</P>
+<PRE>
+    $NTVBASE/$NTVNAME/$NTVNAME.res</PRE>
+<P>All templates are assumed to be under a directory</P>
+<PRE>
+    $NTVBASE/$NTVNAME/templates/</PRE>
+<P>with names starting with two state-characters (described later) and terminating
+with <STRONG>$NTVNAME</STRONG>.</P>
+<P>
+<H2><A NAME="ntvultralitespecific resource information">Ntvultralite-Specific Resource Information</A></H2>
+<P>There are a number of elements present in the resource file of the text
+index that are specific to ntvultralite, found in &lt;ultralite&gt;
+elements.  The format of this and other elements found in the
+resource file is described <A HREF="ntvresourcefile.html" target="_blank">here</A>.</P>
+<P>A given <STRONG>ntvultralite</STRONG> process will preferentially use an &lt;ultralite&gt;
+container in the resource file that is tagged with 'name=``<EM>$NTVNAME</EM>'''.
+If no such container exists,
+<STRONG>ntvultralite</STRONG> will attempt to use a ``default'' &lt;ultralite&gt;
+container defined as having no name attribute.</P>
+<P>
+<H2><A NAME="constructing the search query">Constructing the Search Query</A></H2>
+<P>The incoming information from a form that's submitting a query
+is a sequence of names and values, like:</P>
+<PRE>
+    namea=vala&amp;nameb=valb&amp;namec=valc...</PRE>
+<P>These names are names attached to various fields in the submitting form;
+the values are the values either typed in by the user, or selected
+by the user.</P>
+<P>There are a set of names that are ``special'' to <STRONG>ntvultralite</STRONG>, and that
+will cause it to perform special actions.  This set is:</P>
+<DL>
+<DT><STRONG><A NAME="item_q%3Dquerytext"><STRONG>q=querytext</STRONG></A></STRONG><BR>
+<DD>
+General query text.  Words may be prefixed with '+' or '-'; '+' indicating
+the word must be present in returned documents, '-' indicating it cannot
+be present in returned documents.
+<P></P>
+<DT><STRONG><A NAME="item_qany%3Dquery%2Dany%2Dtext"><STRONG>qany=query-any-text</STRONG></A></STRONG><BR>
+<DD>
+<DT><STRONG><A NAME="item_qall%3Dquery%2Dall%2Dtext"><STRONG>qall=query-all-text</STRONG></A></STRONG><BR>
+<DD>
+<DT><STRONG><A NAME="item_qnot%3Dquery%2Dnot%2Dtext"><STRONG>qnot=query-not-text</STRONG></A></STRONG><BR>
+<DD>
+Special query text.
+Words present in
+query-all-text must be present in documents returned by an exact search.
+Words present in query-not-text are not allowed to be present in documents
+returned by an exact search.  Words in query-any-text may or may not
+be present in returned documents for an exact search.
+<P>These are equivalent to the the &lt;qany&gt;, &lt;qall&gt; and &lt;qnot&gt; elements
+present in an XML query.</P>
+<P></P>
+<DT><STRONG><A NAME="item_i%3Doffset"><STRONG>i=offset</STRONG></A></STRONG><BR>
+<DD>
+<DT><STRONG><A NAME="item_dh%3Doffset"><STRONG>dh=offset</STRONG></A></STRONG><BR>
+<DD>
+<DT><STRONG><A NAME="item_th%3Doffset"><STRONG>th=offset</STRONG></A></STRONG><BR>
+<DD>
+The offset (1-based), number of hits to display,
+and number of hits to process for the query.
+These are equivalent to the firsthit, displayedhits and totalhits
+attributes of an XML query.
+<P></P>
+<DT><STRONG><A NAME="item_h%3Dhighlighting"><STRONG>h=highlighting</STRONG></A></STRONG><BR>
+<DD>
+The minimum number of characters in a word present in the preview before
+it is allowed to be hightlighted.  This is equivalent to a
+highlightlength attribute of an XML query.
+<P></P>
+<DT><STRONG><A NAME="item_f%3Dfuzzylevel"><STRONG>f=fuzzylevel</STRONG></A></STRONG><BR>
+<DD>
+The fuzzylevel to use for a fuzzy search.
+This is equivalent to the fuzzylevel attribute of an XML query.
+<P></P>
+<DT><STRONG><A NAME="item_cs%3Dconstraint"><STRONG>cs=constraint</STRONG></A></STRONG><BR>
+<DD>
+A constraint expression to use.
+This is equivalent to a &lt;constraint&gt; element in an XML query.
+<P></P>
+<DT><STRONG><A NAME="item_db%3Didxname"><STRONG>db=idxname</STRONG></A></STRONG><BR>
+<DD>
+A logical text index name to use.
+This is equivalent to an &lt;indexname&gt; element in an XML query.
+<P></P>
+<DT><STRONG><A NAME="item_fuzzy%3D0%7C1"><STRONG>fuzzy=0|1</STRONG></A></STRONG><BR>
+<DD>
+Perform a fuzzy search if the value is non-zero, otherwise an exact search.
+Equivalent to type=``exact'' or type=``fuzzy'' in an XML query.
+<P></P>
+<DT><STRONG><A NAME="item_exact%3D0%7C1"><STRONG>exact=0|1</STRONG></A></STRONG><BR>
+<DD>
+Perform an exact search if the value is non-zero, otherwise a fuzzy search.
+Equivalent to type=``fuzzy'' or type=``exact'' in an XML query.
+<P></P>
+<DT><STRONG><A NAME="item_ntvselect%3Dattrname"><STRONG>ntvselect=attrname</STRONG></A></STRONG><BR>
+<DD>
+If <EM>attrname</EM> refers to a flag-type attribute defined in the text
+index, any search will be performed only on documents having this
+attribute set.
+<P></P>
+<DT><STRONG><A NAME="item_vblname%3Dvalue"><STRONG>vblname=value</STRONG></A></STRONG><BR>
+<DD>
+Any name starting with ``vbl'' will be processed specially.  See the
+section ``Variables'' below.
+<P></P>
+<DT><STRONG><A NAME="item_attrname"><STRONG>attrname</STRONG></A></STRONG><BR>
+<DD>
+If <EM>attrname</EM> refers to a flag-type attribute defined in the text
+index, any search will be performed only on documents having this
+attribute set.
+If multiple attributes are defined in this way (implying multiple checkboxes
+have been checked by the user), an ``or'' operation is performed.  Ie,
+any search will be on a set of documents having at least one of the nominated
+attributes set.
+More flexible control is allowed via the use of ``vbl'' type form variables.
+<P></P></DL>
+<P>This information is used to construct a query.</P>
+<P>
+<H2><A NAME="variables">Variables</A></H2>
+<P>The use of ``variables'', input fields whose name starts with ``vbl'',
+allows a reasonably flexible way of constructing search text and constraints
+with more complex search forms.
+There are several elements in the resource file that are specific
+to variables in ntvultralite.  These elements are:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;vblsub name=&quot;vblname&quot; text=&quot;text&quot;/&gt;
+    &lt;vblrange name1=&quot;vblname1&quot; name2=&quot;vblname2&quot;/&gt;
+    &lt;vbluse name=&quot;vblname&quot; type=&quot;constraint&quot;|&quot;text&quot;|&quot;texttype&quot;
+            class=&quot;any&quot;|&quot;all&quot;|&quot;not&quot;|&quot;free&quot;|&quot;&lt;ntv-vblname2&gt;&quot;/&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>The intent is to provide the following functionality:</P>
+<UL>
+<LI>
+Map a field value directly to part of a constraint expression.
+<P></P>
+<LI>
+Allow simple range operations, where up to two input fields contribute
+to the constraint expression fragment.
+<P></P>
+<LI>
+Allow a single query-text field to have its function changed
+from ``any'' words to ``all'' words by use of another checkbox or radio
+control field.
+<P></P>
+<LI>
+Allow similar functionality to the above for constraint expression
+fragments (eg, ``all'' keywords, or ``some'' keywords).
+<P></P></UL>
+<P>There are a number of simple steps to providing the above solutions.</P>
+<UL>
+<LI>
+Map a given input field and value to a constraint expression fragment.
+Eg, if input field ``vblstart'' has value 20010130, we might want to get
+a constraint expression fragment of ``startdate &gt;= 20010130'' being
+generated.  This is possible through the use of <STRONG>vblsub</STRONG> elements
+in the resource file.  Eg,
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;vblsub name=&quot;vblstart&quot;
+            text=&quot;startdate &amp;gt;= &amp;lt;ntv-value&amp;gt;&quot;/&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P></P>
+<LI>
+Allow constraint expression fragments to be built from the presence of
+values in two fields, indicating a range operation rather than a single
+comparison.  Eg, if there are two fields ``vblstart'' and ``vblend'', one or the
+other or both may have values posted from the form.
+<P>If only ``vblstart'' has a value of ``20010130'', we might want to map it to the
+constraint
+expression fragment ``startdate &gt;= 20010130'' as above.</P>
+<P>If only ``vblend''
+has a value of ``20010330'', we might want to map it to the constraint
+expression fragment ``enddate &lt;= 20010330''.</P>
+<P>If both are present, however, we would want the constraint expression
+fragment to be ``(startdate &gt;= 20010130 &amp; enddate &lt;= 20010330)'' (note
+the enclosing parentheses and automatic internal ``and'' operation).</P>
+<P>This is possible through use of the <STRONG>vblrange</STRONG> elements in the
+resource file.  Eg,</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;vblrange name1=&quot;vblstart&quot; name2=&quot;vblend&quot;/&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P></P>
+<LI>
+Indicate whether a given field and value are part of ``any-inclusion'',
+``all-inclusion'' or ``exclusion'' operations, and whether it is a
+a constraint-expression fragment or a query-text fragment.
+This is possible by use of
+<STRONG>vbluse</STRONG> elements in the resource file.  Eg,
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;vbluse name=&quot;vblstart&quot; type=&quot;constraint&quot; class=&quot;any&quot;/&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P></P></UL>
+<P>The order of operations that ntvultralite performs during variable
+processing is as follows.</P>
+<DL>
+<DT><STRONG><A NAME="item_Basic_Substitution">Basic Substitution</A></STRONG><BR>
+<DD>
+Any variable with a <EM>non-empty</EM> value is mapped through any <STRONG>vblsub</STRONG>
+element that has a matching name.
+The presence of &lt;ntv-value&gt; in the text of the &lt;vblsub&gt; element
+is replaced with the actual variable value.
+After the substitution, the variable has its value changed to be the
+result of the substitution.
+<P>Eg, having a line in the resource file of the form:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;vblsub name=&quot;vblstartdate&quot; text=&quot;startdate &amp;gt;= &amp;lt;ntv-value&amp;gt;&quot;/&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>will change a ``vblstartdate'' value of ``20010130'' to ``startdate &gt;= 20010130''.</P>
+<P></P>
+<DT><STRONG><A NAME="item_Basic_Ranges">Basic Ranges</A></STRONG><BR>
+<DD>
+After substituting all variables, ranging takes place.  If a <STRONG>vblrange</STRONG>
+element finds that both its variables have non-empty values, it will
+change the value of the first variable to reflect the complete range
+expression, and remove the value of the second variable to prevent
+further use of it.
+<P>Eg if, after substitution, we have the following variables and values:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    vblstartdate    startdate &gt;= 20010130
+    vblenddate      enddate &lt;= 20010330 </PRE></FONT></TD></TR></TABLE></PRE>
+<P>After processing the element:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;vblsub name=&quot;vblstartdate&quot; name2=&quot;vblenddate&quot;/&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>The variable ``vblstartdate'' will have a value of</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &quot;(startdate &gt;= 20010130 &amp; enddate &lt;= 20010330)&quot; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>and the variable ``vblenddate'' will be empty.</P>
+<P></P>
+<DT><STRONG><A NAME="item_Final_Use">Final Use</A></STRONG><BR>
+<DD>
+Finally the text and constraint fragments are combined.
+<P>This is performed through the use of <STRONG>vbluse</STRONG> elements.  Each element
+specifies a variable name, its use (constraint, text or texttype)
+and its inclusion or exclusion.  This final piece of data
+(inclusion or exclusion) can be provided by another variable
+if &lt;ntv-vbl vblname&gt; is used.</P>
+<P>Inclusion should indicate one of ``any'', ``all'', ``not'' or ``free''.</P>
+<P>With a text variable, this simply indicates that the text becomes part of the
+qany, qall, qnot or q strings, representing the query text.</P>
+<P>With a constraint variable, there are equivalent (internal) parts of the
+constraint expression being built up.  If ``any'' is specified, the ``any''
+part of the constraint will be augmented with ``|'' (or) and the expression
+fragment.  If ``all'' is specified, the ``all'' part of the constraint is
+augmented with ``&amp;'' (and) and the expression fragment.  If ``not'' is specified
+the ``not'' part of the constraint (which is later completely
+negated) will be augmented with ``&amp;'' (and) and the
+expression fragment.</P>
+<P>After all this, the final constraint expression is built by combining
+the classified (any, all, not) parts of the constraint, using parentheses
+and ``|'' (or) operators where appropriate.</P>
+<P>With a texttype variable, the text simply defines a space-separated
+sequence of texttypes should should be searched.  Inclusion operators
+are simply ignored.</P>
+<P></P></DL>
+<P>
+<H2><A NAME="choosing templates">Choosing Templates</A></H2>
+<P>In order to view results or present a search form we need to define
+what the page looks like.
+This is done using ``templates''.  A template is a normal HTML
+page with the addition of some extra tags specific to ntvultralite.
+These special tags are recognised by <STRONG>ntvultralite</STRONG>, and filled in
+with automatically generated HTML fragments appropriate to the information
+wanted to be displayed.</P>
+<P>All templates are assumed to be under a directory</P>
+<PRE>
+    $NTVBASE/$NTVNAME/templates/</PRE>
+<P>There is a naming convention associated with template files.
+Ntvultralite will automatically construct a template name starting
+with two letters
+and ending with the name of the script being run (the name of the script
+being defined by the environment variable <STRONG>$NTVNAME</STRONG>, set up
+by the cgi program invoking <STRONG>ntvultralite</STRONG>).</P>
+<P>The first letter is one of:</P>
+<DL>
+<DT><STRONG><A NAME="item__">_</A></STRONG><BR>
+<DD>
+No query has been done.  Ie, this is the initial page.
+<P></P>
+<DT><STRONG><A NAME="item_Q">Q</A></STRONG><BR>
+<DD>
+A query was performed and returned results, which are
+being displayed.
+<P></P>
+<DT><STRONG><A NAME="item_E">E</A></STRONG><BR>
+<DD>
+A query was performed, but there were no results.
+<P></P></DL>
+<P>The second letter is defined by whether or not we're in ``advanced'' mode
+or not.  In advanced mode a more complicated input page can be used
+with more controls over the search being performed.
+The second template name letter is one of:</P>
+<DL>
+<DT><STRONG>_</STRONG><BR>
+<DD>
+We're in ``simple'' mode.
+<P></P>
+<DT><STRONG><A NAME="item_A">A</A></STRONG><BR>
+<DD>
+We're in ``advanced'' mode.
+<P></P></DL>
+<P>It is possible to switch to different sets of template files in two
+different ways described below.  Both methods define a new subdirectory that
+should be present under $NTVBASE/$NTVNAME/templates and which should contain
+all the conventionally named template files required.</P>
+<UL>
+<LI>
+When a flag-type attribute is set for a search, nominally to search
+a particular portion of the text index.
+<P>The valid attributes to cause switching are specified in the resource file
+with <STRONG>attributetemplate</STRONG> elements.  The first such element that has an
+attribute set on the form is used.</P>
+<P></P>
+<LI>
+When a particular keyword is present in the search string.
+<P>The valid keywords are specified using <STRONG>switchedtemplate</STRONG>
+elements in the resource file.</P>
+<P>Note that it is not possible to have both <STRONG>switchedtemplate</STRONG>
+elements and <STRONG>attributetemplate</STRONG> elements in the same resource file.</P>
+<P></P></UL>
+<P>
+<H2><A NAME="filling templates">Filling Templates</A></H2>
+<P>Various <STRONG>ntvultralite</STRONG> specific tags are recognised in the HTML templates
+and are replaced by <STRONG>ntvultralite</STRONG>.  These tags are listed here.</P>
+<DL>
+<DT><STRONG><A NAME="item_%3Cntv%2Dattrmap%3E">&lt;<STRONG>ntv-attrmap</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used inside &lt;ntv-loop&gt;...&lt;/ntv-loop&gt;.
+Replaced with the content specified in the resource file (using
+<STRONG>attrmap</STRONG> elements) of the first flag-attribute that's set for the hit.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dcheckbox%2A%3E">&lt;<STRONG>ntv-checkbox*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by a form checkbox widget for use in restricting the search to
+documents having a specified flag-type attribute set.
+It takes the attribute name as a parameter as in:
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;ntv-checkbox support&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>This allows simple use of flag-type attributes as a constraint, without
+having to use the more powerful (although more complex) general constraint
+construction using ntvultralite form variables starting with ``vbl''.</P>
+<P>There are limitations.  If multiple checkboxes are used on a form to
+control multiple attributes, the checked attributes are ``or-ed'' together;
+there is no ``and'' option.</P>
+<P>If no attributes are checked, a search of the entire text
+index is performed.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dconstraint%2A%3E">&lt;<STRONG>ntv-ctl-constraint*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by a form widget that accepts user input in a text box.
+Any extra material found is placed in the resulting INPUT widget,
+such as ``SIZE=value'', or an initialization using &lt;ntv-printconstraint&gt;.
+Eg:
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;ntv-constraint VALUE=&quot;&lt;ntv-printconstraint&gt;&quot;&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>The data entered by the user is returned as a ``cs'' form variable defining
+a constraint to be applied.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Ddisplayedhits%3E">&lt;<STRONG>ntv-ctl-displayedhits</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by a form widget that accepts user input in a text box.
+The text box is automatically initialized with the current value of
+displayedhits.  The data entered by the user is returned as a form variable
+``d'', defining the number of hits to display for the search.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dexactbutton%3E">&lt;<STRONG>ntv-ctl-exactbutton</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced with a form checkbox widget.  When ``checked'' a form variable called
+``exact'' will be returned indicating an exact search is to be performed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dfuzzybutton%3E">&lt;<STRONG>ntv-ctl-fuzzybutton</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced with a form checkbox widget.  When ``checked'' a form variable called
+``fuzzy'' will be returned indicating a fuzzy search is to be performed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dfuzzyfactor%3E">&lt;<STRONG>ntv-ctl-fuzzyfactor</STRONG>&gt;</A></STRONG><BR>
+<DD>
+For use in an advanced-search page.
+Replaced with a form select widget with allowable values of 1, 2 and 3
+that define the fuzzy level to use for a fuzzy search.  The value is returned
+as the form variable ``f''.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dhighlight%3E">&lt;<STRONG>ntv-ctl-highlight</STRONG>&gt;</A></STRONG><BR>
+<DD>
+For use in an advanced-search page.
+Replaced with a form select widget with allowable values of 1 through 10
+that define the minimum number of characters a preview word must have
+before it is highlighted.
+<P>Data entered by the user is returned as the ``h'' form variable.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dmoderadio%2Dfuzzy%2A%3E">&lt;<STRONG>ntv-ctl-moderadio-fuzzy*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced with a form radio-button widget.  It should be used once with
+a parameter of ``1'' for allowing a fuzzy search when checked, and once with
+a parameter of ``0'' for allowing an exact search when checked.
+<P>The user selection is returned as the value for the ``fuzzy'' form variable.</P>
+<P>For example:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;TR&gt;
+        &lt;TD&gt;Radio mode:&lt;/TD&gt;
+        &lt;TD&gt;
+            fuzzy: &lt;ntv-ctl-moderadio-fuzzy 1&gt;
+            exact: &lt;ntv-ctl-moderadio-fuzzy 0&gt;
+        &lt;/TD&gt;
+    &lt;/TR&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dsearch%2A%3E">&lt;<STRONG>ntv-ctl-search*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by a form widget for accepting user input in a text box
+which is treated as general search text.  Words prefixed with '+' must
+be present in returned documents, words prefixed with '-' cannot be
+present in returned documents.
+Any extra material found is placed in the resulting INPUT widget,
+such as ``SIZE=value'', or an initialization using &lt;ntv-search&gt;.
+<P>Eg:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;ntv-ctl-search VALUE=&quot;&lt;ntv-search&gt;&quot;&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>The value entered in this text box is returend as the value attached
+to the ``q'' form variable.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dsearchall%2A%3E">&lt;<STRONG>ntv-ctl-searchall*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Like &lt;ntv-ctl-search*&gt; except all the words entered in the text
+box must be present in returned documents.  The value entered into this
+text box is returned as the ``qall'' form variable.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dsearchany%2A%3E">&lt;<STRONG>ntv-ctl-searchany*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Like &lt;ntv-ctl-search*&gt; except '+' and '-' prefixing of words entered
+in the text box is ignored.  The value entered into this text box is
+returned as the ``qany'' form variable.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dsearchnot%2A%3E">&lt;<STRONG>ntv-ctl-searchnot*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Like &lt;ntv-ctl-search*&gt; except none of the words entered in the text
+box can be present in returned documents.  The value entered into this
+text box is returned as the ``qnot'' form variable.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dstate%2Dadv%3E">&lt;<STRONG>ntv-ctl-state-adv</STRONG>&gt;</A></STRONG><BR>
+<DD>
+For use in an advanced search page.
+Replaced by a hidden form widget with the name ``adv'' that will ensure
+advanced mode remains on for the next search.  This widget returns
+the ``adv'' form variable.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dsubmit%2A%3E">&lt;<STRONG>ntv-ctl-submit*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by a form ``submit'' widget.  It can take parameters such as
+``VALUE'' giving the text to display on the button:
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;ntv-ctl-submit VALUE=&quot; Search &quot;&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dctl%2Dtotalhits%3E">&lt;<STRONG>ntv-ctl-totalhits</STRONG>&gt;</A></STRONG><BR>
+<DD>
+For use in an advanced search page.
+Replaced by a small form text box widget that defines
+the number of total hits to be processed for the next search.
+The value entered by the user is returned attached to the ``th'' form variable.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Ddefcheckbox%2A%3E">&lt;<STRONG>ntv-defcheckbox*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+The parameter defines the name of a flag-attribute -- any later
+&lt;ntv-checkbox&gt; tag referring to the same attribute will be defaulted
+to a ``checked'' state.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dexec%2A%3E">&lt;<STRONG>ntv-exec*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+If an &lt;<STRONG>execallow value=``1''</STRONG>&gt; element is present in the resource file for
+the text index, <STRONG>ntvultralite</STRONG> permits the use of  &lt;ntv-exec*&gt;
+tags.  The parameter of such a tag should refer to a program and parameters
+that can be run via the use of ``popen()''.  The &lt;ntv-exec*&gt;
+tag is replaced with the output of this process.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dhit%2Dcount%3E">&lt;<STRONG>ntv-hit-count</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used inside &lt;ntv-loop&gt;...&lt;/ntv-loop&gt;.
+Replaced by the number of the hit in the hitlist, the first hit being ``1''.
+<P>See &lt;ntv-loop&gt; for an example usage.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dhit%2Ddocument%3E">&lt;<STRONG>ntv-hit-document</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used inside &lt;ntv-loop&gt;...&lt;/ntv-loop&gt;.
+Replaced by the internal document number used by NexTrieve.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dhit%2Dlinkattr%2A%3E">&lt;<STRONG>ntv-hit-linkattr*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used inside &lt;ntv-loop&gt;&lt;/ntv-loop&gt;.
+Parameters can be given that are treated as a sequence of attribute names.
+The first name encountered that has a non-empty value in the current hit
+defines the textual value substituted.  If the last parameter starts with
+single or double
+quotes it will be used as the value if no non-empty attributes have been found.
+The value substituted will be encoded in a manner suitable for using as
+a link.
+<P>See &lt;ntv-loop&gt; for an example usage.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dhit%2Dpercent%3E">&lt;<STRONG>ntv-hit-percent</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used inside &lt;ntv-loop&gt;&lt;/ntv-loop&gt;.
+Replaced by the percentage score of the hit, supplied as part of fuzzy
+search results.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dhit%2Dpreview%3E">&lt;<STRONG>ntv-hit-preview</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used inside &lt;ntv-loop&gt;&lt;/ntv-loop&gt;.
+Replaced by the preview text of the hit.
+<P>See &lt;ntv-loop&gt; for an example usage.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dhit%2Dprintattr%2A%3E">&lt;<STRONG>ntv-hit-printattr*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Like &lt;ntv-hit-linkattr*&gt; except that the information is encoded
+for general display rather than for use as a link.
+<P>See &lt;ntv-loop&gt; for an example usage.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dhit%2Dscore%3E">&lt;<STRONG>ntv-hit-score</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used inside &lt;ntv-loop&gt;&lt;/ntv-loop&gt;.
+Replaced by the internal score provided by NexTrieve for a hit, supplied
+as part of a fuzzy search.  Unlikely to be useful.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dhits%2Ddisplayed%3E">&lt;<STRONG>ntv-hits-displayed</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used after &lt;ntv-loophead&gt;.
+Replaced by the number of hits being displayed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dhits%2Dlimit%3E">&lt;<STRONG>ntv-hits-limit</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used after &lt;ntv-loophead&gt;.
+Replaced by the number of the last hit being displayed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dhits%2Doffset%3E">&lt;<STRONG>ntv-hits-offset</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used after &lt;ntv-loophead&gt;.
+Replaced by the number of the first hit being displayed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dhits%2Dtotal%3E">&lt;<STRONG>ntv-hits-total</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used after &lt;ntv-loophead&gt;.
+Replaced by the total number of hits in the current hit list.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dinclude%2A%3E">&lt;<STRONG>ntv-include*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+The parameter is treated as a filename, whose contents are substituted
+at this point by <STRONG>ntvultralite</STRONG>.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dlinkconstraint%3E">&lt;<STRONG>ntv-linkconstraint</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by the constraint used, encoded in a manner suitable for use
+in a link.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dlinktextquery%3E">&lt;<STRONG>ntv-linktextquery</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by the textual part of a query, encoded in a manner suitable for
+use in a link.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dloop%3E%2A%3C%2Fntv%2Dloop%3E">&lt;<STRONG>ntv-loop</STRONG>&gt;*&lt;<STRONG>/ntv-loop</STRONG>&gt;</A></STRONG><BR>
+<DD>
+These two tags define a region of HTML that is repeated and substituted
+once for each hit being displayed in a result list.
+<P>An example of its use is:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;ntv-loop&gt;
+    &lt;TABLE CELLSPACING=0 CELLPADDING=0&gt;
+    &lt;TR&gt;
+        &lt;TD WIDTH=32
+            &lt;ntv-hit-ifattreq priority 2&gt;BGCOLOR=&quot;#FF0000&quot;&lt;/ntv-hit-if&gt;
+        &gt;
+        &lt;FONT FACE=&quot;arial&quot; SIZE=2&gt;
+        &lt;B&gt;&lt;ntv-hit-count&gt;&lt;/B&gt;
+        &lt;/FONT&gt;
+        &lt;/TD&gt;</PRE>
+<PRE>
+        &lt;TD&gt;
+        &lt;FONT FACE=&quot;arial&quot; SIZE=2&gt;
+        &lt;A HREF=&quot;&lt;ntv-hit-linkattr filename&gt;&quot; TARGET=launch&gt;
+            &lt;B&gt;&lt;ntv-hit-printattr title filename &quot;no title available&quot;&gt;&lt;/B&gt;
+        &lt;/A&gt;
+        &lt;/FONT&gt;
+        &lt;/TD&gt;</PRE>
+<PRE>
+    &lt;/TR&gt;
+    &lt;TR&gt;
+        &lt;TD&gt;&amp;nbsp;&lt;/TD&gt;</PRE>
+<PRE>
+        &lt;TD&gt;
+        &lt;FONT FACE=&quot;arial&quot; SIZE=2&gt;&lt;ntv-hit-preview&gt;&lt;/FONT&gt;
+        &lt;/TD&gt;
+    &lt;/TR&gt;
+    &lt;/TABLE&gt;
+    &lt;/ntv-loop&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>For each hit we print the hit number (using &lt;ntv-hit-count&gt;),
+a link defined by the ``filename'' attribute of the hit (using
+&lt;ntv-hit-linkattr filename&gt;)
+and a title defined by the ``title'' attribute
+(using &lt;ntv-hit-printattr title filename ``no title available''&gt;).
+This is followed on the next line by the preview text.</P>
+<P>Note that hits with a ``priority'' attribute of 2 are backgrounded in red
+using the &lt;ntv-hit-ifattreq priority 2&gt;BGCOLOR=``#FF0000''&lt;/ntv-hit-if&gt; construct.</P>
+<P>Also note the use of &lt;ntv-hit-printattr&gt; which will use a title
+attribute if one exists, otherwise the filename attribute, otherwise it will
+use the text ``no title available'' as the title.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dloophead%3E">&lt;<STRONG>ntv-loophead</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Marks a point in the HTML at which we can use result-oriented <STRONG>ntvultralite</STRONG>
+tags.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpages%2A%3C%2Fntv%2Dpages%3E">&lt;<STRONG>ntv-pages</STRONG>*&lt;<STRONG>/ntv-pages</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used to define a sequence of page buttons where the hit list extends
+over multiple pages.
+A numeric parameter is given which is taken to be the maximum number of
+buttons wanted.
+The HTML area between these two tags is repeated and substituted once for
+each page button generated.  During this substitution the &lt;ntv-pg-number&gt;
+and &lt;ntv-pg-link&gt; tags can be used giving information about the
+page number represented by the button, and a link to display that page
+of results.
+<P>A complete example of how to use the various &lt;ntv-pg&gt; tags is:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;ntv-pg-ifmlt&gt;
+    Pages: &lt;FONT FACE=&quot;arial&quot; SIZE=-1&gt;
+    &lt;ntv-pg-ifprv&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-linkfirst&gt;&quot;&gt;|&amp;lt;&amp;lt;&lt;/A&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-linkprv&gt;&quot;&gt;&amp;lt;&amp;lt;&lt;/A&gt;
+    &lt;/ntv-pg-ifprv&gt;
+    &lt;ntv-pages 10&gt;
+        &lt;ntv-pg-ifcur&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-link&gt;&quot;&gt;&lt;B&gt;*&lt;ntv-pg-number&gt;*&lt;/B&gt;&lt;/A&gt;
+        &lt;/ntv-pg-ifcur&gt;
+        &lt;ntv-pg-ifcur!&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-link&gt;&quot;&gt;&lt;ntv-pg-number&gt;&lt;/A&gt;
+        &lt;/ntv-pg-ifcur!&gt;
+    &lt;/ntv-pages&gt;
+    &lt;ntv-pg-ifnxt&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-linknxt&gt;&quot;&gt;&amp;gt;&amp;gt;&lt;/A&gt;
+        &lt;A HREF=&quot;&lt;ntv-pg-linklast&gt;&quot;&gt;&amp;gt;&amp;gt;|&lt;/A&gt;
+    &lt;/ntv-pg-ifnxt&gt;
+    &lt;/FONT&gt;
+    &lt;/ntv-pg-ifmlt&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>Note that the code above can be treated as ``boilerplate'' -- ie, taken
+and modified to perform what is wanted, rather than being created from
+scratch.</P>
+<P>If there are multiple pages (&lt;ntv-pg-ifmlt&gt;...&lt;/ntv-pg-ifmlt&gt;),
+buttons will be displayed.</P>
+<P>If there is a previous page (&lt;ntv-pg-ifprv&gt;...&lt;/ntv-pg-ifprv&gt;),
+a link to the first page will be created (&lt;ntv-pg-linkfirst&gt;), and
+a link to the previous page will be created (&lt;ntv-pg-linkprv&gt;).</P>
+<P>This is followed by up to 10 page buttons (&lt;ntv-pages 10&gt;...&lt;/ntv-pages&gt;),
+one of which will be the current
+page (&lt;ntv-pg-ifcur&gt;...&lt;/ntv-pg-ifcur&gt;)
+which has its number-text highlighted.</P>
+<P>If there is a next page (&lt;ntv-pg-ifnxt&gt;...&lt;/ntv-pg-ifnxt&gt;),
+links to the next page and last page are provided.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpg%2Difcur%3E%2A%3C%2Fntv%2Dpg%2Difcur%3E">&lt;<STRONG>ntv-pg-ifcur</STRONG>&gt;*&lt;<STRONG>/ntv-pg-ifcur</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used within &lt;ntv-pages*&lt;/ntv-pages&gt;.
+The HTML area between these two tags is substituted if the current page
+button represents the ``current'' page.  Otherwise the area is simply removed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpg%2Difcur%21%3E%2A%3C%2Fntv%2Dpg%2Difcur">&lt;<STRONG>ntv-pg-ifcur!</STRONG>&gt;*&lt;<STRONG>/ntv-pg-ifcur!</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used within &lt;ntv-pages*&lt;/ntv-pages&gt;.
+Like &lt;ntv-pg-ifcur&gt;*&lt;/ntv-pg-ifcur&gt; above, but the substitution
+occurs if the current page button does <EM>not</EM> represent the ``current'' page.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpg%2Difmlt%3E%2A%3C%2Fntv%2Dpg%2Difmlt%3E">&lt;<STRONG>ntv-pg-ifmlt</STRONG>&gt;*&lt;<STRONG>/ntv-pg-ifmlt</STRONG>&gt;</A></STRONG><BR>
+<DD>
+The HTML area between these two tags is substituted if there are multiple
+pages of results available.  Otherwise the area is simply removed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpg%2Difnxt%3E%2A%3C%2Fntv%2Dpg%2Difnxt%3E">&lt;<STRONG>ntv-pg-ifnxt</STRONG>&gt;*&lt;<STRONG>/ntv-pg-ifnxt</STRONG>&gt;</A></STRONG><BR>
+<DD>
+The HTML area between these two tags is substituted if there is a page
+of results after the page currently being displayed.
+Otherwise the area is simply removed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpg%2Difprv%3E%2A%3C%2Fntv%2Dpg%2Difprv%3E">&lt;<STRONG>ntv-pg-ifprv</STRONG>&gt;*&lt;<STRONG>/ntv-pg-ifprv</STRONG>&gt;</A></STRONG><BR>
+<DD>
+The HTML area between these two tags is substituted if there is a page
+of results prior the page currently being displayed.
+Otherwise the area is simply removed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpg%2Dlink%3E">&lt;<STRONG>ntv-pg-link</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used within &lt;ntv-pages*&lt;/ntv-pages&gt;.
+Replaced by text suitable for use as a link.  The link will cause
+the appropriate page of results to be displayed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpg%2Dlinkfirst%3E">&lt;<STRONG>ntv-pg-linkfirst</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by text suitable for use as a link.  The link will cause
+the first page of results to be displayed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpg%2Dlinklast%3E">&lt;<STRONG>ntv-pg-linklast</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by text suitable for use as a link.  The link will cause
+the first page of results to be displayed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpg%2Dlinknxt%3E">&lt;<STRONG>ntv-pg-linknxt</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by text suitable for use as a link.  The link will cause
+the next page of results to be displayed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpg%2Dlinkprv%3E">&lt;<STRONG>ntv-pg-linkprv</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by text suitable for use as a link.  The link will cause
+the previous page of results to be displayed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpg%2Dnumber%3E">&lt;<STRONG>ntv-pg-number</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used within &lt;ntv-pages*&lt;/ntv-pages&gt;.
+Replaced by the page number of the current page button.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpg%2Dnxt%3E">&lt;<STRONG>ntv-pg-nxt</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by the number of the next page of results.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dpg%2Dprv%3E">&lt;<STRONG>ntv-pg-prv</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by the number of the previous page of results.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dprintconstraint%3E">&lt;<STRONG>ntv-printconstraint</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Like &lt;ntv-hit-linkconstraint*&gt; except that the information is encoded
+for general display rather than for use as a link.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dscript%3E">&lt;<STRONG>ntv-script</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by the URL of the CGI program.  Eg:
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;FORM ACTION=&quot;&lt;ntv-script&gt;&quot; METHOD=POST&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dsearch%3E">&lt;<STRONG>ntv-search</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by the text of the current query.  This represents the entire
+search query.  Words prefixed with '+' are required to be in returned
+documents.  Words prefixed with '-' are required to NOT be in returned
+documents.
+<P>Use either &lt;ntv-search&gt; or some of the set of inputs
+&lt;ntv-searchall&gt;, &lt;ntv-searchany&gt;, &lt;ntv-searchnot&gt;
+on any particular search page.  Don't use all of them on a single page.</P>
+<P>This can be used to initialize an ntv-ctl-search control, for example:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;ntv-ctl-search VALUE=&quot;&lt;ntv-search&gt;&quot;&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dsearchall%3E"><STRONG>&lt;ntv-searchall</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by the text of the ``all'' part of the current query, ie, those
+words in the general query prefixed with '+', with the '+' removed.
+<P>This can be used to initialize a ntv-ctl-searchall control, for example:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;ntv-ctl-searchall VALUE=&quot;&lt;ntv-searchall&gt;&quot;&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dsearchany%3E">&lt;<STRONG>ntv-searchany</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by the text of the ``any'' part of the current query.
+<P>This can be used to initialize a ntv-ctl-searchany control, for example:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;ntv-ctl-searchany VALUE=&quot;&lt;ntv-searchany&gt;&quot;&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dsearchnot%3E">&lt;<STRONG>ntv-searchnot</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by the text of the ``not'' part of the current query, ie, those
+words in the general query prefixed with '-', with the '-' removed.
+<P>This can be used to initialize a ntv-ctl-searchnot control, for example:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;ntv-ctl-searchnot VALUE=&quot;&lt;ntv-searchnot&gt;&quot;&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dselect%2A%3E">&lt;<STRONG>ntv-select*</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Can be used instead of the &lt;ntv-checkbox&gt; tag for simple control
+of flag-type attributes in a search.
+A sequence of attribute names is expected as a parameter to &lt;ntv-select&gt;.
+Each of these names should refer to a flag-type attribute defined in the
+text index.
+<P>A form select widget is constructed having a ``display name'' constructed
+from a matching &lt;selectname&gt; element in the resource file for the
+text index.  It is this ``display name'' that the user sees in his
+selection.</P>
+<P>This is simpler than the use of ``vbl'' type form variables although it
+is less powerful.
+&lt;ntv-checkbox&gt; tags should not be used if &lt;ntv-select*&gt; is
+used.</P>
+<P>If multiple &lt;ntv-select*&gt; tags are used on a form to
+control multiple sets of attributes, the selected attributes are
+``or-ed'' together;
+there is no ``and'' option.</P>
+<P>If no attributes are selected, a search of the entire text
+index is performed.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dvalueadv%3E">&lt;<STRONG>ntv-valueadv</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced with ``&amp;adv'' if advanced search mode is active, otherwise deleted.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dvaluedisplayedhits%3E">&lt;<STRONG>ntv-valuedisplayedhits</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced with the displayed-hits value issued with the query.  This
+represents the number <EM>wanted</EM>, not necessarily the number being
+displayed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dvaluefuzzyfactor%3E">&lt;<STRONG>ntv-valuefuzzyfactor</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced with the fuzzy-factor value issued with the query.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dvaluehighlight%3E">&lt;<STRONG>ntv-valuehighlight</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced with the highlight value issued with the query.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dvaluetotalhits%3E">&lt;<STRONG>ntv-valuetotalhits</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced with the totalhits-value issued with the query.  This represents
+the number <EM>wanted</EM>, not necessarily the number found by the query.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dvbl_%2A%3E">&lt;<STRONG>ntv-vbl *</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Replaced by the value of the ntvultralite user-defined variable named as
+a parameter.  The name of the variable must start with ``vbl''.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dvbleq_%2A%3C%2Fntv%2Dvbleq%3E">&lt;<STRONG>ntv-vbleq</STRONG> *&lt;<STRONG>/ntv-vbleq</STRONG>&gt;</A></STRONG><BR>
+<DD>
+The name of a user-defined ntvultralite variable (with the name starting
+with ``vbl'') is expected, followed by a textual value.
+The HTML area between these two tags is substituted if the current value
+of the variable matches the value.
+Otherwise the area is simply removed.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cntv%2Dhit%2Difattreq%5B%21%5D_name_value%3E%2A%">&lt;<STRONG>ntv-hit-ifattreq[!] name value</STRONG>&gt;*&lt;<STRONG>/ntv-hit-if</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Used inside &lt;ntv-loop&gt;...&lt;/ntv-loop&gt;.
+If the attribute <EM>name</EM> has a value equal to <EM>value</EM> the HTML area
+between the two tags is substituted.  Otherwise it is simply removed.
+<P>Using '!' reverses the sense of the test.</P>
+<P>See &lt;ntv-loop&gt; for an example usage.</P>
+<P></P></DL>
+
+</BODY>
+
+</HTML>

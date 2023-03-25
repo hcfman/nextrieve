@@ -1,0 +1,194 @@
+
+=head1 NAME
+
+ntvhitlistxml -- XML format of nextrieve search results. 
+
+=head1 DESCRIPTION
+
+Search results produced by a nextrieve search engine are in
+XML form.  The DTD describing the format of nextrieve query XML
+can be found ###ntvdtds###.
+
+A nextrieve result list (or hitlist) is implemented as an
+<ntv:hitlist> or <ntv:hl> container, depending on whether a
+'longform="1"' attribute or 'longform="0"' attribute was specified
+on the originating query.  The only difference between the two hitlist
+forms are the tagnames.  The long form (the default) will be used
+in this discussion.  A short ending section will summarize the short form.
+
+A hitlist is simply a header followed by a sequence of "hits".  Each
+hit represents an area of a document that is considered interesting to
+the originator of the query, and they are returned in ranked order, from
+"most interesting" to "least interesting".
+Each hit contains (optionally) the attributes
+attached to the document in the text index, (optionally) the preview text
+of the most interesting area in the document and a document id.
+
+The information in the hitlist header indicates the number of hits found,
+the number of hits returned, and any error or warning information generated
+as part of the search.
+
+Ie, a hitlist has the following form:
+
+    <ntv:hitlist xmlns:ntv="http://www.nextrieve.com/1.0">
+	<header ...>
+	    <warning ...>warning message</warning>
+	    <error ...>error message</error>
+	</header>
+	<hit ...>
+	    <attributes>
+		<attr1>val1</attr1>
+		<attr2>val2</attr2>
+		...
+	    </attributes>
+	    <preview>
+		...
+	    </preview>
+	</hit>
+	<hit ...>...</hit>
+	...
+    </ntv:hitlist>
+
+If the originating query XML id="val" attribute applied to the top level
+<ntv:query> container, the same id value is returned as an attribute to
+the top-level <ntv:hitlist> container.  If the
+originating query had no id="val" attribute, neither does the <ntv:hitlist>
+element.
+
+=head2 <header>
+
+This container is always present, although it may be empty.
+If hits are returned, the header contains attributes describing the range of
+hits.
+
+=over
+
+=item B<firsthit='n'>
+
+The 1-based offset in the complete nominal hit list of the first hit
+actually being returned here.
+
+=item B<displayedhits='n'>
+
+The number of hits actually being returned here.
+
+=item B<totalhits='n'>
+
+The total number of hits that can be returned for this search.
+
+=back
+
+The nested containers permitted inside a <header> container are
+as follows.
+
+=head3 <error>...</error>
+
+English error message text is present, indicating there was a structural
+or other problem regarding the originating query.
+
+It should be noted that for now there are no attributes applied to the
+<error> container, but in the future there will be an error-id and 
+other information describing the error in a language independant way.
+
+=head3 <warning>...</warning>
+
+English warning message text is present, indicating that, although the
+search was performed, there were some conditions present that might be
+of interest.
+
+Two examples are:
+
+=over
+
+=item *
+
+A word being searched for does not exist in the dictionary (the word
+is returned as part of the warning message text).
+
+=item *
+
+The fuzzy or exact search was not supported by the text index, in which
+case the search is changed to its other form.
+
+Eg, a fuzzy search was wanted, but the text index only supports exact searching,
+in which case the query was changed automatically to an exact search query.
+
+=back
+
+=head2 <hit>
+
+Each <hit> container represents a hit.  Each <hit> container can
+have the following attributes:
+
+=over
+
+=item B<docid='id'>
+
+A nextrieve-internal document number.  This is currently informational
+only.
+
+=item B<score='value'>
+
+A normally large nextrieve-generated score number.  This is currently
+informational only.
+
+=item B<percent='value'>
+
+A "percentage correctness" value if the originating search was a fuzzy
+search.
+
+=back
+
+Each hit container can contain two other nested containers.
+
+=head3 <attributes>
+
+If the originating query did not prohibit the returning of attribute
+information, all the attributes applied to the document are
+returned here.  Each attribute value is returned by using:
+
+    <attrname>attrval</attrname>
+
+where I<attrname> is the name of the attribute, and <attrval> its value.
+For a flag-type attribute I<flagattr>, if the flag is set <flagattr/>
+is returned, otherwise nothing labelled I<flagattr> is returned.
+
+=head3 <preview>
+
+If the originating query did not prohibit the returning of preview text,
+the "most interesting" small text fragment of the interesting document
+is returned here.  Words in the preview text considered relevant to the
+original search are "highlighted" using information from the <highlight>
+element in the resource file for the text index.  Note that, for a fuzzy
+search, words may be highlighted in the preview text that are not
+I<identical> to any original search word, but they should be I<similar>
+in some way.
+
+=head1 SHORT FORM
+
+The "short form" of the nextrieve hitlist follows the same structure
+as the "long form", but with short tag names.  An example of the short
+form of a hitlist is:
+
+    <ntv:hl xmlns:ntv="http://www.nextrieve.com/1.0">
+	<hdr fh="n" dh="n" th="n">
+	    <warn>warning message</warn>
+	    <err>error message</err>
+	</hdr>
+	<h dn="n" sc="n" pc="n">
+	    <a>
+		<attr1>val1</attr1>
+		<attr2>val2</attr2>
+		...
+	    </a>
+	    <p>
+		...
+	    </p>
+	</h>
+	<h ...>...</hit>
+	...
+    </ntv:hl>
+
+=head1 SEE ALSO
+
+    ntvsearch(1), ntvsearchd(1), ntvresourcefile(1), ntvqueryxml(1)

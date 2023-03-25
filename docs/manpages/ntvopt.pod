@@ -1,0 +1,66 @@
+
+=head1 NAME
+
+ntvopt - Optimize a nextrieve text index for searching
+
+=head1 SYNOPSIS
+
+ntvopt [--tempdir=tmpdir] [--nwaymerge=n] [--opt=n] idxdir
+
+=head1 DESCRIPTION
+
+B<ntvopt> optimizes a nextrieve text index found in I<idxdir> for
+later searching.  This operation is recommended if the text index is large,
+as it will reduce the number of disk seeks for typical searches.
+
+To perform the optimizing operation, B<ntvopt> needs to have enough
+space for approximately I<two more> copies of the ref*.ntv files found
+in I<idxdir> (one copy is a working copy, another copy is the final
+destination copy).
+
+The original *.ntv files under I<idxdir> are not modified by this operation,
+but I<ntvopt> will leave several files named '*-opt.ntv' in I<idxdir>
+after its operation.  To use this "optimized" copy of the text index,
+it is suggested that you use the small "ntvidx-useopt.sh" shell script.
+This shell script will rename the current *.ntv files to have names
+suffixed with "-orig.ntv", and then rename the "-opt.ntv" suffixed files
+to become *.ntv files.
+
+The script "ntvidx-restore.sh" will perform the reverse file-naming
+operation.
+
+If there is not enough space under I<idxdir> to hold two further copies
+of the ref* files, you can use the --tempdir switch to have the
+working copies placed on another disk partition.  In this way, you only
+need space under I<idxdir> for approximately I<one> extra copy of the ref*
+files, and space under the other partition for another working copy.
+
+To perform its operation, B<ntvopt> will perform one or more merges of
+different files.  The number of files that will be merged at one time
+is, by default, 16.  This can be modified with the --nwaymerge parameter.
+
+Finally, B<ntvopt> can be told how much memory to use for its
+operations with --opt=n.  I<n> is the number of megabytes of memory to use
+for its internal buffering; a default of 10 is used.
+
+=head1 OPTIONS
+
+=over
+
+=item --tempdir=tmpdir
+
+Place working copies of files under I<tmpdir> rather than I<idxdir>.
+
+=item --nwaymerge=n
+
+Merge I<n> files at a time rather than the default 16.
+
+=item --opt=n
+
+Use I<n> megabytes of memory for internal buffering.
+
+=back
+
+=head1 SEE ALSO
+
+    ntvsearch(1), ntvsearchd(1), ntvresources(5), ntvcached(1).

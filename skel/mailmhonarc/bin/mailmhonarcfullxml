@@ -1,0 +1,37 @@
+#!%%NTVPERL%% -I%%NTVBASE%%/%%NTVNAME%%/bin
+
+use %%NTVNAME%%error;
+use File::Find;
+
+sub wanted {
+    my( $dir );
+
+    return 0 if ! -f || !/^msg\d+\.html$/;
+    ( $dir = $File::Find::dir ) =~ s%^\./%%;
+    print OUT "$dir/$_\n";
+    $topLastIndexed{ $dir } = $_
+	if $_ gt $topLastIndexed{ $dir };
+    return 1;
+}
+
+
+sub saveLastIndexed {
+    open ( OUT, '> %%NTVBASE%%/%%NTVNAME%%/archive/lastindexed' ) || return;
+    for $i ( keys %topLastIndexed ) {
+	print OUT "$i/$topLastIndexed{ $i }\n";
+    }
+    close OUT;
+}
+
+
+# Generate XML
+chdir "%%NTVBASEDIR%%" ||
+    ntverror( "Can't change to %%NTVBASEDIR%%: $!\n" );
+
+open( OUT, "|%%NTVINST%%/%%VERSION%%/bin/filters/ntvmhonarc2ntvml | %%NTVINST%%/%%VERSION%%/bin/ntvdocseq" ) ||
+    ntverror( "Can't spawn filter: $!\n" );
+
+find( \&wanted, '.' );
+close OUT;
+&saveLastIndexed;
+

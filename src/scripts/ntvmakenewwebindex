@@ -1,0 +1,417 @@
+#!/bin/sh
+
+shelltouse=/bin/sh
+if [ "`uname -s`" = "SunOS" ] ; then
+    shelltouse=/usr/bin/ksh
+fi
+
+PID=$$
+cat <<'eod' > /tmp/install.$PID
+
+NTVINST=/usr/local/nextrieve
+VERSION=2.0.0
+
+if [ "$1" = "-B" ]; then
+    [ -z "$2" ] \
+	&& echo A -B parameter must be followed by the collection directory name.\
+	&& exit 1
+
+    NTVBASE="$2"
+fi
+
+while [ -z "$NTVBASE" ]; do
+    echo ""
+    echo "Where is the directory containing your collection of indexes? ($NTVINST/collection)?"
+    read NTVBASE
+    if [ -z "$NTVBASE" ]; then
+	NTVBASE="$NTVINST"/collection
+    fi
+    if [ "$NTVBASE" = "`echo ${NTVBASE#/}`" ] ; then
+	echo Please enter an absolute path.
+	NTVBASE=
+    elif [ ! -d "$NTVBASE" ]; then
+	echo $NTVBASE does not exist.
+	NTVBASE=
+    fi
+done
+
+# Check for correctly positioned vital files.
+[ ! -d "$NTVBASE" ] \
+    && echo The collection directory, "$NTVBASE", does not exist. \
+    && echo Use either: \
+    && echo "    $0 -B collectiondir" \
+    && echo or \
+    && echo "    NTVBASE=collectiondir $0" \
+    && echo "with an existing collection directory." \
+    && exit 1
+
+[ \
+    ! -d "$NTVINST" \
+    -o ! -d "$NTVINST"/"$VERSION" \
+    -o ! -d "$NTVINST"/"$VERSION"/bin \
+    -o ! -d "$NTVINST"/"$VERSION"/skel \
+] \
+&&  {
+	echo One or more of the following directories do not exist:
+	echo "    $NTVINST"
+	echo "    $NTVINST/$VERSION"
+	echo "    $NTVINST/$VERSION/bin"
+	echo "    $NTVINST/$VERSION/skel"
+	exit 1;
+    }
+
+NTVSKELD="$NTVINST"/"$VERSION"/skel
+
+echo This script will create a new nextrieve text index and related
+echo management scripts under $NTVBASE/.
+
+done=
+while [ -z "$done" ] ; do
+    NTVNAME=
+    while [ -z "$NTVNAME" ] ; do
+	echo ""
+	echo "What would you like to call the new index?"
+	echo "(Note that this is also become the name of the CGI program.)"
+	read NTVNAME
+	NTVNAME=`echo $NTVNAME|sed -e 's/^[   ]*//' -e 's/[   ]*$//'`
+	if [ "`echo ${NTVNAME#*/}`" != "$NTVNAME" ]; then
+	    echo ""
+	    echo "Just a simple name thanks."
+	    NTVNAME=
+	fi
+    done
+
+    done=1
+    if [ -d "$NTVBASE/$NTVNAME" ]; then
+	echo ""
+	echo "This index seems to be setup already, do you want to remove the"
+	echo "current content of $NTVBASE/$NTVNAME? (y|n)"
+
+	read answer
+	answer=`echo $answer|sed -e 's/^[   ]*//' -e 's/[   ]*$//'`
+
+	if [ "$answer" != y -a "$answer" != Y ] ; then
+	    done=
+	else
+	    rm -rf "$NTVBASE/$NTVNAME"
+	fi
+    fi
+done
+
+done=
+while [ -z "$done" ] ; do
+    CGIDIR=
+    while [ -z "$CGIDIR" ] ; do
+	echo '';echo "Where is the cgi script directory?"
+	read CGIDIR
+	CGIDIR=`echo $CGIDIR|sed -e 's/^[   ]*//' -e 's/[   ]*$//'`
+    done
+
+    done=1
+    if [ ! -d "$CGIDIR" -o ! -w "$CGIDIR" ] ; then
+	echo ""
+	echo "This directory either doesn't exist or you can't write to it."
+	done=
+    fi
+done
+
+NTVPERL=
+while [ -z "$NTVPERL" ] ; do
+    echo ""
+    echo "What is the full pathname of your perl (/usr/bin/perl)?"
+    read NTVPERL
+
+    if [ -z "$NTVPERL" ]; then
+	NTVPERL=/usr/bin/perl
+    fi
+    if [ ! -x "$NTVPERL" ]; then
+	echo "$NTVPERL" is not executable.
+	NTVPERL=
+    fi
+done
+
+done=
+while [ -z "$done" ] ; do
+    SKEL=
+    while [ -z "$SKEL" ]; do
+	echo ""
+	echo "Please choose a template out of the following set:"
+	ls -1 $NTVSKELD | fgrep -v bin
+	read SKEL
+	SKEL=`echo $SKEL|sed -e 's/^[   ]*//' -e 's/[   ]*$//'`
+    done
+
+    if [ ! -d "$NTVSKELD/$SKEL" ]; then
+	echo ""
+	echo "This template directory does not exist; please choose again."
+    else
+	done=1
+    fi
+done
+
+script=
+echo ""
+echo "To make a small CGI program that sets two environment variables and"
+echo "then runs $NTVINST/$VERSION/bin/ntvultralite, should a perl script"
+echo "or C-program be used?  A shell script is not recommended because"
+echo "of potential security problems."
+
+cgiperl=
+cgicc=
+while [ -z "$cgiperl" -a -z "$cgicc" ]; do
+
+    echo ""
+    echo "Enter the name or path of your C-compiler (cc or gcc, for example),"
+    echo "or an empty line to use perl"
+
+    read script
+    if [ "`echo ${script%cc}`" != "$script" ]; then
+	cgicc="$script"
+    elif [ -z "$script" ]; then
+	cgiperl="$NTVPERL"
+    else
+	echo 'Only a path ending with "cc" or an empty line is acceptable.'
+	script=
+    fi
+done
+
+if [ ! -z "$cgicc" ]; then
+    cgiscript="$NTVSKELD/bin/cgi-cc.c"
+    cgidst="$CGIDIR/$NTVNAME".c
+else
+    cgiscript="$NTVSKELD/bin/cgi-perl"
+    cgidst="$CGIDIR/$NTVNAME"
+fi
+
+cat <<EEOF
+
+Will the script for this webserver be required to emit "HTTP/1.0 200 OK"
+as the first line for correct operation? (This is normally the case if the
+script is an "nph" script, i.e. the suffix is .nph, otherwise it is usually
+not required)
+EEOF
+
+NTVEMITOK=
+while [ -z "$NTVEMITOK" ]; do
+    echo ""
+    echo "Enter y|n (default n)"
+    read line
+    if [ "$line" = 'y' -o "$line" = 'Y' ]; then
+	NTVEMITOK=1
+    else
+	NTVEMITOK=0
+    fi
+done
+
+done=
+while [ -z "$done" ]; do
+    echo ""
+    echo "Will the ntvultralite for $NTVNAME be operating as a client?"
+    echo "If so, enter the host:port address of the index server."
+    echo "If not, enter an empty line."
+    read line
+    if [ -z "$line" ]; then
+	done=1
+	NTVSERVERLINE=""
+    else
+	machine="`echo ${line%:*}`"
+	port="`echo ${line#*:}`"
+	if [ -z "$machine" \
+	     -o -z "$port" \
+	     -o "$machine" = "$line" \
+	     -o "$port" = "$line" \
+	   ]; then
+	    echo Enter machine:port or an empty line.
+	else
+	    NTVSERVERLINE="<server name='$line'/>"
+	    done=1
+	fi
+    fi
+done
+
+if [ -f "$NTVSKELD/$SKEL/extra-vbls.sh" ]; then
+    # Extra index-type-specific variables.
+    . "$NTVSKELD/$SKEL"/extra-vbls.sh
+fi
+
+# Chroot placement...
+NTVCHROOTINST="$NTVINST"
+NTVCHROOTBASE="$NTVBASE"
+done=
+while [ -z "$done" ]; do
+    echo ""
+    echo "If you'll be running this under a CHROOT, what's it's base?"
+    echo "(an empty line for no chroot)"
+    read chroot
+    if [ -z "$chroot" ]; then
+	done=1
+    elif [ ! -d "$chroot" ]; then
+	echo Either an empty line or directory please.
+    elif [ "`echo ${NTVBASE#$chroot}`" = "$NTVBASE" ]; then
+	echo "But... an NTVBASE of $NTVBASE is not under the chroot!"
+	echo The collection must be installed under the chroot for this to work.
+    elif [ "`echo ${NTVINST#$chroot}`" = "$NTVINST" ]; then
+	echo "But... an NTVINST of $NTVINST is not under the chroot!"
+	echo Nextrieve must be installed under the chroot for this to work.
+    else
+	done=1
+	NTVCHROOTINST="`echo ${NTVINST#$chroot}`"
+	NTVCHROOTBASE="`echo ${NTVBASE#$chroot}`"
+	NTVCHROOT=$chroot
+    fi
+done
+
+# Translate some stuff!
+
+echo "Creating directories and copying files..."
+
+mkdir "$NTVBASE/$NTVNAME" 2> /dev/null
+[ ! -d "$NTVBASE/$NTVNAME" ] \
+    && echo Cannot create directory "$NTVBASE/$NTVNAME" \
+    && exit 1
+
+( \
+    find "$NTVSKELD/$SKEL" -type f -print; \
+    find "$NTVSKELD/bin" -name "$SKEL*" -print \
+) | while read inf
+      do
+	# convert name to get destination.
+	# /usr/local/nextrieve/2.0.0/skel/chosenskel/stuff -> $collection/$name/stuff.
+	if [ "$inf" = "`echo ${inf#$NTVSKELD/bin}`" ]; then
+	    # skeleton stuff.
+	    dst=`echo "$inf" | sed -e "s!$SKEL!$NTVNAME!g" -e "s!$NTVSKELD!$NTVBASE!"`
+	else
+	    # cgi bin stuff.
+	    dst=`echo "$inf" | sed -e "s!$NTVSKELD/bin/$SKEL!$CGIDIR/$NTVNAME!"`
+	fi
+	dstdir=`dirname "$dst"`
+	if [ ! -d "$dstdir" ]; then
+	    mkdir "$dstdir" 2> /dev/null
+	    [ ! -d "$dstdir" ] \
+		&& echo "Cannot make directory '$dstdir'." \
+		&& exit 1
+	fi
+
+	# convert content.
+	echo "'$inf' -> '$dst'"
+	sed -e "s!%%NTVBASE%%!$NTVBASE!g" \
+	    -e "s!%%NTVNAME%%!$NTVNAME!g" \
+	    -e "s!%%NTVINST%%!$NTVINST!g" \
+	    -e "s!%%VERSION%%!$VERSION!g" \
+	    -e "s!%%NTVCHROOTBASE%%!$NTVCHROOTBASE!g" \
+	    -e "s!%%NTVCHROOTINST%%!$NTVCHROOTINST!g" \
+	    -e "s!.*%%NTVSERVER%%.*!$NTVSERVERLINE!g" \
+	    -e "s!%%NTVEMITOK%%!$NTVEMITOK!g" \
+	    -e "s!%%NTVBASEDIR%%!$NTVBASEDIR!g" \
+	    -e "s!%%NTVMAILADM%%!$NTVMAILADM!g" \
+	    -e "s!%%NTVMAILCC%%!$NTVMAILCC!g" \
+	    -e "s!%%NTVSENDMAIL%%!$NTVSENDMAIL!g" \
+	    -e "s!%%NTVHOSTNAME%%!$NTVHOSTNAME!g" \
+	    -e "s!%%NTVPERL%%!$NTVPERL!g" \
+	    -e "s!%%NTVHTTPPREFIX%%!$NTVHTTPPREFIX!g" \
+	    -e "s!%%NTVMHONARC%%!$NTVMHONARC!g" \
+	    -e "s!%%NTVCHROOT%%!$NTVCHROOT!g" \
+	    -e "s!%%NTVHTMLFILES%%!$NTVHTMLFILES!g" \
+	    -e "s!%%NTVPDFFILES%%!$NTVPDFFILES!g" \
+	    -e "s!%%NTVDOCFILES%%!$NTVDOCFILES!g" \
+	    -e "s!%%NTVTXTFILES%%!$NTVTXTFILES!g" \
+	    -e "s!%%NTVMAILBOXES%%!$NTVMAILBOXES!g" \
+	    -e "s!%%NTVMAILFOLDERS%%!$NTVMAILFOLDERS!g" \
+	    < "$inf"  > "$dst"
+      done
+
+# Install the CGI calling script or C-program.
+
+echo "'$cgiscript' -> '$cgidst'"
+sed -e "s!%%NTVBASE%%!$NTVBASE!" \
+    -e "s!%%NTVNAME%%!$NTVNAME!" \
+    -e "s!%%NTVINST%%!$NTVINST!" \
+    -e "s!%%VERSION%%!$VERSION!" \
+    -e "s!%%NTVCHROOTBASE%%!$NTVCHROOTBASE!" \
+    -e "s!%%NTVCHROOTINST%%!$NTVCHROOTINST!" \
+    -e "s!%%NTVPERL%%!$NTVPERL!" \
+    -e "s!%%NTVMHONARC%%!$NTVMHONARC!" \
+    -e "s!%%NTVCHROOT%%!$NTVCHROOT!" \
+    < "$cgiscript" > "$cgidst"
+
+if [ ! -z "$cgicc" ]; then
+    echo $cgicc "$cgidst" -o "$CGIDIR/$NTVNAME"
+    $cgicc "$cgidst" -o "$CGIDIR/$NTVNAME"
+    if [ ! -f "$CGIDIR/$NTVNAME" ]; then
+	echo ""
+	echo "We had a problem with the compilation of $cgidst".
+	echo "We'll leave the source file, $cgidst, there for reference."
+    else
+	echo ""
+	echo "Do you want to leave $cgidst there for reference? (y|n)"
+	read ans
+	if [ "$ans" != "y" -a "$ans" != "Y" ]; then
+	    rm -f "$cgidst"
+	    echo "Removed it."
+	    echo ""
+	fi
+    fi
+else
+    # Perl script.
+    echo chmod +x "$CGIDIR"/"$NTVNAME"
+    chmod +x "$CGIDIR"/"$NTVNAME"
+fi
+
+find "$NTVBASE/$NTVNAME" -type f -print \
+    | while read file
+      do
+	if [ "`echo ${file#$NTVBASE/$NTVNAME/bin}`" = "$file" ]; then
+	    echo chmod 644 "$file"
+	    chmod 644 "$file"
+	else
+	    echo chmod 755 "$file"
+	    chmod 755 "$file"
+	fi
+      done
+
+find "$NTVBASE/$NTVNAME" -type d -print \
+    | while read dir
+      do
+	echo chmod 755 "$dir"
+	chmod 755 "$dir"
+      done
+
+echo chmod 755 "$CGIDIR"/"$NTVNAME"*
+chmod 755 "$CGIDIR"/"$NTVNAME"*
+
+echo ""
+echo "Do you want to change ownership of the"
+echo "    $NTVBASE/$NTVNAME/logs"
+echo "directory so that a process spawned from a webserver can write to it?"
+echo ""
+echo "If so enter the username, otherwise an empty line:"
+read user
+if [ ! -z "$user" ]; then
+    chown "$user" "$NTVBASE/$NTVNAME/logs"
+    echo ""
+    echo "Enter a groupname to change group ownership, or an empty line:"
+    read grp
+    [ ! -z "$grp" ] && chgrp "$grp" "$NTVBASE/$NTVNAME/logs"
+fi
+
+if [ -f "$NTVBASE/$NTVNAME/README.txt" ]; then
+    more "$NTVBASE/$NTVNAME/README.txt"
+fi
+
+if [ ! -z "$NTVAUTOINDEX" ]; then
+    echo ''
+    echo "Do you want to perform a full re-index of $NTVNAME now? (y|n)"
+    read line
+    if [ "$line" = "y" -o "$line" = "Y" ]; then
+	export NTVBASE
+	"$NTVINST"/"$VERSION"/bin/ntvfullreindex "$NTVNAME"
+    fi
+fi
+
+exit 0
+eod
+
+$shelltouse /tmp/install.$PID $*
+rm /tmp/install.$PID
+
+exit 0

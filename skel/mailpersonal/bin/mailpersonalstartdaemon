@@ -1,0 +1,15 @@
+#!/bin/sh
+
+#ADDRESS=localhost
+#PORT=700
+
+# Uncomment out the way you want to run the daemon. The first version runs
+# outside of the chroot. The second version runs inside the chroot
+
+#echo Starting daemon for %%NTVNAME%% with $ADDRESS:$PORT
+
+#%%NTVINST%%/%%VERSION%%/ntvsearchd -I %%NTVBASE%%/%%NTVNAME%%/index -R %%NTVBASE%%/%%NTVNAME%%/%%NTVNAME%%.res -A $ADDRESS -P $PORT
+
+#/usr/sbin/chroot %%NTVCHROOT%% %%NTVCHROOTINST%%/%%VERSION%%/ntvsearchd -R %%NTVCHROOTBASE%%/%%NTVNAME%%/%%NTVNAME%%.res -A $ADDRESS -P $PORT
+
+exit 0

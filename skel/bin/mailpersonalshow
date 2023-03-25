@@ -1,0 +1,109 @@
+#!%%NTVPERL%%
+
+$ARCHIVEDIR = '%%NTVCHROOTBASE%%/%%NTVNAME%%/archive';
+
+sub urlEncode {
+    local ( $value ) = @_;
+
+    return sprintf( "&#%d;", ord( $value ) );
+}
+
+
+sub encodedValue {
+    ( $string ) = @_;
+
+    $string =~ s/([^a-zA-Z0-9 \/:\.-])/&urlEncode( $1 )/eg;
+
+    return $string;
+}
+
+
+sub parseInput {
+    local( $name, $value );
+
+    if ( $ENV{ 'REQUEST_METHOD' } eq 'GET' ) {
+        $buffer = $ENV{ 'QUERY_STRING' };
+    } else {
+        read( STDIN, $buffer, $ENV{ 'CONTENT_LENGTH'} );
+    }
+    @pairs = split( /&/, $buffer );
+    for $pair ( @pairs ) {
+        ( $name, $value ) = split( '=', $pair );
+        $value =~ tr/+/ /;
+        $value =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack( "C", hex( $1 ) )/eg;
+        $form{ $name } = "$value";
+    }
+}
+
+
+&parseInput;
+
+$titlestuff = &encodedValue( $form{ 'subject' } );
+print <<EOF;
+Content-type: text/html
+
+<HTML>
+<HEAD>
+<TITLE>%%NTVNAME%% mailing list - $titlestuff</TITLE>
+</HEAD>
+<BODY>
+<H2 ALIGN="CENTER">$titlestuff</H2>
+<PRE>
+EOF
+
+# Strict parsing absolutely necessary otherwise it's a security hole!
+if ($form{ 'mailbox' } !~ /^%%NTVNAME%%-\d+.mbx$/)
+{
+    print "Bad mailbox $form{'mailbox'}\n";
+    die "Bad mailbox";
+}
+if ($form{ 'offset' } !~ /^\d+$/)
+{
+    print "Bad offset $form{ 'offset' }\n";
+    die "Bad offset";
+}
+#if ($form{ 'length' } !~ /^\d+$/)
+#{
+#    print "Bad length $form{ 'length' }\n";
+#    die "Bad length";
+#}
+
+open( IN, "$ARCHIVEDIR/$form{ 'mailbox' }" ) ||
+    die "Can't open mailbox: $ARCHIVEDIR/$form{ 'mailbox' }.xml : $!\n";
+seek( IN, $form{ 'offset' }, 0 ) ||
+    die "Can't seek: $!\n";
+
+# New filter doesn't do lengths yet
+#read( IN, $data, $form{ 'length' } ) ||
+#    die "Can't read: $!\n";
+#close IN;
+
+read( IN, $datapiece, 2048 ) ||
+    die "Can't read: $!\n";
+( $startdata, $data ) = $datapiece =~ m%^(.)(.*)%s;
+$done = ( $data =~ m/\nFrom /si ) ? 1 : 0;
+while ( !$done ) {
+    read( IN, $datapiece, 2048 ) ||
+	die "Can't read: $!\n";
+    $data .= $datapiece;
+    if ( $data =~ m/\nFrom /si ) {
+	$done = 1;
+    }
+}
+close IN;
+$data =~ s/\nFrom .*//si;
+
+$data = $startdata . $data;
+
+$data =~ s/\&/\&amp;/gs;
+$data =~ s/</&lt;/gs;
+$data =~ s/>/&gt;/gs;
+
+print $data;
+print <<EOF;
+</PRE>
+</BODY>
+</HTML>
+EOF
+
+exit 0

@@ -1,0 +1,1050 @@
+
+=head1 NAME
+
+ntvultralite - NexTrieve HTML template filling process
+
+=head1 SYNOPSIS
+
+NTVBASE=basedir NTVNAME=scriptname ntvultralite
+
+=head1 DESCRIPTION
+
+B<ntvultralite> is basically a template-filling process used as part
+of a web server.
+It is invoked
+in response to the web server receiving a POST or GET message from a browser.
+B<ntvultralite> analyzes the message data received and constructs a query
+to be applied to a text index.
+This query can be processed directly by ntvultralite (which is possible if the
+text index is reasonably small and is directly accessable),
+or it can be sent to a nextrieve search server on the same or a different
+machine.
+
+The resulting XML hitlist is then analyzed and merged with appropriate
+HTML templates to produce the final resultant HTML.
+
+B<ntvultralite> is normally executed as part of a CGI script -- this script
+has all the information in its environment relating to the POST or GET
+request issued by the remote web user.  There is normally a small program
+under cgi-bin -- created automatically if the text index was installed
+with ntvmakenewwebindex -- that sets two other
+environment variables necessary for B<ntvultralite> to work, namely:
+
+=over
+
+=item NTVBASE
+
+A base directory.
+
+=item NTVNAME
+
+A simple name discriminating between various different indexes that can be
+searched by ultralite processes or even different forms for the same
+index.
+
+=back
+
+These two pieces of information, B<$NTVBASE> and B<$NTVNAME>, are
+used by B<ntvultralite> to locate all the other information it needs.
+
+The resource file defining the text index information is assumed
+to be at
+
+    $NTVBASE/$NTVNAME/$NTVNAME.res
+
+All templates are assumed to be under a directory
+
+    $NTVBASE/$NTVNAME/templates/
+
+with names starting with two state-characters (described later) and terminating
+with B<$NTVNAME>.
+
+=head2 Ntvultralite-Specific Resource Information
+
+There are a number of elements present in the resource file of the text
+index that are specific to ntvultralite, found in <ultralite>
+elements.  The format of this and other elements found in the
+resource file is described ###ntvresourcefile###.
+
+A given B<ntvultralite> process will preferentially use an <ultralite>
+container in the resource file that is tagged with 'name="I<$NTVNAME>"'.
+If no such container exists,
+B<ntvultralite> will attempt to use a "default" <ultralite>
+container defined as having no name attribute.
+
+=head2 Constructing the Search Query
+
+The incoming information from a form that's submitting a query
+is a sequence of names and values, like:
+
+    namea=vala&nameb=valb&namec=valc...
+
+These names are names attached to various fields in the submitting form;
+the values are the values either typed in by the user, or selected
+by the user.
+
+There are a set of names that are "special" to B<ntvultralite>, and that
+will cause it to perform special actions.  This set is:
+
+=over
+
+=item B<q=querytext>
+
+General query text.  Words may be prefixed with '+' or '-'; '+' indicating
+the word must be present in returned documents, '-' indicating it cannot
+be present in returned documents.
+
+=item B<qany=query-any-text>
+
+=item B<qall=query-all-text>
+
+=item B<qnot=query-not-text>
+
+Special query text.
+Words present in
+query-all-text must be present in documents returned by an exact search.
+Words present in query-not-text are not allowed to be present in documents
+returned by an exact search.  Words in query-any-text may or may not
+be present in returned documents for an exact search.
+
+These are equivalent to the the <qany>, <qall> and <qnot> elements
+present in an XML query.
+
+=item B<i=offset>
+
+=item B<dh=offset>
+
+=item B<th=offset>
+
+The offset (1-based), number of hits to display,
+and number of hits to process for the query.
+These are equivalent to the firsthit, displayedhits and totalhits
+attributes of an XML query.
+
+=item B<h=highlighting>
+
+The minimum number of characters in a word present in the preview before
+it is allowed to be hightlighted.  This is equivalent to a
+highlightlength attribute of an XML query.
+
+=item B<f=fuzzylevel>
+
+The fuzzylevel to use for a fuzzy search.
+This is equivalent to the fuzzylevel attribute of an XML query.
+
+=item B<cs=constraint>
+
+A constraint expression to use.
+This is equivalent to a <constraint> element in an XML query.
+
+=item B<db=idxname>
+
+A logical text index name to use.
+This is equivalent to an <indexname> element in an XML query.
+
+=item B<fuzzy=0|1>
+
+Perform a fuzzy search if the value is non-zero, otherwise an exact search.
+Equivalent to type="exact" or type="fuzzy" in an XML query.
+
+=item B<exact=0|1>
+
+Perform an exact search if the value is non-zero, otherwise a fuzzy search.
+Equivalent to type="fuzzy" or type="exact" in an XML query.
+
+=item B<ntvselect=attrname>
+
+If I<attrname> refers to a flag-type attribute defined in the text
+index, any search will be performed only on documents having this
+attribute set.
+
+=item B<vblname=value>
+
+Any name starting with "vbl" will be processed specially.  See the
+section "Variables" below.
+
+=item B<attrname>
+
+If I<attrname> refers to a flag-type attribute defined in the text
+index, any search will be performed only on documents having this
+attribute set.
+If multiple attributes are defined in this way (implying multiple checkboxes
+have been checked by the user), an "or" operation is performed.  Ie,
+any search will be on a set of documents having at least one of the nominated
+attributes set.
+More flexible control is allowed via the use of "vbl" type form variables.
+
+=back
+
+This information is used to construct a query.
+
+=head2 Variables
+
+The use of "variables", input fields whose name starts with "vbl",
+allows a reasonably flexible way of constructing search text and constraints
+with more complex search forms.
+There are several elements in the resource file that are specific
+to variables in ntvultralite.  These elements are:
+
+    TABLESTART
+    <vblsub name="vblname" text="text"/>
+    <vblrange name1="vblname1" name2="vblname2"/>
+    <vbluse name="vblname" type="constraint"|"text"|"texttype"
+	    class="any"|"all"|"not"|"free"|"<ntv-vblname2>"/> TABLEEND
+
+The intent is to provide the following functionality:
+
+=over
+
+=item *
+
+Map a field value directly to part of a constraint expression.
+
+=item *
+
+Allow simple range operations, where up to two input fields contribute
+to the constraint expression fragment.
+
+=item *
+
+Allow a single query-text field to have its function changed
+from "any" words to "all" words by use of another checkbox or radio
+control field.
+
+=item *
+
+Allow similar functionality to the above for constraint expression
+fragments (eg, "all" keywords, or "some" keywords).
+
+=back
+
+There are a number of simple steps to providing the above solutions.
+
+=over
+
+=item *
+
+Map a given input field and value to a constraint expression fragment.
+Eg, if input field "vblstart" has value 20010130, we might want to get
+a constraint expression fragment of "startdate >= 20010130" being
+generated.  This is possible through the use of B<vblsub> elements
+in the resource file.  Eg,
+
+    TABLESTART
+    <vblsub name="vblstart"
+            text="startdate &gt;= &lt;ntv-value&gt;"/> TABLEEND
+
+=item *
+
+Allow constraint expression fragments to be built from the presence of
+values in two fields, indicating a range operation rather than a single
+comparison.  Eg, if there are two fields "vblstart" and "vblend", one or the
+other or both may have values posted from the form.
+
+If only "vblstart" has a value of "20010130", we might want to map it to the
+constraint
+expression fragment "startdate >= 20010130" as above.
+
+If only "vblend"
+has a value of "20010330", we might want to map it to the constraint
+expression fragment "enddate <= 20010330".
+
+If both are present, however, we would want the constraint expression
+fragment to be "(startdate >= 20010130 & enddate <= 20010330)" (note
+the enclosing parentheses and automatic internal "and" operation).
+
+This is possible through use of the B<vblrange> elements in the
+resource file.  Eg,
+
+    TABLESTART
+    <vblrange name1="vblstart" name2="vblend"/> TABLEEND
+
+=item *
+
+Indicate whether a given field and value are part of "any-inclusion",
+"all-inclusion" or "exclusion" operations, and whether it is a
+a constraint-expression fragment or a query-text fragment.
+This is possible by use of
+B<vbluse> elements in the resource file.  Eg,
+
+    TABLESTART
+    <vbluse name="vblstart" type="constraint" class="any"/> TABLEEND
+
+=back
+
+The order of operations that ntvultralite performs during variable
+processing is as follows.
+
+=over
+
+=item Basic Substitution
+
+Any variable with a I<non-empty> value is mapped through any B<vblsub>
+element that has a matching name.
+The presence of <ntv-value> in the text of the <vblsub> element
+is replaced with the actual variable value.
+After the substitution, the variable has its value changed to be the
+result of the substitution.
+
+Eg, having a line in the resource file of the form:
+
+    TABLESTART
+    <vblsub name="vblstartdate" text="startdate &gt;= &lt;ntv-value&gt;"/> TABLEEND
+
+will change a "vblstartdate" value of "20010130" to "startdate >= 20010130".
+
+=item Basic Ranges
+
+After substituting all variables, ranging takes place.  If a B<vblrange>
+element finds that both its variables have non-empty values, it will
+change the value of the first variable to reflect the complete range
+expression, and remove the value of the second variable to prevent
+further use of it.
+
+Eg if, after substitution, we have the following variables and values:
+
+    TABLESTART
+    vblstartdate    startdate >= 20010130
+    vblenddate      enddate <= 20010330 TABLEEND
+
+After processing the element:
+
+    TABLESTART
+    <vblsub name="vblstartdate" name2="vblenddate"/> TABLEEND
+
+The variable "vblstartdate" will have a value of
+
+    TABLESTART
+    "(startdate >= 20010130 & enddate <= 20010330)" TABLEEND
+
+and the variable "vblenddate" will be empty.
+
+=item Final Use
+
+Finally the text and constraint fragments are combined.
+
+This is performed through the use of B<vbluse> elements.  Each element
+specifies a variable name, its use (constraint, text or texttype)
+and its inclusion or exclusion.  This final piece of data
+(inclusion or exclusion) can be provided by another variable
+if <ntv-vbl vblname> is used.
+
+Inclusion should indicate one of "any", "all", "not" or "free".
+
+With a text variable, this simply indicates that the text becomes part of the
+qany, qall, qnot or q strings, representing the query text.
+
+With a constraint variable, there are equivalent (internal) parts of the
+constraint expression being built up.  If "any" is specified, the "any"
+part of the constraint will be augmented with "|" (or) and the expression
+fragment.  If "all" is specified, the "all" part of the constraint is
+augmented with "&" (and) and the expression fragment.  If "not" is specified
+the "not" part of the constraint (which is later completely
+negated) will be augmented with "&" (and) and the
+expression fragment.
+
+After all this, the final constraint expression is built by combining
+the classified (any, all, not) parts of the constraint, using parentheses
+and "|" (or) operators where appropriate.
+
+With a texttype variable, the text simply defines a space-separated
+sequence of texttypes should should be searched.  Inclusion operators
+are simply ignored.
+
+=back
+
+=head2 Choosing Templates
+
+In order to view results or present a search form we need to define
+what the page looks like.
+This is done using "templates".  A template is a normal HTML
+page with the addition of some extra tags specific to ntvultralite.
+These special tags are recognised by B<ntvultralite>, and filled in
+with automatically generated HTML fragments appropriate to the information
+wanted to be displayed.
+
+All templates are assumed to be under a directory
+
+    $NTVBASE/$NTVNAME/templates/
+
+There is a naming convention associated with template files.
+Ntvultralite will automatically construct a template name starting
+with two letters
+and ending with the name of the script being run (the name of the script
+being defined by the environment variable B<$NTVNAME>, set up
+by the cgi program invoking B<ntvultralite>).
+
+The first letter is one of:
+
+=over
+
+=item _
+
+No query has been done.  Ie, this is the initial page.
+
+=item Q
+
+A query was performed and returned results, which are
+being displayed.
+
+=item E
+
+A query was performed, but there were no results.
+
+=back
+
+The second letter is defined by whether or not we're in "advanced" mode
+or not.  In advanced mode a more complicated input page can be used
+with more controls over the search being performed.
+The second template name letter is one of:
+
+=over
+
+=item _
+
+We're in "simple" mode.
+
+=item A
+
+We're in "advanced" mode.
+
+=back
+
+It is possible to switch to different sets of template files in two
+different ways described below.  Both methods define a new subdirectory that
+should be present under $NTVBASE/$NTVNAME/templates and which should contain
+all the conventionally named template files required.
+
+=over
+
+=item *
+
+When a flag-type attribute is set for a search, nominally to search
+a particular portion of the text index.
+
+The valid attributes to cause switching are specified in the resource file
+with B<attributetemplate> elements.  The first such element that has an
+attribute set on the form is used.
+
+=item *
+
+When a particular keyword is present in the search string.
+
+The valid keywords are specified using B<switchedtemplate>
+elements in the resource file.
+
+Note that it is not possible to have both B<switchedtemplate>
+elements and B<attributetemplate> elements in the same resource file.
+
+=back
+
+=head2 Filling Templates
+
+Various B<ntvultralite> specific tags are recognised in the HTML templates
+and are replaced by B<ntvultralite>.  These tags are listed here.
+
+=over
+
+=item <B<ntv-attrmap>>
+
+Used inside <ntv-loop>...</ntv-loop>.
+Replaced with the content specified in the resource file (using
+B<attrmap> elements) of the first flag-attribute that's set for the hit.
+
+=item <B<ntv-checkbox*>>
+
+Replaced by a form checkbox widget for use in restricting the search to
+documents having a specified flag-type attribute set.
+It takes the attribute name as a parameter as in:
+
+    TABLESTART
+    <ntv-checkbox support> TABLEEND
+
+This allows simple use of flag-type attributes as a constraint, without
+having to use the more powerful (although more complex) general constraint
+construction using ntvultralite form variables starting with "vbl".
+
+There are limitations.  If multiple checkboxes are used on a form to
+control multiple attributes, the checked attributes are "or-ed" together;
+there is no "and" option.
+
+If no attributes are checked, a search of the entire text
+index is performed.
+
+=item <B<ntv-ctl-constraint*>>
+
+Replaced by a form widget that accepts user input in a text box.
+Any extra material found is placed in the resulting INPUT widget,
+such as "SIZE=value", or an initialization using <ntv-printconstraint>.
+Eg:
+
+    TABLESTART
+    <ntv-constraint VALUE="<ntv-printconstraint>"> TABLEEND
+
+The data entered by the user is returned as a "cs" form variable defining
+a constraint to be applied.
+
+=item <B<ntv-ctl-displayedhits>>
+
+Replaced by a form widget that accepts user input in a text box.
+The text box is automatically initialized with the current value of
+displayedhits.  The data entered by the user is returned as a form variable
+"d", defining the number of hits to display for the search.
+
+=item <B<ntv-ctl-exactbutton>>
+
+Replaced with a form checkbox widget.  When "checked" a form variable called
+"exact" will be returned indicating an exact search is to be performed.
+
+=item <B<ntv-ctl-fuzzybutton>>
+
+Replaced with a form checkbox widget.  When "checked" a form variable called
+"fuzzy" will be returned indicating a fuzzy search is to be performed.
+
+=item <B<ntv-ctl-fuzzyfactor>>
+
+For use in an advanced-search page.
+Replaced with a form select widget with allowable values of 1, 2 and 3
+that define the fuzzy level to use for a fuzzy search.  The value is returned
+as the form variable "f".
+
+=item <B<ntv-ctl-highlight>>
+
+For use in an advanced-search page.
+Replaced with a form select widget with allowable values of 1 through 10
+that define the minimum number of characters a preview word must have
+before it is highlighted.
+
+Data entered by the user is returned as the "h" form variable.
+
+=item <B<ntv-ctl-moderadio-fuzzy*>>
+
+Replaced with a form radio-button widget.  It should be used once with
+a parameter of "1" for allowing a fuzzy search when checked, and once with
+a parameter of "0" for allowing an exact search when checked.
+
+The user selection is returned as the value for the "fuzzy" form variable.
+
+For example:
+
+    TABLESTART
+    <TR>
+        <TD>Radio mode:</TD>
+        <TD>
+	    fuzzy: <ntv-ctl-moderadio-fuzzy 1>
+	    exact: <ntv-ctl-moderadio-fuzzy 0>
+        </TD>
+    </TR> TABLEEND
+
+=item <B<ntv-ctl-search*>>
+
+Replaced by a form widget for accepting user input in a text box
+which is treated as general search text.  Words prefixed with '+' must
+be present in returned documents, words prefixed with '-' cannot be
+present in returned documents.
+Any extra material found is placed in the resulting INPUT widget,
+such as "SIZE=value", or an initialization using <ntv-search>.
+
+Eg:
+
+    TABLESTART
+    <ntv-ctl-search VALUE="<ntv-search>"> TABLEEND
+
+The value entered in this text box is returend as the value attached
+to the "q" form variable.
+
+=item <B<ntv-ctl-searchall*>>
+
+Like <ntv-ctl-search*> except all the words entered in the text
+box must be present in returned documents.  The value entered into this
+text box is returned as the "qall" form variable.
+
+=item <B<ntv-ctl-searchany*>>
+
+Like <ntv-ctl-search*> except '+' and '-' prefixing of words entered
+in the text box is ignored.  The value entered into this text box is
+returned as the "qany" form variable.
+
+=item <B<ntv-ctl-searchnot*>>
+
+Like <ntv-ctl-search*> except none of the words entered in the text
+box can be present in returned documents.  The value entered into this
+text box is returned as the "qnot" form variable.
+
+=item <B<ntv-ctl-state-adv>>
+
+For use in an advanced search page.
+Replaced by a hidden form widget with the name "adv" that will ensure
+advanced mode remains on for the next search.  This widget returns
+the "adv" form variable.
+
+=item <B<ntv-ctl-submit*>>
+
+Replaced by a form "submit" widget.  It can take parameters such as
+"VALUE" giving the text to display on the button:
+
+    TABLESTART
+    <ntv-ctl-submit VALUE=" Search "> TABLEEND
+
+=item <B<ntv-ctl-totalhits>>
+
+For use in an advanced search page.
+Replaced by a small form text box widget that defines
+the number of total hits to be processed for the next search.
+The value entered by the user is returned attached to the "th" form variable.
+
+=item <B<ntv-defcheckbox*>>
+
+The parameter defines the name of a flag-attribute -- any later
+<ntv-checkbox> tag referring to the same attribute will be defaulted
+to a "checked" state.
+
+=item <B<ntv-exec*>>
+
+If an <B<execallow value="1">> element is present in the resource file for
+the text index, B<ntvultralite> permits the use of  <ntv-exec*>
+tags.  The parameter of such a tag should refer to a program and parameters
+that can be run via the use of "popen()".  The <ntv-exec*>
+tag is replaced with the output of this process.
+
+=item <B<ntv-hit-count>>
+
+Used inside <ntv-loop>...</ntv-loop>.
+Replaced by the number of the hit in the hitlist, the first hit being "1".
+
+See <ntv-loop> for an example usage.
+
+=item <B<ntv-hit-document>>
+
+Used inside <ntv-loop>...</ntv-loop>.
+Replaced by the internal document number used by NexTrieve.
+
+=item <B<ntv-hit-linkattr*>>
+
+Used inside <ntv-loop></ntv-loop>.
+Parameters can be given that are treated as a sequence of attribute names.
+The first name encountered that has a non-empty value in the current hit
+defines the textual value substituted.  If the last parameter starts with
+single or double
+quotes it will be used as the value if no non-empty attributes have been found.
+The value substituted will be encoded in a manner suitable for using as
+a link.
+
+See <ntv-loop> for an example usage.
+
+=item <B<ntv-hit-percent>>
+
+Used inside <ntv-loop></ntv-loop>.
+Replaced by the percentage score of the hit, supplied as part of fuzzy
+search results.
+
+=item <B<ntv-hit-preview>>
+
+Used inside <ntv-loop></ntv-loop>.
+Replaced by the preview text of the hit.
+
+See <ntv-loop> for an example usage.
+
+=item <B<ntv-hit-printattr*>>
+
+Like <ntv-hit-linkattr*> except that the information is encoded
+for general display rather than for use as a link.
+
+See <ntv-loop> for an example usage.
+
+=item <B<ntv-hit-score>>
+
+Used inside <ntv-loop></ntv-loop>.
+Replaced by the internal score provided by NexTrieve for a hit, supplied
+as part of a fuzzy search.  Unlikely to be useful.
+
+=item <B<ntv-hits-displayed>>
+
+Used after <ntv-loophead>.
+Replaced by the number of hits being displayed.
+
+=item <B<ntv-hits-limit>>
+
+Used after <ntv-loophead>.
+Replaced by the number of the last hit being displayed.
+
+=item <B<ntv-hits-offset>>
+
+Used after <ntv-loophead>.
+Replaced by the number of the first hit being displayed.
+
+=item <B<ntv-hits-total>>
+
+Used after <ntv-loophead>.
+Replaced by the total number of hits in the current hit list.
+
+=item <B<ntv-include*>>
+
+The parameter is treated as a filename, whose contents are substituted
+at this point by B<ntvultralite>.
+
+=item <B<ntv-linkconstraint>>
+
+Replaced by the constraint used, encoded in a manner suitable for use
+in a link.
+
+=item <B<ntv-linktextquery>>
+
+Replaced by the textual part of a query, encoded in a manner suitable for
+use in a link.
+
+=item <B<ntv-loop>>*<B</ntv-loop>>
+
+These two tags define a region of HTML that is repeated and substituted
+once for each hit being displayed in a result list.
+
+An example of its use is:
+
+    TABLESTART
+    <ntv-loop>
+    <TABLE CELLSPACING=0 CELLPADDING=0>
+    <TR>
+	<TD WIDTH=32
+	    <ntv-hit-ifattreq priority 2>BGCOLOR="#FF0000"</ntv-hit-if>
+	>
+	<FONT FACE="arial" SIZE=2>
+	<B><ntv-hit-count></B>
+	</FONT>
+	</TD>
+
+	<TD>
+	<FONT FACE="arial" SIZE=2>
+	<A HREF="<ntv-hit-linkattr filename>" TARGET=launch>
+	    <B><ntv-hit-printattr title filename "no title available"></B>
+	</A>
+	</FONT>
+	</TD>
+
+    </TR>
+    <TR>
+	<TD>&nbsp;</TD>
+
+	<TD>
+	<FONT FACE="arial" SIZE=2><ntv-hit-preview></FONT>
+	</TD>
+    </TR>
+    </TABLE>
+    </ntv-loop> TABLEEND
+
+For each hit we print the hit number (using <ntv-hit-count>),
+a link defined by the "filename" attribute of the hit (using
+<ntv-hit-linkattr filename>)
+and a title defined by the "title" attribute
+(using <ntv-hit-printattr title filename "no title available">).
+This is followed on the next line by the preview text.
+
+Note that hits with a "priority" attribute of 2 are backgrounded in red
+using the <ntv-hit-ifattreq priority 2>BGCOLOR="#FF0000"</ntv-hit-if> construct.
+
+Also note the use of <ntv-hit-printattr> which will use a title
+attribute if one exists, otherwise the filename attribute, otherwise it will
+use the text "no title available" as the title.
+
+=item <B<ntv-loophead>>
+
+Marks a point in the HTML at which we can use result-oriented B<ntvultralite>
+tags.
+
+=item <B<ntv-pages>*<B</ntv-pages>>
+
+Used to define a sequence of page buttons where the hit list extends
+over multiple pages.
+A numeric parameter is given which is taken to be the maximum number of
+buttons wanted.
+The HTML area between these two tags is repeated and substituted once for
+each page button generated.  During this substitution the <ntv-pg-number>
+and <ntv-pg-link> tags can be used giving information about the
+page number represented by the button, and a link to display that page
+of results.
+
+A complete example of how to use the various <ntv-pg> tags is:
+
+    TABLESTART
+    <ntv-pg-ifmlt>
+    Pages: <FONT FACE="arial" SIZE=-1>
+    <ntv-pg-ifprv>
+	<A HREF="<ntv-pg-linkfirst>">|&lt;&lt;</A>
+	<A HREF="<ntv-pg-linkprv>">&lt;&lt;</A>
+    </ntv-pg-ifprv>
+    <ntv-pages 10>
+	<ntv-pg-ifcur>
+	<A HREF="<ntv-pg-link>"><B>*<ntv-pg-number>*</B></A>
+	</ntv-pg-ifcur>
+	<ntv-pg-ifcur!>
+	<A HREF="<ntv-pg-link>"><ntv-pg-number></A>
+	</ntv-pg-ifcur!>
+    </ntv-pages>
+    <ntv-pg-ifnxt>
+	<A HREF="<ntv-pg-linknxt>">&gt;&gt;</A>
+	<A HREF="<ntv-pg-linklast>">&gt;&gt;|</A>
+    </ntv-pg-ifnxt>
+    </FONT>
+    </ntv-pg-ifmlt> TABLEEND
+
+Note that the code above can be treated as "boilerplate" -- ie, taken
+and modified to perform what is wanted, rather than being created from
+scratch.
+
+If there are multiple pages (<ntv-pg-ifmlt>...</ntv-pg-ifmlt>),
+buttons will be displayed.
+
+If there is a previous page (<ntv-pg-ifprv>...</ntv-pg-ifprv>),
+a link to the first page will be created (<ntv-pg-linkfirst>), and
+a link to the previous page will be created (<ntv-pg-linkprv>).
+
+This is followed by up to 10 page buttons (<ntv-pages 10>...</ntv-pages>),
+one of which will be the current
+page (<ntv-pg-ifcur>...</ntv-pg-ifcur>)
+which has its number-text highlighted.
+
+If there is a next page (<ntv-pg-ifnxt>...</ntv-pg-ifnxt>),
+links to the next page and last page are provided.
+
+=item <B<ntv-pg-ifcur>>*<B</ntv-pg-ifcur>>
+
+Used within <ntv-pages*</ntv-pages>.
+The HTML area between these two tags is substituted if the current page
+button represents the "current" page.  Otherwise the area is simply removed.
+
+=item <B<ntv-pg-ifcur!>>*<B</ntv-pg-ifcur!>>
+
+Used within <ntv-pages*</ntv-pages>.
+Like <ntv-pg-ifcur>*</ntv-pg-ifcur> above, but the substitution
+occurs if the current page button does I<not> represent the "current" page.
+
+=item <B<ntv-pg-ifmlt>>*<B</ntv-pg-ifmlt>>
+
+The HTML area between these two tags is substituted if there are multiple
+pages of results available.  Otherwise the area is simply removed.
+
+=item <B<ntv-pg-ifnxt>>*<B</ntv-pg-ifnxt>>
+
+The HTML area between these two tags is substituted if there is a page
+of results after the page currently being displayed.
+Otherwise the area is simply removed.
+
+=item <B<ntv-pg-ifprv>>*<B</ntv-pg-ifprv>>
+
+The HTML area between these two tags is substituted if there is a page
+of results prior the page currently being displayed.
+Otherwise the area is simply removed.
+
+=item <B<ntv-pg-link>>
+
+Used within <ntv-pages*</ntv-pages>.
+Replaced by text suitable for use as a link.  The link will cause
+the appropriate page of results to be displayed.
+
+=item <B<ntv-pg-linkfirst>>
+
+Replaced by text suitable for use as a link.  The link will cause
+the first page of results to be displayed.
+
+=item <B<ntv-pg-linklast>>
+
+Replaced by text suitable for use as a link.  The link will cause
+the first page of results to be displayed.
+
+=item <B<ntv-pg-linknxt>>
+
+Replaced by text suitable for use as a link.  The link will cause
+the next page of results to be displayed.
+
+=item <B<ntv-pg-linkprv>>
+
+Replaced by text suitable for use as a link.  The link will cause
+the previous page of results to be displayed.
+
+=item <B<ntv-pg-number>>
+
+Used within <ntv-pages*</ntv-pages>.
+Replaced by the page number of the current page button.
+
+=item <B<ntv-pg-nxt>>
+
+Replaced by the number of the next page of results.
+
+=item <B<ntv-pg-prv>>
+
+Replaced by the number of the previous page of results.
+
+=item <B<ntv-printconstraint>>
+
+Like <ntv-hit-linkconstraint*> except that the information is encoded
+for general display rather than for use as a link.
+
+=item <B<ntv-script>>
+
+Replaced by the URL of the CGI program.  Eg:
+
+    TABLESTART
+    <FORM ACTION="<ntv-script>" METHOD=POST> TABLEEND
+
+=item <B<ntv-search>>
+
+Replaced by the text of the current query.  This represents the entire
+search query.  Words prefixed with '+' are required to be in returned
+documents.  Words prefixed with '-' are required to NOT be in returned
+documents.
+
+Use either <ntv-search> or some of the set of inputs
+<ntv-searchall>, <ntv-searchany>, <ntv-searchnot>
+on any particular search page.  Don't use all of them on a single page.
+
+This can be used to initialize an ntv-ctl-search control, for example:
+
+    TABLESTART
+    <ntv-ctl-search VALUE="<ntv-search>"> TABLEEND
+
+=item B<<ntv-searchall>>
+
+Replaced by the text of the "all" part of the current query, ie, those
+words in the general query prefixed with '+', with the '+' removed.
+
+This can be used to initialize a ntv-ctl-searchall control, for example:
+
+    TABLESTART
+    <ntv-ctl-searchall VALUE="<ntv-searchall>"> TABLEEND
+
+=item <B<ntv-searchany>>
+
+Replaced by the text of the "any" part of the current query.
+
+This can be used to initialize a ntv-ctl-searchany control, for example:
+
+    TABLESTART
+    <ntv-ctl-searchany VALUE="<ntv-searchany>"> TABLEEND
+
+=item <B<ntv-searchnot>>
+
+Replaced by the text of the "not" part of the current query, ie, those
+words in the general query prefixed with '-', with the '-' removed.
+
+This can be used to initialize a ntv-ctl-searchnot control, for example:
+
+    TABLESTART
+    <ntv-ctl-searchnot VALUE="<ntv-searchnot>"> TABLEEND
+
+=item <B<ntv-select*>>
+
+Can be used instead of the <ntv-checkbox> tag for simple control
+of flag-type attributes in a search.
+A sequence of attribute names is expected as a parameter to <ntv-select>.
+Each of these names should refer to a flag-type attribute defined in the
+text index.
+
+A form select widget is constructed having a "display name" constructed
+from a matching <selectname> element in the resource file for the
+text index.  It is this "display name" that the user sees in his
+selection.
+
+This is simpler than the use of "vbl" type form variables although it
+is less powerful.
+<ntv-checkbox> tags should not be used if <ntv-select*> is
+used.
+
+If multiple <ntv-select*> tags are used on a form to
+control multiple sets of attributes, the selected attributes are
+"or-ed" together;
+there is no "and" option.
+
+If no attributes are selected, a search of the entire text
+index is performed.
+
+=item <B<ntv-valueadv>>
+
+Replaced with "&adv" if advanced search mode is active, otherwise deleted.
+
+=item <B<ntv-valuedisplayedhits>>
+
+Replaced with the displayed-hits value issued with the query.  This
+represents the number I<wanted>, not necessarily the number being
+displayed.
+
+=item <B<ntv-valuefuzzyfactor>>
+
+Replaced with the fuzzy-factor value issued with the query.
+
+=item <B<ntv-valuehighlight>>
+
+Replaced with the highlight value issued with the query.
+
+=item <B<ntv-valuetotalhits>>
+
+Replaced with the totalhits-value issued with the query.  This represents
+the number I<wanted>, not necessarily the number found by the query.
+
+=item <B<ntv-vbl *>>
+
+Replaced by the value of the ntvultralite user-defined variable named as
+a parameter.  The name of the variable must start with "vbl".
+
+=item <B<ntv-vbleq> *<B</ntv-vbleq>>
+
+The name of a user-defined ntvultralite variable (with the name starting
+with "vbl") is expected, followed by a textual value.
+The HTML area between these two tags is substituted if the current value
+of the variable matches the value.
+Otherwise the area is simply removed.
+
+=item <B<ntv-hit-ifattreq[!] name value>>*<B</ntv-hit-if>>
+
+Used inside <ntv-loop>...</ntv-loop>.
+If the attribute I<name> has a value equal to I<value> the HTML area
+between the two tags is substituted.  Otherwise it is simply removed.
+
+Using '!' reverses the sense of the test.
+
+See <ntv-loop> for an example usage.
+
+=back
+
+=head1 DIAGNOSTICS
+
+A list of diagnostics should go here.
+
+=head1 EXAMPLES
+
+See the tutorial is probably best.
+
+=head1 ENVIRONMENT
+
+=over
+
+=item NTVBASE
+
+=item NTVNAME
+
+B<$NTVBASE> is the name of a base directory.  B<$NTVNAME> is a
+discriminating name for the script.
+
+With these two pieces of information, ntvultralite can locate all the
+other information it needs to find a text index and its templates.
+
+The resource file indicating the text index information is assumed
+to be at
+
+    $NTVBASE/$NTVNAME/$NTVNAME.res
+
+All templates are assumed to be under a directory
+
+    $NTVBASE/$NTVNAME/templates/
+
+with names ending with B<$NTVNAME>.
+
+=back
+
+=head1 CAVEATS
+
+=head1 BUGS
+
+=head1 RESTRICTIONS
+
+=head1 SEE ALSO
+
+    ntvindex(1), ntvresourcefile(5), ntvsearch(1), ntvsearchd(1).

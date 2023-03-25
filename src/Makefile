@@ -1,0 +1,561 @@
+#
+# Hacked Makefile for nextrieve -- automake will eventually be used
+# to generate a nice one if possible.
+# 
+
+CC = gcc
+LIBS = -lm 
+
+AR = ar cr
+RM = rm -f
+
+CFLAGS=-I. -I.. -I../expat-1.95.1/lib -I../zlib-1.1.3 -g -O2 -Winline -Wall
+CTDFLAGS=-DUSE_THREADS $(CFLAGS)
+
+LIBSTD=-lpthread -lm 
+
+SHELL=/bin/sh
+
+VERSION=2.0.28
+bindir = ${exec_prefix}/bin
+prefix = /data2/local/nextrieve
+exec_prefix = ${prefix}
+includedir = ${prefix}/include
+libdir = ${exec_prefix}/lib
+
+OBJD=../objects
+LIBD=../lib
+BIND=../bin
+SRCS = \
+	main.c ntvtest.c ntvindex.c ntvcharsets.c ntverror.c ntvhash.c \
+	ntvmemlib.c ntvblkbuf.c ntvbinstuff.c ntvsearch.c ntvdfa.c \
+	ntvparam.c ntvindcache.c ntvhostname.c ntvwhat.c ntvtokenise.c \
+	ntvcompile.c ntvultralite.c ntvtemplate.c ntvcheck.c ncscache.c \
+	ncsclients.c ncssubservers.c ncssubdbs.c ncsdbnamemap.c ntvquery.c \
+	getopt.c ntvattr.c utf8tabs.c rbt.c rbtdd.c ntvreq.c ntvschd.c \
+	ntvschd.c ntvquerygen.c uthread_sem.c dlmalloc.c ntvsysutils.c \
+	ntvchunkutils.c ntvxmlutils.c ntvucutils.c ntvutils.c \
+	ntvhashutils.c ntvutf8utils.c ntvgreputils.c ntvversion.c
+
+OBJSNTVINDEX=$(OBJD)/main.o
+OBJSNTVHOSTNAME=$(OBJD)/ntvhostname.o
+OBJSNTVWHAT=$(OBJD)/ntvwhat.o
+OBJSNTVTESTEXP=$(OBJD)/ntvtestexp.o
+OBJSNTVULTRALITE=$(OBJD)/ntvultralite.o
+OBJSNTVCHECK=$(OBJD)/ntvcheck.o
+OBJSNTVCACHED=$(OBJD)/ntvcached.o $(OBJD)/ncscache.o $(OBJD)/ncsclients.o $(OBJD)/ncssubservers.o \
+	$(OBJD)/ncssubdbs.o $(OBJD)/ncsdbnamemap.o
+OBJSNTVCHECKINT=$(OBJD)/ntvcheck-int.o
+OBJSNTVOPT=$(OBJD)/ntvcheck-opt.o
+OBJSNTVQUERYGEN=$(OBJD)/ntvquerygen.o
+OBJSNTVSEARCHD=$(OBJD)/ntvsearchd.o
+OBJSNTVSEARCH=$(OBJD)/ntvsearch-fe.o
+OBJSNTVHTMLFILTER=$(OBJD)/ntvhtmlfilter.o
+OBJSNTVMAILFILTER=$(OBJD)/ntvmailfilter.o
+OBJSNTVSHOWMAIL=$(OBJD)/ntvshowmail.o
+OBJSNTVTR=$(OBJD)/ntvtr.o
+
+# Normally compiled objects.
+LIBOBJS=$(OBJD)/ntvindex.o \
+	$(OBJD)/ntvcharsets.o \
+	$(OBJD)/ntverror.o \
+	$(OBJD)/ntvmemlib.o \
+	$(OBJD)/ntvhash.o \
+	$(OBJD)/ntvblkbuf.o \
+	$(OBJD)/ntvbinstuff.o \
+	$(OBJD)/ntvsearch.o \
+	$(OBJD)/ntvdfa.o \
+	$(OBJD)/ntvparam.o \
+	$(OBJD)/ntvindcache.o \
+	$(OBJD)/ntvtokenise.o \
+	$(OBJD)/ntvcompile.o \
+	$(OBJD)/ntvtemplate.o \
+	$(OBJD)/ntvquery.o \
+	$(OBJD)/getopt.o \
+	$(OBJD)/ntvattr.o \
+	$(OBJD)/utf8tabs.o \
+	$(OBJD)/rbt.o \
+	$(OBJD)/rbtdd.o \
+	$(OBJD)/ntvreq.o \
+	$(OBJD)/dlmalloc.o \
+	$(OBJD)/ntvsysutils.o \
+	$(OBJD)/ntvchunkutils.o \
+	$(OBJD)/ntvxmlutils.o \
+	$(OBJD)/ntvucutils.o \
+	$(OBJD)/ntvutils.o \
+	$(OBJD)/ntvhashutils.o \
+	$(OBJD)/ntvutf8utils.o \
+	$(OBJD)/ntvgreputils.o \
+	$(OBJD)/ntvversion.o
+
+# Objects compiled with threading turned on for ntvsearchd.
+LIBTDOBJS=$(OBJD)/ntvindextd.o \
+	  $(OBJD)/ntvcharsetstd.o \
+	  $(OBJD)/ntverrortd.o \
+	  $(OBJD)/ntvmemlibtd.o \
+	  $(OBJD)/ntvhashtd.o \
+	  $(OBJD)/ntvblkbuftd.o \
+	  $(OBJD)/ntvbinstufftd.o \
+	  $(OBJD)/ntvsearchtd.o \
+	  $(OBJD)/ntvdfatd.o \
+	  $(OBJD)/ntvparamtd.o \
+	  $(OBJD)/ntvindcachetd.o \
+	  $(OBJD)/ntvtokenisetd.o \
+	  $(OBJD)/ntvcompiletd.o \
+	  $(OBJD)/ntvtemplatetd.o \
+	  $(OBJD)/ntvquerytd.o \
+	  $(OBJD)/getopttd.o \
+	  $(OBJD)/ntvattrtd.o \
+	  $(OBJD)/utf8tabstd.o \
+	  $(OBJD)/rbttd.o \
+	  $(OBJD)/rbtddtd.o \
+	  $(OBJD)/ntvreqtd.o \
+	  $(OBJD)/dlmalloctd.o \
+	  $(OBJD)/uthread_semtd.o \
+	  $(OBJD)/ntvsysutilstd.o \
+	  $(OBJD)/ntvchunkutilstd.o \
+	  $(OBJD)/ntvxmlutilstd.o \
+	  $(OBJD)/ntvucutilstd.o \
+	  $(OBJD)/ntvutilstd.o \
+	  $(OBJD)/ntvhashutilstd.o \
+	  $(OBJD)/ntvutf8utilstd.o \
+	  $(OBJD)/ntvgreputilstd.o \
+	  $(OBJD)/ntvversion.o
+
+COMPILETARGETS = \
+	$(BIND)/ntvcheck \
+	$(BIND)/ntvcheck-int \
+	$(BIND)/ntvopt \
+	$(BIND)/ntvindex \
+	$(BIND)/ntvquerygen \
+	$(BIND)/ntvsearchd \
+	$(BIND)/ntvsearch \
+	$(BIND)/ntvcached \
+	$(BIND)/ntvhostname \
+	$(BIND)/ntvwhat \
+	$(BIND)/ntvtestexp \
+	$(BIND)/ntvultralite \
+	$(BIND)/ntvhtmlfilter \
+	$(BIND)/ntvmailfilter \
+	$(BIND)/ntvtr \
+	$(BIND)/ntvshowmail
+
+BINCP = \
+	$(BIND)/ntvcheck \
+	$(BIND)/ntvcheck-int \
+	$(BIND)/ntvopt \
+	$(BIND)/ntvindex \
+	$(BIND)/ntvquerygen \
+	$(BIND)/ntvsearchd \
+	$(BIND)/ntvsearch \
+	$(BIND)/ntvcached \
+	$(BIND)/ntvhostname \
+	$(BIND)/ntvwhat \
+	$(BIND)/ntvtestexp \
+	$(BIND)/ntvultralite \
+	$(BIND)/ntvshowmail
+
+FILTERS=scripts/ntvmhonarc2ntvml \
+	scripts/ntvpdffilter \
+	scripts/ntvdocfilter \
+	scripts/ntvtxtfilter \
+	utils/ntvhtmlfilter.c \
+	utils/ntvmailfilter.c \
+	utils/ntvtr.c \
+	$(BIND)/ntvhtmlfilter \
+	$(BIND)/ntvmailfilter \
+	$(BIND)/ntvtr
+
+BINSCRIPTS=\
+	scripts/ntvfullreindex \
+	scripts/ntvidx-restore.sh \
+	scripts/ntvidx-useopt.sh \
+	scripts/ntvincreindex \
+	scripts/ntvmakenewcollection \
+	scripts/ntvmakenewwebindex \
+	scripts/ntvdocseq
+
+PERL=scripts/perl
+
+# Normal library.
+LIBPLAIN=$(LIBD)/libntv.a
+# Library containing threaded-compiled objects.
+LIBTD=$(LIBD)/libntvtd.a
+
+LIBEXPAT=../expat-1.95.1/lib/.libs/libexpat.a
+LIBZLIB=../zlib-1.1.3/libz.a
+
+all: $(COMPILETARGETS)
+
+$(LIBPLAIN): $(LIBOBJS)
+	$(RM) $@
+	$(AR) $@ $(LIBOBJS)
+
+$(LIBTD): $(LIBTDOBJS)
+	$(RM) $@
+	$(AR) $@ $(LIBTDOBJS)
+
+$(BIND)/ntvcheck: $(OBJSNTVCHECK) $(LIBPLAIN)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVCHECK) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvcheck-int: $(OBJSNTVCHECKINT) $(LIBPLAIN)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVCHECKINT) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvopt: $(OBJSNTVOPT) $(LIBPLAIN)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVOPT) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvindex: $(OBJSNTVINDEX) $(LIBPLAIN)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVINDEX) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvquerygen: $(OBJSNTVQUERYGEN) $(LIBPLAIN)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVQUERYGEN) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvsearchd: $(OBJSNTVSEARCHD) $(LIBTD)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVSEARCHD) $(LIBTD) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBSTD)
+
+$(BIND)/ntvsearch: $(OBJSNTVSEARCH) $(LIBPLAIN)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVSEARCH) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvcached: $(OBJSNTVCACHED) $(LIBPLAIN)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVCACHED) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvhostname: $(OBJSNTVHOSTNAME)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVHOSTNAME) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvwhat: $(OBJSNTVWHAT)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVWHAT) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvtestexp: $(OBJSNTVTESTEXP) $(LIBPLAIN)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVTESTEXP) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvultralite: $(OBJSNTVULTRALITE) $(LIBPLAIN)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVULTRALITE) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvhtmlfilter: $(OBJSNTVHTMLFILTER) $(LIBPLAIN)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVHTMLFILTER) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvmailfilter: $(OBJSNTVMAILFILTER) $(LIBPLAIN)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVMAILFILTER) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvtr: $(OBJSNTVTR) $(LIBPLAIN)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVTR) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(BIND)/ntvshowmail: $(OBJSNTVSHOWMAIL) $(LIBPLAIN)
+	$(RM) $@
+	$(CC) -o $@ $(LDOPTIONS) $(OBJSNTVSHOWMAIL) $(LIBPLAIN) \
+		$(LIBEXPAT) $(LIBZLIB) $(LIBS)
+
+$(OBJD)/main.o: main.c
+	$(CC) -c $(CFLAGS) -o $@ main.c
+
+$(OBJD)/ntvcharsets.o: ntvcharsets.c
+	$(CC) -c $(CFLAGS) -o $@ ntvcharsets.c
+
+$(OBJD)/ntverror.o: ntverror.c
+	$(CC) -c $(CFLAGS) -o $@ ntverror.c
+
+$(OBJD)/ntvmemlib.o: ntvmemlib.c
+	$(CC) -c $(CFLAGS) -o $@ ntvmemlib.c
+
+$(OBJD)/ntvhash.o: ntvhash.c
+	$(CC) -c $(CFLAGS) -o $@ ntvhash.c
+
+$(OBJD)/ntvblkbuf.o: ntvblkbuf.c
+	$(CC) -c $(CFLAGS) -o $@ ntvblkbuf.c
+
+$(OBJD)/ntvbinstuff.o: ntvbinstuff.c
+	$(CC) -c $(CFLAGS) -o $@ ntvbinstuff.c
+
+$(OBJD)/ntvdfa.o: ntvdfa.c
+	$(CC) -c $(CFLAGS) -o $@ ntvdfa.c
+
+$(OBJD)/ntvsysutils.o: ntvsysutils.c
+	$(CC) -c $(CFLAGS) -o $@ ntvsysutils.c
+
+$(OBJD)/ntvchunkutils.o: ntvchunkutils.c
+	$(CC) -c $(CFLAGS) -o $@ ntvchunkutils.c
+
+$(OBJD)/ntvxmlutils.o: ntvxmlutils.c
+	$(CC) -c $(CFLAGS) -o $@ ntvxmlutils.c
+
+$(OBJD)/ntvucutils.o: ntvucutils.c
+	$(CC) -c $(CFLAGS) -o $@ ntvucutils.c
+
+$(OBJD)/ntvutils.o: ntvutils.c
+	$(CC) -c $(CFLAGS) -o $@ ntvutils.c
+
+$(OBJD)/ntvhashutils.o: ntvhashutils.c
+	$(CC) -c $(CFLAGS) -o $@ ntvhashutils.c
+
+$(OBJD)/ntvutf8utils.o: ntvutf8utils.c
+	$(CC) -c $(CFLAGS) -o $@ ntvutf8utils.c
+
+$(OBJD)/ntvgreputils.o: ntvgreputils.c
+	$(CC) -c $(CFLAGS) -o $@ ntvgreputils.c
+
+$(OBJD)/ntvversion.o: ntvversion.c
+	$(CC) -c $(CFLAGS) -o $@ ntvversion.c
+
+$(OBJD)/ntvparam.o: ntvparam.c
+	$(CC) -c $(CFLAGS) -o $@ ntvparam.c
+
+$(OBJD)/ntvindcache.o: ntvindcache.c
+	$(CC) -c $(CFLAGS) -o $@ ntvindcache.c
+
+$(OBJD)/ntvtokenise.o: ntvtokenise.c
+	$(CC) -c $(CFLAGS) -o $@ ntvtokenise.c
+
+$(OBJD)/ntvcompile.o: ntvcompile.c
+	$(CC) -c $(CFLAGS) -o $@ ntvcompile.c
+
+$(OBJD)/ntvtemplate.o: ntvtemplate.c
+	$(CC) -c $(CFLAGS) -o $@ ntvtemplate.c
+
+$(OBJD)/ntvquery.o: ntvquery.c
+	$(CC) -c $(CFLAGS) -o $@ ntvquery.c
+
+$(OBJD)/getopt.o: getopt.c
+	$(CC) -c $(CFLAGS) -o $@ getopt.c
+
+$(OBJD)/ntvattr.o: ntvattr.c
+	$(CC) -c $(CFLAGS) -o $@ ntvattr.c
+
+$(OBJD)/utf8tabs.o: utf8tabs.c
+	$(CC) -c $(CFLAGS) -o $@ utf8tabs.c
+
+$(OBJD)/rbt.o: rbt.c
+	$(CC) -c $(CFLAGS) -o $@ rbt.c
+
+$(OBJD)/rbtdd.o: rbtdd.c
+	$(CC) -c $(CFLAGS) -o $@ rbtdd.c
+
+$(OBJD)/ntvreq.o: ntvreq.c
+	$(CC) -c $(CFLAGS) -o $@ ntvreq.c
+
+$(OBJD)/dlmalloc.o: dlmalloc.c
+	$(CC) -c $(CFLAGS) -o $@ dlmalloc.c
+
+$(OBJD)/ntvcheck.o: ntvcheck.c
+	$(CC) -c $(CFLAGS) -o $@ ntvcheck.c
+
+$(OBJD)/ntvindex.o: ntvindex.c
+	$(CC) -c $(CFLAGS) -o $@ ntvindex.c
+
+$(OBJD)/ntvquerygen.o: ntvquerygen.c
+	$(CC) -c $(CFLAGS) -o $@ ntvquerygen.c
+
+$(OBJD)/ntvsearch.o: ntvsearch.c
+	$(CC) -c $(CFLAGS) -o $@ ntvsearch.c
+
+$(OBJD)/ntvhostname.o: ntvhostname.c
+	$(CC) -c $(CFLAGS) -o $@ ntvhostname.c
+
+$(OBJD)/ntvwhat.o: ntvwhat.c
+	$(CC) -c $(CFLAGS) -o $@ ntvwhat.c
+
+$(OBJD)/ntvtestexp.o: ntvtestexp.c
+	$(CC) -c $(CFLAGS) -o $@ ntvtestexp.c
+
+$(OBJD)/ntvultralite.o: ntvultralite.c
+	$(CC) -c $(CFLAGS) -o $@ ntvultralite.c
+
+$(OBJD)/ncscache.o: ncscache.c
+	$(CC) -c $(CFLAGS) -o $@ ncscache.c
+
+$(OBJD)/ncsclients.o: ncsclients.c
+	$(CC) -c $(CFLAGS) -o $@ ncsclients.c
+
+$(OBJD)/ncssubservers.o: ncssubservers.c
+	$(CC) -c $(CFLAGS) -o $@ ncssubservers.c
+
+$(OBJD)/ncssubdbs.o: ncssubdbs.c
+	$(CC) -c $(CFLAGS) -o $@ ncssubdbs.c
+
+$(OBJD)/ncsdbnamemap.o: ncsdbnamemap.c
+	$(CC) -c $(CFLAGS) -o $@ ncsdbnamemap.c
+
+$(OBJD)/ntvcheck-opt.o: ntvcheck.c
+	$(CC) -c $(CFLAGS) -DNTVCHECK_OPT -o $@ ntvcheck.c
+
+$(OBJD)/ntvcheck-int.o: ntvcheck.c
+	$(CC) -c $(CFLAGS) -DINTERNAL_VERSION -o $@ ntvcheck.c
+
+$(OBJD)/ntvsearchd.o: ntvschd.c
+	$(CC) -c -DSEARCHD $(CTDFLAGS) -o $@ ntvschd.c
+
+$(OBJD)/ntvcached.o: ntvschd.c
+	$(CC) -c $(CFLAGS) -DCACHING -o $@ ntvschd.c
+
+$(OBJD)/ntvsearch-fe.o: ntvschd.c
+	$(CC) -c $(CFLAGS) -o $@ ntvschd.c
+
+$(OBJD)/ntvindextd.o: ntvindex.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvindex.c
+
+$(OBJD)/ntvcharsetstd.o: ntvcharsets.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvcharsets.c
+
+$(OBJD)/ntverrortd.o: ntverror.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntverror.c
+
+$(OBJD)/ntvmemlibtd.o: ntvmemlib.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvmemlib.c
+
+$(OBJD)/ntvhashtd.o: ntvhash.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvhash.c
+
+$(OBJD)/ntvblkbuftd.o: ntvblkbuf.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvblkbuf.c
+
+$(OBJD)/ntvbinstufftd.o: ntvbinstuff.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvbinstuff.c
+
+$(OBJD)/ntvsearchtd.o: ntvsearch.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvsearch.c
+
+$(OBJD)/ntvdfatd.o: ntvdfa.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvdfa.c
+
+$(OBJD)/ntvsysutilstd.o: ntvsysutils.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvsysutils.c
+
+$(OBJD)/ntvchunkutilstd.o: ntvchunkutils.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvchunkutils.c
+
+$(OBJD)/ntvxmlutilstd.o: ntvxmlutils.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvxmlutils.c
+
+$(OBJD)/ntvucutilstd.o: ntvucutils.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvucutils.c
+
+$(OBJD)/ntvutilstd.o: ntvutils.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvutils.c
+
+$(OBJD)/ntvhashutilstd.o: ntvhashutils.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvhashutils.c
+
+$(OBJD)/ntvutf8utilstd.o: ntvutf8utils.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvutf8utils.c
+
+$(OBJD)/ntvgreputilstd.o: ntvgreputils.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvgreputils.c
+
+$(OBJD)/ntvversiontd.o: ntvversion.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvversion.c
+
+$(OBJD)/ntvparamtd.o: ntvparam.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvparam.c
+
+$(OBJD)/ntvindcachetd.o: ntvindcache.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvindcache.c
+
+$(OBJD)/ntvtokenisetd.o: ntvtokenise.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvtokenise.c
+
+$(OBJD)/ntvcompiletd.o: ntvcompile.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvcompile.c
+
+$(OBJD)/ntvtemplatetd.o: ntvtemplate.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvtemplate.c
+
+$(OBJD)/ntvquerytd.o: ntvquery.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvquery.c
+
+$(OBJD)/getopttd.o: getopt.c
+	$(CC) -c $(CTDFLAGS) -o $@ getopt.c
+
+$(OBJD)/ntvattrtd.o: ntvattr.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvattr.c
+
+$(OBJD)/utf8tabstd.o: utf8tabs.c
+	$(CC) -c $(CTDFLAGS) -o $@ utf8tabs.c
+
+$(OBJD)/rbttd.o: rbt.c
+	$(CC) -c $(CTDFLAGS) -o $@ rbt.c
+
+$(OBJD)/rbtddtd.o: rbt.c
+	$(CC) -c $(CTDFLAGS) -o $@ rbtdd.c
+
+$(OBJD)/ntvreqtd.o: ntvreq.c
+	$(CC) -c $(CTDFLAGS) -o $@ ntvreq.c
+
+$(OBJD)/dlmalloctd.o: dlmalloc.c
+	$(CC) -c $(CTDFLAGS) -o $@ dlmalloc.c
+
+$(OBJD)/uthread_semtd.o: uthread_sem.c
+	$(CC) -c $(CTDFLAGS) -o $@ uthread_sem.c
+
+$(OBJD)/ntvhtmlfilter.o: utils/ntvhtmlfilter.c
+	$(CC) -c $(CFLAGS) -o $@ utils/ntvhtmlfilter.c
+
+$(OBJD)/ntvmailfilter.o: utils/ntvmailfilter.c
+	$(CC) -c $(CFLAGS) -o $@ utils/ntvmailfilter.c
+
+$(OBJD)/ntvtr.o: utils/ntvtr.c
+	$(CC) -c $(CFLAGS) -o $@ utils/ntvtr.c
+
+$(OBJD)/ntvshowmail.o: utils/ntvshowmail.c
+	$(CC) -c $(CFLAGS) -o $@ utils/ntvshowmail.c
+
+clean:
+	rm -f $(OBJD)/*.o
+	rm -f $(BIND)/*
+	rm -f $(LIBD)/*.a
+
+distclean:	clean
+
+tags:	
+	ctags *.[ch]
+
+depend:
+	makedepend -Y -p$(OBJD)/ -- $(CFLAGS) -- $(SRCS)
+
+# Copy stuff over.
+# Patch internal paths of scripts to reflect installed path.
+install:
+	-@for d in $(VERSION) collection; do mkdir -p $(prefix)/$$d; done
+	-@for d in bin bin/filters bin/perl docs skel; \
+	do \
+	    mkdir -p $(prefix)/$(VERSION)/$$d; \
+	done
+	cp $(BINCP) $(prefix)/$(VERSION)/bin
+	cp $(BINSCRIPTS) $(prefix)/$(VERSION)/bin
+	cp $(FILTERS) $(prefix)/$(VERSION)/bin/filters
+	cp -r $(PERL) $(prefix)/$(VERSION)/bin
+	rm -f $(prefix)/$(VERSION)/bin/filters/ntvmailbox2ntvml
+	ln -s $(prefix)/$(VERSION)/bin/perl/script/ntvmailbox2ntvml \
+	      $(prefix)/$(VERSION)/bin/filters
+	find $(prefix)/$(VERSION)/bin/perl -name CVS -exec rm -rf {} ';' -prune
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+

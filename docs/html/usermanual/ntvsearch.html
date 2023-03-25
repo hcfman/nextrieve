@@ -1,0 +1,91 @@
+<HTML>
+<HEAD>
+<TITLE>Searching an Index with Ntvsearch</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">Searching an Index with Ntvsearch</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvsearch.html#synopsis">SYNOPSIS</A></LI>
+		<LI><A HREF="ntvsearch.html#description">DESCRIPTION</A></LI>
+		<LI><A HREF="ntvsearch.html#options">OPTIONS</A></LI>
+		<LI><A HREF="ntvsearch.html#examples">EXAMPLES</A></LI>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="synopsis">SYNOPSIS</A></H2>
+<PRE>
+ ntvsearch [-?] [-V]
+           [-R resfile] [-I indexdir] [-L logfile]
+           -A addr -P port</PRE>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P><STRONG>ntvsearch</STRONG> provides a raw interface to
+the searching of a nextrieve text index.</P>
+<P>A search query in XML form is presented on standard input, and a
+search is made either to a remote nextrieve search server (using
+the <CODE>-A</CODE> and <CODE>-P</CODE> options), or to a text index that can be directly
+read.
+A result list is returned on standard output in XML form.</P>
+<P>A definition of what the XML for a query looks like
+can be found <A HREF="ntvqueryxml.html" target="_blank">here</A>.</P>
+<P>A definition of what the XML for the result list looks like
+can be found <A HREF="ntvhitlistxml.html" target="_blank">here</A>.</P>
+<P>The text index to search is defined by a <EM>resource file</EM>, specified with
+the <STRONG>NTV_RESOURCE</STRONG> environment variable, or by using the <CODE>-R</CODE> option.</P>
+<P>
+<H2><A NAME="options">OPTIONS</A></H2>
+<DL>
+<DT><STRONG><A NAME="item_%2DR_resfile"><CODE>-R</CODE> resfile</A></STRONG><BR>
+<DD>
+<EM>resfile</EM> specifies the location of the <EM>resource file</EM> describing the
+text index to be searched.  This overrides any NTV_RESOURCE environment
+variable that is set.
+<P>A resource file specification is necessary when a text index is being
+read directly by <STRONG>ntvsearch</STRONG>.  It is not required when <STRONG>ntvsearch</STRONG> is
+being used in ``client mode'', with the <CODE>-A</CODE> and <CODE>-P</CODE> options.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%2DI_indexdir"><STRONG>-I</STRONG> indexdir</A></STRONG><BR>
+<DD>
+The <EM>indexdir</EM> specified overrides any <EM>indexdir</EM> line in the resource
+file.  <EM>indexdir</EM> specifies the directory where the *.ntv files are
+located that comprise
+the text index.  This option is useful where there are
+several physical text indexes using the same schema defined in a single
+resource file.
+<P></P>
+<DT><STRONG><A NAME="item_%2DL_logfile"><STRONG>-L</STRONG> logfile</A></STRONG><BR>
+<DD>
+<EM>logfile</EM> explicitly overrides any <EM>logfile</EM> line in a resource file
+and any NTV_ERRORLOG environment variable.
+<P></P>
+<DT><STRONG><A NAME="item_%2DA_address%2C_%2DP_port"><CODE>-A</CODE> address, <CODE>-P</CODE> port</A></STRONG><BR>
+<DD>
+Specify the machine address and port to connect to when operating as a client.
+<P></P>
+<DT><STRONG><A NAME="item_%2D%3F"><STRONG>-?</STRONG></A></STRONG><BR>
+<DD>
+Write extended help information to standard output and exit.
+<P></P>
+<DT><STRONG><A NAME="item_%2DV"><STRONG>-V</STRONG></A></STRONG><BR>
+<DD>
+Write version information to standard output and exit.
+<P></P></DL>
+<P>
+<H2><A NAME="examples">EXAMPLES</A></H2>
+<P>Some examples?</P>
+
+</BODY>
+
+</HTML>

@@ -1,0 +1,37 @@
+<HTML>
+<HEAD>
+<TITLE>Search the %%NTVNAME%% index</TITLE>
+</HEAD>
+<BODY BACKGROUND="/bgblend.gif">
+<FONT FACE="arial,helvetica" SIZE=2>
+
+<H2>Search the %%NTVNAME%% index</H2>
+
+<FORM METHOD="POST" ACTION="<ntv-script>">
+<ntv-include %%NTVCHROOTBASE%%/%%NTVNAME%%/templates/%%NTVNAME%%-basicbuttons>
+</FORM>
+<CENTER>
+
+<P>
+<FONT FACE="arial,helvetica" SIZE="2">
+<CENTER><FONT SIZE=3><B>A sample index</B></FONT></CENTER>
+</P>
+<P>
+One can talk about what the %%NTVNAME%% index is all about, for example.
+Or you can delete this section entirely.
+</P>
+
+<BR CLEAR=ALL/>
+
+<P><HR WIDTH=90% SIZE=3 NOSHADE></P>
+<P>
+<CENTER>
+    <FONT SIZE=1>
+    Powered by <A HREF="http://www.nextrieve.com/" TARGET=_top>NexTrieve</A>
+    </FONT>
+</CENTER>
+</P>
+
+</FONT>
+</BODY>
+</HTML>

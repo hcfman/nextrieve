@@ -1,0 +1,34 @@
+
+<ntv-ctl-state-adv>
+
+<TABLE BORDER=0>
+<TR> <TD><B>Total hits:</B></TD> <TD><ntv-ctl-totalhits></TD> </TR>
+<TR> <TD><B>Hits to display:</B></TD> <TD><ntv-ctl-displayedhits></TD> </TR>
+<TR> <TD><B>Fuzziness:</TD> <TD><ntv-ctl-fuzzyfactor></TD> </TR>
+<TR> <TD><B>Highlighting:</B></TD> <TD><ntv-ctl-highlight></TD> </TR>
+</TABLE>
+
+<P><HR WIDTH=90% SIZE=3 NOSHADE></P>
+
+<BR>
+<input type="text" name="vblq" size="40" value="<ntv-vbl vblq>">
+<ntv-ctl-submit VALUE=" Go ">
+<BR>
+<input
+    type="checkbox"
+    NAME="vblsubjectsonly"
+    VALUE="checked"
+    <ntv-vbl vblsubjectsonly>
+    >
+<I>Subjects only</I>
+<BR>
+<ntv-ctl-moderadio-fuzzy 1> <I>Fuzzy</I> 
+<ntv-ctl-moderadio-fuzzy 0> <I>Exact</I> 
+<BR>
+<input type="checkbox" name="vblall" value="checked" <ntv-vbl vblall>>
+    <I>All words</I>
+<BR>
+
+<BR><FONT SIZE=-1><A HREF="<ntv-script>?q=<ntv-vbl vblq>">Simple search</A></FONT>
+
+<BR>

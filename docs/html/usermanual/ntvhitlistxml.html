@@ -1,0 +1,197 @@
+<HTML>
+<HEAD>
+<TITLE>Result List XML</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">Result List XML</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvhitlistxml.html#description">DESCRIPTION</A></LI>
+		<LI><A HREF="ntvhitlistxml.html#<header>">&lt;header&gt;</A></LI>
+		<UL>
+
+			<LI><A HREF="ntvhitlistxml.html#<error>...</error>">&lt;error&gt;...&lt;/error&gt;</A></LI>
+			<LI><A HREF="ntvhitlistxml.html#<warning>...</warning>">&lt;warning&gt;...&lt;/warning&gt;</A></LI>
+		</UL>
+
+		<LI><A HREF="ntvhitlistxml.html#<hit>">&lt;hit&gt;</A></LI>
+		<UL>
+
+			<LI><A HREF="ntvhitlistxml.html#<attributes>">&lt;attributes&gt;</A></LI>
+			<LI><A HREF="ntvhitlistxml.html#<preview>">&lt;preview&gt;</A></LI>
+		</UL>
+
+		<LI><A HREF="ntvhitlistxml.html#short form">SHORT FORM</A></LI>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P>Search results produced by a nextrieve search engine are in
+XML form.  The DTD describing the format of nextrieve query XML
+can be found <A HREF="ntvdtds.html" target="_blank">here</A>.</P>
+<P>A nextrieve result list (or hitlist) is implemented as an
+&lt;ntv:hitlist&gt; or &lt;ntv:hl&gt; container, depending on whether a
+'longform=``1''' attribute or 'longform=``0''' attribute was specified
+on the originating query.  The only difference between the two hitlist
+forms are the tagnames.  The long form (the default) will be used
+in this discussion.  A short ending section will summarize the short form.</P>
+<P>A hitlist is simply a header followed by a sequence of ``hits''.  Each
+hit represents an area of a document that is considered interesting to
+the originator of the query, and they are returned in ranked order, from
+``most interesting'' to ``least interesting''.
+Each hit contains (optionally) the attributes
+attached to the document in the text index, (optionally) the preview text
+of the most interesting area in the document and a document id.</P>
+<P>The information in the hitlist header indicates the number of hits found,
+the number of hits returned, and any error or warning information generated
+as part of the search.</P>
+<P>Ie, a hitlist has the following form:</P>
+<PRE>
+    &lt;ntv:hitlist xmlns:ntv=&quot;http://www.nextrieve.com/1.0&quot;&gt;
+        &lt;header ...&gt;
+            &lt;warning ...&gt;warning message&lt;/warning&gt;
+            &lt;error ...&gt;error message&lt;/error&gt;
+        &lt;/header&gt;
+        &lt;hit ...&gt;
+            &lt;attributes&gt;
+                &lt;attr1&gt;val1&lt;/attr1&gt;
+                &lt;attr2&gt;val2&lt;/attr2&gt;
+                ...
+            &lt;/attributes&gt;
+            &lt;preview&gt;
+                ...
+            &lt;/preview&gt;
+        &lt;/hit&gt;
+        &lt;hit ...&gt;...&lt;/hit&gt;
+        ...
+    &lt;/ntv:hitlist&gt;</PRE>
+<P>If the originating query XML id=``val'' attribute applied to the top level
+&lt;ntv:query&gt; container, the same id value is returned as an attribute to
+the top-level &lt;ntv:hitlist&gt; container.  If the
+originating query had no id=``val'' attribute, neither does the &lt;ntv:hitlist&gt;
+element.</P>
+<P>
+<H2><A NAME="<header>">&lt;header&gt;</A></H2>
+<P>This container is always present, although it may be empty.
+If hits are returned, the header contains attributes describing the range of
+hits.</P>
+<DL>
+<DT><STRONG><A NAME="item_firsthit%3D%27n%27"><STRONG>firsthit='n'</STRONG></A></STRONG><BR>
+<DD>
+The 1-based offset in the complete nominal hit list of the first hit
+actually being returned here.
+<P></P>
+<DT><STRONG><A NAME="item_displayedhits%3D%27n%27"><STRONG>displayedhits='n'</STRONG></A></STRONG><BR>
+<DD>
+The number of hits actually being returned here.
+<P></P>
+<DT><STRONG><A NAME="item_totalhits%3D%27n%27"><STRONG>totalhits='n'</STRONG></A></STRONG><BR>
+<DD>
+The total number of hits that can be returned for this search.
+<P></P></DL>
+<P>The nested containers permitted inside a &lt;header&gt; container are
+as follows.</P>
+<P>
+<H3><A NAME="<error>...</error>">&lt;error&gt;...&lt;/error&gt;</A></H3>
+<P>English error message text is present, indicating there was a structural
+or other problem regarding the originating query.</P>
+<P>It should be noted that for now there are no attributes applied to the
+&lt;error&gt; container, but in the future there will be an error-id and 
+other information describing the error in a language independant way.</P>
+<P>
+<H3><A NAME="<warning>...</warning>">&lt;warning&gt;...&lt;/warning&gt;</A></H3>
+<P>English warning message text is present, indicating that, although the
+search was performed, there were some conditions present that might be
+of interest.</P>
+<P>Two examples are:</P>
+<UL>
+<LI>
+A word being searched for does not exist in the dictionary (the word
+is returned as part of the warning message text).
+<P></P>
+<LI>
+The fuzzy or exact search was not supported by the text index, in which
+case the search is changed to its other form.
+<P>Eg, a fuzzy search was wanted, but the text index only supports exact searching,
+in which case the query was changed automatically to an exact search query.</P>
+<P></P></UL>
+<P>
+<H2><A NAME="<hit>">&lt;hit&gt;</A></H2>
+<P>Each &lt;hit&gt; container represents a hit.  Each &lt;hit&gt; container can
+have the following attributes:</P>
+<DL>
+<DT><STRONG><A NAME="item_docid%3D%27id%27"><STRONG>docid='id'</STRONG></A></STRONG><BR>
+<DD>
+A nextrieve-internal document number.  This is currently informational
+only.
+<P></P>
+<DT><STRONG><A NAME="item_score%3D%27value%27"><STRONG>score='value'</STRONG></A></STRONG><BR>
+<DD>
+A normally large nextrieve-generated score number.  This is currently
+informational only.
+<P></P>
+<DT><STRONG><A NAME="item_percent%3D%27value%27"><STRONG>percent='value'</STRONG></A></STRONG><BR>
+<DD>
+A ``percentage correctness'' value if the originating search was a fuzzy
+search.
+<P></P></DL>
+<P>Each hit container can contain two other nested containers.</P>
+<P>
+<H3><A NAME="<attributes>">&lt;attributes&gt;</A></H3>
+<P>If the originating query did not prohibit the returning of attribute
+information, all the attributes applied to the document are
+returned here.  Each attribute value is returned by using:</P>
+<PRE>
+    &lt;attrname&gt;attrval&lt;/attrname&gt;</PRE>
+<P>where <EM>attrname</EM> is the name of the attribute, and &lt;attrval&gt; its value.
+For a flag-type attribute <EM>flagattr</EM>, if the flag is set &lt;flagattr/&gt;
+is returned, otherwise nothing labelled <EM>flagattr</EM> is returned.</P>
+<P>
+<H3><A NAME="<preview>">&lt;preview&gt;</A></H3>
+<P>If the originating query did not prohibit the returning of preview text,
+the ``most interesting'' small text fragment of the interesting document
+is returned here.  Words in the preview text considered relevant to the
+original search are ``highlighted'' using information from the &lt;highlight&gt;
+element in the resource file for the text index.  Note that, for a fuzzy
+search, words may be highlighted in the preview text that are not
+<EM>identical</EM> to any original search word, but they should be <EM>similar</EM>
+in some way.</P>
+<P>
+<H2><A NAME="short form">SHORT FORM</A></H2>
+<P>The ``short form'' of the nextrieve hitlist follows the same structure
+as the ``long form'', but with short tag names.  An example of the short
+form of a hitlist is:</P>
+<PRE>
+    &lt;ntv:hl xmlns:ntv=&quot;http://www.nextrieve.com/1.0&quot;&gt;
+        &lt;hdr fh=&quot;n&quot; dh=&quot;n&quot; th=&quot;n&quot;&gt;
+            &lt;warn&gt;warning message&lt;/warn&gt;
+            &lt;err&gt;error message&lt;/err&gt;
+        &lt;/hdr&gt;
+        &lt;h dn=&quot;n&quot; sc=&quot;n&quot; pc=&quot;n&quot;&gt;
+            &lt;a&gt;
+                &lt;attr1&gt;val1&lt;/attr1&gt;
+                &lt;attr2&gt;val2&lt;/attr2&gt;
+                ...
+            &lt;/a&gt;
+            &lt;p&gt;
+                ...
+            &lt;/p&gt;
+        &lt;/h&gt;
+        &lt;h ...&gt;...&lt;/hit&gt;
+        ...
+    &lt;/ntv:hl&gt;</PRE>
+
+</BODY>
+
+</HTML>

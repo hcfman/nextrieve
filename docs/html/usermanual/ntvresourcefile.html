@@ -1,0 +1,631 @@
+<HTML>
+<HEAD>
+<TITLE>Text Index Resource File</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">Text Index Resource File</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvresourcefile.html#description">DESCRIPTION</A></LI>
+		<LI><A HREF="ntvresourcefile.html#miscellaneous elements">Miscellaneous Elements</A></LI>
+		<LI><A HREF="ntvresourcefile.html#<indexcreation> container">&lt;indexcreation&gt; Container</A></LI>
+		<LI><A HREF="ntvresourcefile.html#indexing container">Indexing Container</A></LI>
+		<LI><A HREF="ntvresourcefile.html#searching container">Searching Container</A></LI>
+		<LI><A HREF="ntvresourcefile.html#ultralite containers">Ultralite Containers</A></LI>
+		<LI><A HREF="ntvresourcefile.html#utf8 data files">UTF8 Data Files</A></LI>
+		<UL>
+
+			<LI><A HREF="ntvresourcefile.html#classfilename">classfilename</A></LI>
+			<LI><A HREF="ntvresourcefile.html#foldfilename">foldfilename</A></LI>
+			<LI><A HREF="ntvresourcefile.html#decompfilename">decompfilename</A></LI>
+		</UL>
+
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P>A nextrieve <EM>resource file</EM> is a simple text file containing information
+in XML form about or related to a text index.</P>
+<P>A DTD describing the resource file format can be found <A HREF="ntvdtds.html" target="_blank">here</A>.</P>
+<P>The structure of a resource file is simple; there is an outer &lt;ntv:resource&gt;
+container which contains a small number of other top-level containers:</P>
+<DL>
+<DT><STRONG><A NAME="item_miscellaneous"><EM>miscellaneous</EM></A></STRONG><BR>
+<DD>
+There are a small number of miscellaneous elements
+specifying information that's generally useful
+to all nextrieve products regarding this text index.
+<P></P>
+<DT><STRONG><A NAME="item_indexcreation">indexcreation</A></STRONG><BR>
+<DD>
+The &lt;indexcreation&gt; container collects all the information related to
+the structure of a text index.  If any information in this section is changed,
+the text index should be rebuilt with <STRONG>ntvindex</STRONG> from original text sources.
+<P></P>
+<DT><STRONG><A NAME="item_indexing">indexing</A></STRONG><BR>
+<DD>
+The &lt;indexing&gt; container holds the information used by <STRONG>ntvindex</STRONG>
+as it performs indexing operations.  This is information relating
+to what to do with various error conditions, etc.
+<P></P>
+<DT><STRONG><A NAME="item_searching">searching</A></STRONG><BR>
+<DD>
+The &lt;searching&gt; container holds the information used by <STRONG>ntvsearch</STRONG>
+and <STRONG>ntvsearchd</STRONG> to determine how to perform searches and how to
+return results.
+<P></P>
+<DT><STRONG><A NAME="item_ultralite">ultralite</A></STRONG><BR>
+<DD>
+The &lt;ultralite&gt; <CODE>container(s)</CODE> are solely used by ntvultralite, nextrieve's
+HTML template filling process.
+<P></P></DL>
+<P>All the containers are EMPTY containers, ie, no text is expected in a
+container.</P>
+<P>In summary, the top-level structure of a nextrieve resource file looks
+something like this:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;ntv:resource xmlns:ntv=&quot;http://www.nextrieve.com/1.0&quot;&gt;</PRE>
+<PRE>
+        &lt;misc1 .../&gt;
+        &lt;misc2 .../&gt;
+        ...</PRE>
+<PRE>
+        &lt;indexcreation&gt;
+            &lt;index-creation-specific.../&gt;
+            ...
+        &lt;/indexcreation&gt;</PRE>
+<PRE>
+        &lt;indexing&gt;
+            &lt;ntvindex-specific.../&gt;
+            ...
+        &lt;/indexing&gt;</PRE>
+<PRE>
+        &lt;searching&gt;
+            &lt;nextrieve-specific.../&gt;
+            ...
+        &lt;/searching&gt;</PRE>
+<PRE>
+        &lt;ultralite&gt;
+            &lt;ntvultralite-specific.../&gt;
+            ...
+        &lt;/ultralite&gt;</PRE>
+<PRE>
+    &lt;/ntv:resource&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>The content of the resource file is discussed according to these
+classifications.  Within each classification, containers are
+presented in no particular order.</P>
+<P>
+<H2><A NAME="miscellaneous elements">Miscellaneous Elements</A></H2>
+<DL>
+<DT><STRONG><A NAME="item_%3Cindexdir_name%3D%27index%2Ddirectory%27%2F%3E">&lt;<STRONG>indexdir name='<EM>index-directory</EM>'</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+<EM>index-directory</EM> is the name of the directory
+in which all the text-index-related
+files are found.
+These files all end with the suffix ``.ntv''.
+<P></P>
+<DT><STRONG><A NAME="item_%3Clogfile_name%3D%27logfile%2Dname%27%2F%3E">&lt;<STRONG>logfile name='<EM>logfile-name</EM>'</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+During its operation, the indexer (<STRONG>ntvindex</STRONG>) or searcher (<STRONG>ntvsearch</STRONG>
+or <STRONG>ntvsearchd</STRONG>)
+may print various time-stamped messages.
+These messages are printed to stderr (the standard error output) and,
+if specified, to the file specified as <EM>logfile-name</EM>.
+<P></P>
+<DT><STRONG><A NAME="item_%3Ccache_size%3D%22cachesize%22%2F%3E">&lt;<STRONG>cache size=``<EM>cachesize</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+A memory cache is used during indexing and during searching, to increase
+performance.
+This line specifies the amount of memory to allocate for the cache.
+<EM>cachesize</EM> is a number which can be suffixed with K, M or G indicating
+kilobytes, megabytes or gigabytes.  If only a number is used for <EM>cachesize</EM>,
+it is taken to be the size in bytes.
+<P>By default a value of 10M (10Mb) is used, but normally a much larger
+value is specified, dependant somewhat on how large the index is and
+how much physical memory is available on the indexing machine.
+Values of 100M are not uncommon.</P>
+<P></P></DL>
+<P>
+<H2><A NAME="<indexcreation> container">&lt;indexcreation&gt; Container</A></H2>
+<P>The containers permitted in an &lt;indexcreation&gt; container are as follows:</P>
+<DL>
+<DT><STRONG><A NAME="item_%3Cexact_%5Baccentaction%3D%22distinct%22%7C%22mer">&lt;<STRONG>exact [accentaction=``distinct''|``merge''|``both'']</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+<DT><STRONG><A NAME="item_%3Cfuzzy_%5Baccentaction%3D%22distinct%22%7C%22mer">&lt;<STRONG>fuzzy [accentaction=``distinct''|``merge''|``both'']</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+The &lt;exact&gt; element indicates that the text index will contain an
+``exact'' part.  The &lt;fuzzy&gt; element indicates that the text index will contain
+a fuzzy part.
+<P>With an exact index it is possible to search for words in an exact fashion.
+Only words that exactly match words in a particular search query are
+relevant.</P>
+<P>With a fuzzy index it is possible to search for words in a fuzzy fashion.
+Words that are <EM>similar</EM> to original query words can be considered relevant.
+A ``fuzzy'' level, specified in the search, gives an indication of the
+permitted word variation.</P>
+<P>It is possible to have both <EM>exact</EM> and <EM>fuzzy</EM> in the same index.  In
+fact, if both are present, the accuracy and quality of fuzzy searches is
+significantly improved by the information found in the exact index.</P>
+<P>The optional <EM>accentaction</EM> attribute specifies what to do with accented
+characters, as defined by the &lt;utf8data foldfilename=...&gt; tag.</P>
+<DL>
+<DT><STRONG><A NAME="item_distinct">distinct</A></STRONG><BR>
+<DD>
+Accented characters are ``preserved''.
+<P>For example, if the word ``voilà''
+is indexed, it can only be found in an exact index by searching for
+``voilà'' (with the accent).  In a fuzzy index, searching for ``voilà''
+will consider ``voilà'' to be an exact match, and ``voila'' (without the
+accent) to be ``further away''.</P>
+<P></P>
+<DT><STRONG><A NAME="item_merge">merge</A></STRONG><BR>
+<DD>
+Accented characters are ``decomposed'' to their closest non-accented equivalents.
+<P>For example, if the word ``voilà'' is indexed, it will be stored in the index
+as ``voila'' (no accents).  It will be found by an exact or fuzzy search for
+either ``voilà'' or ``voila'', which both map automatically to a search for
+``voila'' (no accents).</P>
+<P></P>
+<DT><STRONG><A NAME="item_both">both</A></STRONG><BR>
+<DD>
+Both the above operations are performed.
+<P>If the word ``voilà'' is indexed, it is stored in the index as both ``voilà''
+<EM>and</EM> ``voila''.
+During searching, if the word ``voila'' (no accent) is searched for, both
+``voila'' and ``voilà'' will therefore be found.
+If the word ``voilà'' (accented) is searched for in an exact fashion,
+only occurrences of ``voilà'' will be found.  A fuzzy search for
+``voilà'' will treat ``voila'' to be ``further away''.</P>
+<P>In this way a search using non-accented text will find both non-accented
+and accented forms of the words.  A search using explicitly accented text
+will find only the accented forms that were indexed.</P>
+<P></P></DL>
+<P>It should be noted, however, that in the text <EM>preview</EM> provided as
+part of the search results, accented characters are displayed in their original
+form.  The lines discussed above relate only the <EM>searching</EM> of
+the text as a consequence of how it was indexed.</P>
+<P>By default, an accentaction of ``both'' is used for both exact and fuzzy
+indexes.  It is recommended that if both an exact and fuzzy text index
+are being created, that the accentaction of both is the same.</P>
+<DT><STRONG><A NAME="item_%3Ctexttype_name%3D%22ttname%22%2F%3E">&lt;<STRONG>texttype name=``<EM>ttname</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+This element specifies the name of an allowable ``text type''.
+<P>The &lt;text&gt; element of a document being indexed can contain nested
+containers that are indexed specially.
+If the name of a nested container matches one of the allowable
+texttype names (as defined with a &lt;texttype&gt; element),
+the text contained in that container will be indexed
+in a manner that makes it searchable separately.  Eg,</P>
+<PRE>
+    &lt;texttype name=&quot;heading&quot;/&gt;</PRE>
+<P>allows the use of the following in the text of a document being indexed:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;text&gt;
+        normal text.
+        &lt;heading&gt;title text&lt;/heading&gt;
+        more normal text.
+        &lt;heading&gt;more heading text&lt;/heading&gt;
+        more normal text.
+    &lt;/text&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>It is then possible to search the text index looking at <EM>only</EM> the heading
+text, for example.  It is also possible to search the text index looking
+at all text, but giving text found in &lt;heading&gt; containers a higher weight.
+By default, all text types are searched.</P>
+<P>A discussion of search operations can be found <A HREF="ntvqueryxml.html" target="_blank">here</A>.</P>
+<P>The number of different text types is somewhat limited -- they should be
+chosen with reasonable care.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cattribute_name%3D%22attrname%22_type%3D%22flag%">&lt;<STRONG>attribute name=``<EM>attrname</EM>'' type=``flag''|``number''|``string'' key=``key-unique''|``key-duplicates''|``notkey'' nvals=``1''|``*''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+An &lt;attribute&gt; element specifies
+the characteristics of a particular per-document attribute.
+<P>The name of the attribute is given by <EM>attrname</EM>.</P>
+<P>Attributes for a document are presented to the indexer in the XML
+input stream and are processed at the same time as the document text is
+indexed.
+Each attribute has a name by which it is referenced, and a value.  The
+value can be one of a number of different types:</P>
+<DL>
+<DT><STRONG><A NAME="item_type%3D%22flag%22">type=``flag''</A></STRONG><BR>
+<DD>
+The value of the attribute can be either 0 (off) or non-zero (on).
+If the value of a particular flag attribute is not specified for a document,
+it is taken to be ``off''.
+Similarly, if the value of a flag attribute is explicitly specified as:
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;attrname&gt;0&lt;/attrname&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>the value is taken to be ``off''.
+If the value is specified as one of:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;attrname/&gt;
+    &lt;attrname&gt;&lt;/attrname&gt;
+    &lt;attrname&gt;1&lt;/attrname&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>the value is taken to be ``on''.</P>
+<P></P>
+<DT><STRONG><A NAME="item_type%3D%22number%22">type=``number''</A></STRONG><BR>
+<DD>
+The value of the attribute can be a non-negative number in the range
+0..2147483647 inclusive.
+<P>If the value of a number attribute is not specified for a document,
+the value is taken to be zero.</P>
+<P></P>
+<DT><STRONG><A NAME="item_type%3D%22string%22">type=``string''</A></STRONG><BR>
+<DD>
+The value of the attribute can be any string of characters.
+<P></P></DL>
+<P>It should be noted that the values of these attributes cannot be
+<EM>searched</EM> in the way document text can be.  The values of these
+attributes can only be:</P>
+<UL>
+<LI>
+Be used as part of a <EM>constraint</EM>, restricting the set of valid
+documents to return for a search result.
+<P></P>
+<LI>
+Returned as part of search results, giving information about the
+document found.
+<P></P></UL>
+<P>The ``key'' parameter indicates the following characteristics of
+a document attribute:</P>
+<DL>
+<DT><STRONG><A NAME="item_key%3D%22key%2Dunique%22">key=``key-unique''</A></STRONG><BR>
+<DD>
+A ``key-unique'' parameter implies that only one document in the text
+index can have any particular attribute value.
+If, during indexing, a second document is presented with an attribute
+value of <EM>attrname</EM> that is already associated with a document in the
+index, the <EM>existing document is automatically marked deleted</EM>.
+<P></P>
+<DT><STRONG><A NAME="item_key%3D%22key%2Dduplicates%22">key=``key-duplicates''</A></STRONG><BR>
+<DD>
+A ``key-duplicates'' attribute will eventually allow fast retrieval of
+documents when only the value of <EM>attrname</EM> is specified.
+In the current release of NexTrieve ``key-duplicates'' is accepted but is
+normally only used for string attributes where there are many occurrences
+of the same per-document value: a side-effect of using ``key-duplicates''
+is that values are ``shared'' amongst documents.  All documents having
+the same string value all point to the same piece of text, reducing
+memory requirements if the strings are generally long and duplicated.
+<P></P>
+<DT><STRONG><A NAME="item_key%3D%22notkey%22">key=``notkey''</A></STRONG><BR>
+<DD>
+Attribute values are not keyed or shared in any way.
+<P></P></DL>
+<P>The ``nvals'' parameter indicates if a single document can have only
+at most one value of the attribute, or many:</P>
+<DL>
+<DT><STRONG><A NAME="item_nvals%3D%221%22">nvals=``1''</A></STRONG><BR>
+<DD>
+A particular document can only have one value of this particular attribute.
+A ``filename'' attribute is an example.
+<P></P>
+<DT><STRONG><A NAME="item_nvals%3D%22%2A%22">nvals=``*''</A></STRONG><BR>
+<DD>
+A particular document can have several values associated with this
+particular attribute.  A ``keyword'' or ``author'' attribute is a good example.
+In the XML stream being indexed, the multiple values of such an attribute
+are defined simply by repeating the &lt;attrname&gt;...&lt;/attrname&gt; specification,
+eg:
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;document&gt;
+        &lt;attributes&gt;
+            &lt;attrname&gt;value1&lt;/attrname&gt;
+            &lt;attrname&gt;value2&lt;/attrname&gt;
+            &lt;attrname&gt;value3&lt;/attrname&gt;
+        &lt;/attributes&gt;
+    ...
+    </PRE></FONT></TD></TR></TABLE></PRE>
+<P></P></DL>
+<P>These per-document attributes are reported as part of the search results
+for a query.
+They can also be used as part of a ``constraint'' in a search,
+an expression built up
+out of attribute names and values that restrict the set of allowable
+documents returned as the result of a query.  A discussion of
+constraints in nextrieve can be found <A HREF="ntvqueryxml.html" target="_blank">here</A>.</P>
+<P>For a flag-type attribute, the only valid settings for the other
+parameters are 'key=``notkey'' nvals=``1'''.
+Other variations for a flag type attribute will return an error.</P>
+<DT><STRONG><A NAME="item_%3Cutf8data_classfile%3D%22classfilename%22_foldfi">&lt;<STRONG>utf8data classfile=``<EM>classfilename</EM>'' foldfile=``<EM>foldfilename</EM>'' decompfile=``<EM>decompfilename</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+This element specifies names of files,
+files whose content overrides compiled-in content
+of nextrieve utilities.
+The functions are all related to unicode encoding.
+The compiled-in content of the nextrieve utilities has been extracted
+from publicly available standards datafiles CaseFolding.txt and
+UnicodeData.txt.
+<P>For the file format of these files, refer to the section ``UTF8 Data Files''
+below.</P>
+<P></P></DL>
+<P>
+<H2><A NAME="indexing container">Indexing Container</A></H2>
+<P>The elements permitted in an &lt;indexing&gt; container are as follows:</P>
+<DL>
+<DT><STRONG><A NAME="item_%3Cunknowntext_logaction%3D%22log%22%7C%22%21log%2">&lt;<STRONG>unknowntext logaction=``log''|``!log''|``stop'' indexaction=``ignore''|``default''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+<DT><STRONG><A NAME="item_%3Cnestedtext_logaction%3D%22log%22%7C%22%21log%22">&lt;<STRONG>nestedtext logaction=``log''|``!log''|``stop'' indexaction=``ignore''|``inherit''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+During indexing of the &lt;text&gt; container of a document,
+it is possible for the <STRONG>ntvindex</STRONG>
+to find containers that are unknown or too deeply nested.  <STRONG>unknowntext</STRONG>
+and <STRONG>nestedtext</STRONG> specify what to do in those situations.
+<DL>
+<DT><STRONG><A NAME="item_logaction%3D%22log%22">logaction=``log''</A></STRONG><BR>
+<DD>
+A message is logged and indexing continues.
+<P></P>
+<DT><STRONG><A NAME="item_logaction%3D%22%21log%22">logaction=``!log''</A></STRONG><BR>
+<DD>
+A message is not logged and indexing continues.
+<P></P>
+<DT><STRONG><A NAME="item_logaction%3D%22stop%22">logaction=``stop''</A></STRONG><BR>
+<DD>
+A message is logged and indexing stops.
+<P></P>
+<DT><STRONG><A NAME="item_indexaction%3D%22ignore%22">indexaction=``ignore''</A></STRONG><BR>
+<DD>
+The text contained in the offending container is simply ignored.
+<P></P>
+<DT><STRONG><A NAME="item_indexaction%3D%22default%22">indexaction=``default''</A></STRONG><BR>
+<DD>
+The text contained in the unknown container is indexed as if it was
+part of the top level default text of the document.
+<P></P>
+<DT><STRONG><A NAME="item_indexaction%3D%22inherit%22">indexaction=``inherit''</A></STRONG><BR>
+<DD>
+If a text element is nested too deeply, the text it contains is indexed as
+if it was part of its immediate parent.
+<P></P></DL>
+<DT><STRONG><A NAME="item_%3Cunknownattrs_logaction%3D%22log%22%7C%22%21log%">&lt;<STRONG>unknownattrs logaction=``log''|``!log''|``stop''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+<DT><STRONG><A NAME="item_%3Cnestedattrs_logaction%3D%22log%22%7C%22%21log%2">&lt;<STRONG>nestedattrs logaction=``log''|``!log''|``stop''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+Similar to the &lt;unknowntext&gt; and &lt;nestedtext&gt; elements described above,
+these containers specify what to do with unknown or nested elements in
+the &lt;attributes&gt; section during indexing.
+<P>The offending elements are never indexed, but they can trigger messages
+and/or termination of indexing.</P>
+<P></P></DL>
+<P>
+<H2><A NAME="searching container">Searching Container</A></H2>
+<P>The elements permitted in a &lt;searching&gt; container are as follows:</P>
+<DL>
+<DT><STRONG><A NAME="item_%3C%3Chighlight_name%3D%22tagname%22_on%3D%22ontex">&lt;&lt;highlight name=``<EM>tagname</EM>'' on=``<EM>ontext</EM>'' off=``<EM>offtext</EM>''&gt;/&gt;</A></STRONG><BR>
+<DD>
+If preview text is being returned in a hit list, words present
+in the preview text relevant to the original search terms in the preview
+are highlighted.
+By default, nextrieve will surround such terms with a
+&lt;b&gt;&lt;/b&gt; pair.
+It is possible to supply alternate highlighting text using the &lt;highlight&gt;
+element.  If name=``<EM>tagname</EM>'' is given, nextrieve will surround words
+to be hightlighted with
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;tagname&gt;word&lt;/tagname&gt; </PRE></FONT></TD></TR></TABLE></PRE>
+<P>Alternatively, if 'on=``<EM>ontext</EM>''' and 'off=``<EM>offtext</EM>''' are given, the text
+``ontext'' and ``offtext'' will be used directly to introduce and leave the
+highlighted word respectively.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Chitlistxml_form%3D%22long%22%7C%22short%22%2F%3">&lt;<STRONG>hitlistxml form=``long''|``short''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+When searching, the XML for the hitlist can be returned in a ``long'' form
+(&lt;hitlist&gt;...&lt;/hitlist&gt;) or a short form (&lt;hl&gt;...&lt;/hl&gt;).  The &lt;hitlistxml&gt;
+element specifies the default if the form wanted is not specified in the
+query.
+<P>If the &lt;hitlistxml&gt; element is not present, a default of form=``long''
+is applied.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cthreads_connector%3D%22nconn%22_worker%3D%22nwo">&lt;<STRONG>threads connector=``<EM>nconn</EM>'' worker=``<EM>nworker</EM>'' core=``<EM>ncore</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+The &lt;threads&gt; element specifies
+the number of threads and connections allowed in a multi-threading
+<STRONG>ntvsearchd</STRONG>.
+<P><EM>nconn</EM> defines the number of simultaneous client connections
+allowed to <STRONG>ntvsearchd</STRONG>.  If the system supports threads and the
+server has been compiled with threading enabled, the request data arriving
+for each connection is read by a dedicated thread, otherwise the request
+data is read by a central loop.  This can be a number around 50,
+for example.</P>
+<P><EM>nworker</EM> is only relevant for an <STRONG>ntvsearchd</STRONG> compiled multi-threaded.
+It defines the maximum number of simultanous requests able to be
+active in the server at any one time.  This can have a value similar
+to <EM>nconn</EM>.</P>
+<P><EM>ncore</EM> is only relevant for an <STRONG>ntvsearchd</STRONG> compiled multi-threaded.
+It defines the maximum number of simultanous requests able to be
+in the inner decode loop at any one time.   This is typically a small
+value such as 5.</P>
+<P>To determine if <STRONG>ntvsearchd</STRONG> has been compiled multi-threaded, use the
+-V option.  The number of threads and connections allowed is also printed
+to the logfile by <STRONG>ntvsearchd</STRONG> as the first log message after startup.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cquerylog_path%3D%22qlogpath%22%2F%3E">&lt;<STRONG>querylog path=``<EM>qlogpath</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+<EM>qlogpath</EM> specifies a directory in which <STRONG>ntvsearchd</STRONG> will create a
+file to be used for logging all search requests.  The name of the file
+is constructed automatically from the current date and time when
+<STRONG>ntvsearchd</STRONG> starts up.
+<P></P></DL>
+<P>
+<H2><A NAME="ultralite containers">Ultralite Containers</A></H2>
+<P>The &lt;ultralite&gt; container is used by
+<STRONG>ntvultralite</STRONG>, nextrieve's HTML template filling application.</P>
+<P>Different instances of <STRONG>ntvultralite</STRONG> are given different values of
+the environment variable <STRONG>$NTVNAME</STRONG>.  The value of this variable
+is used for, among other things, to locate an &lt;ntvultralite&gt; element
+in the resource file with an attribute of name=``$NTVNAME''.  If this
+container does not exist, <STRONG>ntvultralite</STRONG> will read the ``default''
+container specified simply as &lt;ntvultralite&gt; with no ``name'' attribute.</P>
+<P>The elements permitted in an &lt;ultralite&gt; container are as follows:</P>
+<DL>
+<DT><STRONG><A NAME="item_%3Cattrmap_name%3D%22attrname%22_text%3D%22text%22">&lt;<STRONG>attrmap name=``<EM>attrname</EM>'' text=``<EM>text</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+Used by the &lt;ntv-attrmap*&gt; tag in a template.  Arbitrary HTML, specified
+here as <EM>text</EM>, is substituted into the template if the nominated
+attribute <EM>attrname</EM> is set on a particular hit.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cfuzzybutton_level%3D%22n%22_text%3D%22text%22%2">&lt;<STRONG>fuzzybutton level=``<EM>n</EM>'' text=``<EM>text</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+Used by the &lt;ntv-ctl-fuzzyfactor&gt; tag when it is filled with a &lt;select&gt;
+HTML element.  The fuzzy level <EM>n</EM> is given select text of <EM>text</EM>.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cserver_name%3D%22host%3Aport%22%2F%3E">&lt;<STRONG>server name=``<EM>host:port</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+If this container is present, <STRONG>ntvultralite</STRONG> will communicate with the
+nextrieve search
+server nominated as <EM>host</EM> and <EM>port</EM> to perform the query.
+<P>If this container is not present, <STRONG>ntvultralite</STRONG> will perform the query
+directly on the text index.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cvblsub_name%3D%22vblname%22_text%3D%22text%22%2">&lt;<STRONG>vblsub name=``vbl<EM>name</EM>'' text=``<EM>text</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+<DT><STRONG><A NAME="item_%3Cvblrange_name1%3D%22vblname1%22_name2%3D%22vbln">&lt;<STRONG>vblrange name1=``vbl<EM>name1</EM>'' name2=``vbl<EM>name2</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+<DT><STRONG><A NAME="item_%3Cvbluse_name%3D%22vblname%22_type%3D%22constrain">&lt;<STRONG>vbluse name=``vbl<EM>name</EM>'' type=``constraint|''text`` class=''any``|''all|``not|''free``|''ntv-vbl<EM>name2</EM>``</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+A discussion of the use of ``variables'' in <STRONG>ntvultralite</STRONG> can be found 
+<A HREF="ntvultralite.html" target="_blank">here</A>.
+<P></P>
+<DT><STRONG><A NAME="item_%3Chitlimit_total%3D%22maxth%22_displayed%3D%22dis">&lt;<STRONG>hitlimit total=``<EM>maxth</EM>'' displayed=``<EM>displayed</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+The &lt;hitlimit&gt; element restricts the maximum number of total hits
+and displayed hits asked for by a form to the values specified
+as <EM>maxth</EM> and <EM>displayed</EM> respectively.
+<P>By default total=``1000'' and displayed=``100'' are applied.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cemitok_value%3D%220%22%7C%221%22%2F%3E">&lt;<STRONG>emitok value=``0''|``1''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+If present with a value of ``1'', ntvultralite will emit an ``HTTP/1.0 200 OK''
+line in the HTTP header.
+<P></P>
+<DT><STRONG><A NAME="item_%3Clog_value%3D%220%22%7C%221%22%2F%3E">&lt;<STRONG>log value=``0''|``1''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+If present with a value of ``1'', ntvultralite will automatically create or
+append to a logfile named $NTVBASE/$NTVNAME/logs/ultralite.txt.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cexecallow_value%3D%220%22%7C%221%22%2F%3E">&lt;<STRONG>execallow value=``0''|``1''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+If present with a value of ``1'', the use of &lt;ntv-exec&gt; tags is
+permitted in templates when ntvultralite is filling them.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cswitchedtemplate_keyword%3D%22kwd%22_tempatedir">&lt;<STRONG>switchedtemplate keyword=``<EM>kwd</EM>'' tempatedir=``<EM>templatedir</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+A simple keyword scan is performed on the query string -- if the query string
+contains the word <EM>kwd</EM>, templates will be taken from the subdirectory
+<EM>templatedir</EM> under $NTVBASE/templates.
+<P>Note that <STRONG>switchedtemplate</STRONG> is only honored if there are
+no &lt;attributetemplate&gt; containers in the resource file.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%3Cselectname_name%3D%22attrname%22_text%3D%22disp">&lt;<STRONG>selectname name=``<EM>attrname</EM>'' text=``<EM>displayname</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+This maps a flag-type attribute named <EM>attrname</EM> to text that will
+be displayed in a select box on an HTML form.
+Only required if &lt;ntv-select&gt; tags are used in templates.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cattributetemplate_attrname%3D%22attrname%22_tem">&lt;<STRONG>attributetemplate attrname=``<EM>attrname</EM>'' templatedir=``<EM>templatedir</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+A particular subdirectory under $NTVBASE/templates/ (named by
+<EM>templatedir</EM>) can be nominated to be
+used if a particular flag-type attribute (named by <EM>attrname</EM>)
+has been set on the search form.
+This is intended for use when there is a single attribute set per form,
+set by using &lt;ntv-select&gt; for example.  If multiple attributes are
+present, the first <STRONG>attributetemplate</STRONG> element having a match on the form is
+used.
+The template files within this subdirectory follow the normal ntvultralite
+file naming naming convention for templates.
+<P></P>
+<DT><STRONG><A NAME="item_%3Clogicalindex_name%3D%22idxname%22%2F%3E">&lt;<STRONG>logicalindex name=``<EM>idxname</EM>''</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+If present, <STRONG>ntvultralite</STRONG> will fill in an &lt;indexname&gt; container in the
+query specifying that this logical text index is to be searched.
+This is useful where there are multiple ``logical'' text indexes
+in a single ``physical'' text index, managed by a nextrieve caching
+server.
+<P></P></DL>
+<P>
+<H2><A NAME="utf8 data files">UTF8 Data Files</A></H2>
+<P>As part of a &lt;utf8data&gt; element in the resource file:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;utf8data classfile=&quot;classfilename&quot;
+              foldfile=&quot;foldfilename&quot;
+              decompfile=&quot;decompfilename&quot;/&gt; </PRE></FONT></TD></TR></TABLE>
+</PRE>
+<PRE>
+
+up to three files can be specified whose content will replace compiled-in
+content of nextrieve utilities.</PRE>
+<P>
+<H3><A NAME="classfilename">classfilename</A></H3>
+<P>A <EM>classfilename</EM> specifies a file whose content defines the
+classification of unicode data.
+The first line of this file gives the value (in hex) of the maximum unicode
+code point of an acceptable character.
+Subsequent lines give the unicode code point (in hex) of a character,
+followed by a space, followed by it's nextrieve-specific classification.
+This classification is a decimal number representing the sum of the following
+values:</P>
+<OL>
+<LI>
+The character is an alpha character.
+<P></P>
+<LI>
+The character is a digit.
+<P></P>
+<LI>
+The character is an accented character.
+<P></P>
+<LI>
+The character is equivalent to a space.
+<P></P>
+<LI>
+The character is a control character, and will be replaced by a space during
+indexing.
+<P></P></OL>
+<P>Any characters whose codes are not present in the utf8class.txt file
+are given a nextrieve classification value of zero -- ie, they will be
+treated as punctuation.</P>
+<P>
+<H3><A NAME="foldfilename">foldfilename</A></H3>
+<P>A <EM>foldfilename</EM> specifies a file whose content defines the
+case-folding of unicode data.  This information is used to map
+words containing characters differing in case to the same word in
+the index.</P>
+<P>Each line of the file should start
+with the unicode code point (in hex) of an ``alpha'' type character followed
+by a space, then followed by a space-separated sequence of unicode code
+points (in hex) of the character's lower-case equivalent.  Normally there
+is just one entry in this sequence.  Accents should be preserved with
+this transformation.</P>
+<P>
+<H3><A NAME="decompfilename">decompfilename</A></H3>
+<P>A <EM>decompfilename</EM> specifies a file whose content defines the
+decomposition of an accented character to a non-accented form.</P>
+<P>Each line of the file should start with the unicode code point (in hex) of
+an accented (or decomposable) character, followed by a space and a
+space-separated sequence of unicode code points (in hex) of the decomposition.
+Accents should be removed in this transformation.</P>
+<P>Note that it is possible to decompose the unicode code point for 1/4,
+for example, into the sequence ``1'', ``/'', and ``4''.</P>
+
+</BODY>
+
+</HTML>

@@ -1,0 +1,135 @@
+<HTML>
+<HEAD>
+<TITLE>Indexer XML</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">Indexer XML</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvindexerxml.html#description">DESCRIPTION</A></LI>
+		<LI><A HREF="ntvindexerxml.html#<document>">&lt;document&gt;</A></LI>
+		<UL>
+
+			<LI><A HREF="ntvindexerxml.html#<attributes>">&lt;attributes&gt;</A></LI>
+			<LI><A HREF="ntvindexerxml.html#<text>">&lt;text&gt;</A></LI>
+		</UL>
+
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P>Information submitted to <STRONG>ntvindex</STRONG> to be incorporated into a nextrieve
+text index is presented in XML form.
+The DTD describing the format of this XML
+can be found <A HREF="ntvdtds.html" target="_blank">here</A>.</P>
+<P>A nextrieve indexing stream is implemented as an &lt;ntv:docseq&gt; container.
+There are a number of optional nested
+elements in this container specifying documents (attributes and text)
+to be indexed.</P>
+<P>Each document to be indexed is enclosed in a &lt;document&gt; container.  Within
+that, all attributes to applied to the document are collected in an
+&lt;attributes&gt; container, and all text to be indexed is enclosed in
+a &lt;text&gt; container.  This &lt;text&gt; container can have nested elements
+representing text of different ``types''.</P>
+<P>As an example, consider the following:</P>
+<PRE>
+<TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0> <TR> <TD BGCOLOR="#A6C2ED"><FONT SIZE=2><PRE>
+    &lt;ntv:docseq xmlns:ntv=&quot;http://www.nextrieve.com/1.0&quot;&gt;</PRE>
+<PRE>
+        &lt;document&gt;
+            &lt;attributes&gt;
+                &lt;attr1&gt;value1&lt;/attr1&gt;
+                &lt;attr2&gt;value2&lt;/attr2&gt;
+            &lt;/attributes&gt;
+            &lt;text&gt;
+                Normal document text.
+                &lt;title&gt;
+                    Text in the document title -- a special text type.
+                    that must be declared in the resource file.
+                &lt;/title&gt;
+                More normal document text.
+            &lt;/text&gt;
+        &lt;/document&gt;</PRE>
+<PRE>
+        &lt;document&gt;
+            &lt;!- the content of a second document... --&gt;
+        &lt;/document&gt;</PRE>
+<PRE>
+    &lt;/ntv:docseq&gt;</PRE></FONT></TD></TR></TABLE></PRE>
+<P>
+<H2><A NAME="<document>">&lt;document&gt;</A></H2>
+<P>Each &lt;document&gt; container encloses all the information for a single
+document that is to be indexed.  This consists of attributes to be
+applied, and text to be indexed.</P>
+<P>
+<H3><A NAME="<attributes>">&lt;attributes&gt;</A></H3>
+<P>The &lt;attributes&gt; container within a &lt;document&gt; collects all the
+attribute information to be applied to a document.</P>
+<P>A document attribute is a name/value pair, where the allowable
+names and types are declared in the resource file for the text index
+using &lt;attribute&gt; elements.</P>
+<P>The name/value pair for each attribute to apply is specified as:</P>
+<PRE>
+    &lt;name&gt;value&lt;/name&gt;</PRE>
+<P>If a particular attribute is declared as a ``flag'' type attribute, its
+only legal values are 0 and non-zero.  If the attribute is not specified,
+it is automatically given a value of ``0'' (off) for that document.
+If it is specified, it can have one of the following forms:</P>
+<DL>
+<DT><STRONG><A NAME="item_%3Cattr%3E0%3C%2Fattr%3E">&lt;<STRONG>attr</STRONG>&gt;0&lt;/<STRONG>attr</STRONG>&gt;</A></STRONG><BR>
+<DD>
+Off.
+<P></P>
+<DT><STRONG><A NAME="item_%3Cattr%3E1%3C%2Fattr%3E">&lt;<STRONG>attr</STRONG>&gt;1&lt;/<STRONG>attr</STRONG>&gt;</A></STRONG><BR>
+<DD>
+<DT><STRONG><A NAME="item_%3Cattr%2F%3E">&lt;<STRONG>attr</STRONG>/&gt;</A></STRONG><BR>
+<DD>
+<DT><STRONG><A NAME="item_%3Cattr%3E%3C%2Fattr%3E">&lt;<STRONG>attr</STRONG>&gt;&lt;/<STRONG>attr</STRONG>&gt;</A></STRONG><BR>
+<DD>
+On
+<P></P></DL>
+<P>If a given attribute is declared as 'key=``key-unique''', it should be noted
+that if a document is presented having this attribute set to the same value
+as a document already existing in the text index, the <EM>existing document
+will be automatically marked as deleted</EM>.</P>
+<P>Also, if a given attribute is marked as possibly having multiple values
+for a single document (ie, ``nvals='*''' is used in the &lt;attribute&gt;
+declaration in the resource file), the multiple values are specified
+by simply repeating the &lt;attrname&gt;value&lt;/attrname&gt; container as
+required.</P>
+<P>
+<H3><A NAME="<text>">&lt;text&gt;</A></H3>
+<P>The text for a document is presented in a &lt;text&gt; container.  Text present
+at the top-level of this container is indexed as ``default'' text.  It
+is possible to have other areas of text, ``types'' of text, specially
+marked so they can be searched separately.</P>
+<P>Each ``texttype'' is declared in the resource file for the text index
+using &lt;texttype name=``<EM>ttname</EM>''/&gt; elements.  For each <EM>ttname</EM>
+defined in this way, it is possible to have a nested container or
+containers of the same name in the &lt;text&gt; container of the document.</P>
+<P>Eg, with a declaration of:</P>
+<PRE>
+    &lt;texttype name=&quot;title&quot;/&gt;</PRE>
+<P>in the resource file, it is possible to have a document containing:</P>
+<PRE>
+    &lt;document&gt;
+        &lt;text&gt;
+        default text.
+        &lt;title&gt;searchable text in the title.&lt;/title&gt;
+        more default text.
+    &lt;/document&gt;</PRE>
+
+</BODY>
+
+</HTML>

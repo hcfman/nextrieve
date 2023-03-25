@@ -1,0 +1,17 @@
+
+<ntv-ctl-search size="40" VALUE="<ntv-search>">
+<ntv-ctl-submit VALUE=" Search ">
+<BR>
+<ntv-ctl-moderadio-fuzzy 2> <I>All words</I>
+<ntv-ctl-moderadio-fuzzy 0> <I>Any words</I>
+<ntv-ctl-moderadio-fuzzy 1> <I>Fuzzy</I>
+<BR>
+<input
+    type="checkbox"
+    NAME="vblsubjectsonly"
+    VALUE="checked"
+    <ntv-vbl vblsubjectsonly>
+    >
+<I>Subjects only</I>
+<BR>
+<FONT SIZE=-1><A HREF="<ntv-script>?<ntv-linktextquery>&adv&fuzzy=<ntv-moderadio-fuzzy>&vblsubjectsonly=<ntv-vbl vblsubjectsonly>">Advanced search options</A></FONT>

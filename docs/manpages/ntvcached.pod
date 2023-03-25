@@ -1,0 +1,164 @@
+
+=head1 NAME
+
+ntvcached - NexTrieve caching server
+
+=head1 SYNPOSIS
+
+ ntvcached [C<-?>] [C<-V>]
+           [C<-L> logfile]
+           [C<-u> user] [C<-l> listen-depth]
+           C<-A> addr C<-P> port C<-F> cache-cfg.xml
+
+=head1 DESCRIPTION
+
+B<ntvcached> implements a nextrieve caching server.  This is a daemon
+that is located between a client and a nextrieve search server.
+
+It makes no difference to a client whether the client is communicating
+with a nextrieve search server or a nextrieve caching server.
+The only difference is one of efficiency, as the caching server holds
+result lists for a while.
+Thus, if the client uses "page next" or "page previous", for example, the
+caching server can provide results without loading the search server at
+all.
+
+Like the B<ntvsearchd> nextrieve search server, B<ntvcached>
+will listen on the nominated address/port pair
+for incoming connections.
+
+It will accept a stream of incoming queries in XML form from each
+connection, and respond with results ("hitlists") in XML form.
+
+A definition of what the XML for a query looks like
+can be found ###ntvqueryxml###.
+
+A definition of what the XML for the result list looks like
+can be found ###ntvhitlistxml###.
+
+The operation of the caching server is controlled by the C<-F> cache-cfg.xml
+parameter.  A definition of the content of a caching configuration 
+file an be found ###ntvcachecfgxml###.  A short functional summary
+can be found in the following section.
+
+=head2 Caching Server Configuration File
+
+B<ntvcached> can operate on one or more I<physical> text indexes.
+A physical text index is simply a directory in which there are is a collection
+of *.ntv files.
+
+These physical text indexes can be on remote machines,
+with file systems that are not directly accessible.
+Each of these physical text indexes is assumed to be
+served by one or more B<ntvsearchd> nextrieve search servers, and the
+machine addresses and ports of these servers are found in the caching
+configuration file.
+
+In addition, B<ntvcached> allows the use of multiple
+"logical" text indexes inside single physical text index.
+A "logical" text index is simply defined to be a constraint applied
+to a search on the physical text index.
+
+If there are many rather small text indexes that are wanted to be created
+and searched, it is frequently more effective to create a single
+physical text index containing all the documents from all the "logical"
+indexes, and the logical indexes are discriminated using a simple
+constraint.  The constraint is normally just a single flag value, one
+flag per different logical text index.
+
+B<ntvcached> understands how to modify any user-specified constraint
+that arrives in a query to augment it with the extra constraint required
+to search within particular logical text index.  The constraint
+information to apply is found in the caching configuration file.
+
+=head2 Caching Server Signal Operations
+
+While B<ntvcached> is running, it is possible to perform two
+operations using signals.
+
+=over
+
+=item kill C<-HUP>
+
+B<ntvcached> will print its state to the logfile.  The state
+of the caching server includes the number of clients currently attached
+and their outstanding requests.  It includes the state of each nextrieve
+server and any outstanding requests on each.  It also includes the number
+of entries in the caching server's cache, the number of client requests served,
+and the number of those requests that were served directly from the cache.
+
+=item kill C<-USR1>
+
+The caching server will zero out or "flush" its cache.
+
+=back
+
+=head2 Caching Server Automatic Operations
+
+When B<ntvcached> is performing normal operations it may notice
+that a particular nextrieve search server has "gone away", either due to a
+system failure or due to the fact that the server has been simply
+killed to use machine resources for some other task.
+
+In that case, any queries that were being waited on (if any) from that
+nextrieve server are re-distributed to other servers, the offending
+server is marked as "in error", a message is logged,
+and processing continues.
+If the caching server system
+is saturated, the nextrieve server(s) marked "in error" are periodically
+retried so that if they are re-started they start serving requests again
+automatically with no other user-intervention required.
+
+=head1 OPTIONS
+
+=over
+
+=item C<-L> logfile
+
+I<logfile> explicitly overrides any I<logfile> line in a resource file
+and any NTV_ERRORLOG environment variable.
+
+=item C<-A> address, C<-P> port
+
+Specify the machine address and port to listen on for incoming connections.
+
+=item C<-?>
+
+Write extended help information to standard output and exit.
+
+=item C<-V>
+
+Write version information to standard output and exit.
+
+=back
+
+=head1 DIAGNOSTICS
+
+A list of diagnostics should go here.
+
+=head1 ENVIRONMENT
+
+=over
+
+=item NTV_RESOURCE
+
+The location of the resource file describing the text index.
+Can be overridden by the C<-R> option.
+
+=item NTV_ERRORLOG
+
+Where to log error messages.
+Overridden by a B<logfile> line in the resource file,
+and C<-L> option.
+
+=back
+
+=head1 CAVEATS
+
+=head1 BUGS
+
+=head1 RESTRICTIONS
+
+=head1 SEE ALSO
+
+    ntvindex(1), ntvsearch(1), ntvqueryxml(5), ntvhitlistxml(5).

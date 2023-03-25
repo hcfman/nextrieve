@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# Simple HTML indexer.
+ERR=echo
+[ -x "%%NTVBASE%%/%%NTVNAME%%/bin/%%NTVNAME%%error" ] \
+    && ERR="%%NTVBASE%%/%%NTVNAME%%/bin/%%NTVNAME%%error"
+
+cd "%%NTVBASEDIR%%" \
+    || err=1
+    
+if [ ! -z "$err" ]; then
+    "$ERR" "Cannot change to '%%NTVBASEDIR%%'"
+    exit 1
+fi
+
+# Convert all input files to XML form.
+#
+# We accept .htm, .html, .doc and .pdf files.
+#
+
+{
+    if [ ! -z "%%NTVTXTFILES%%" ]
+    then
+	find . -follow -name '*.[tT][xX][tT]' -print 2> /dev/null \
+	    | sed -e 's%^\./%%' \
+	    | "%%NTVINST%%/%%VERSION%%/bin/filters/ntvtxtfilter" \
+		    -t title -T title -f filename
+    fi
+    if [ ! -z "%%NTVDOCFILES%%" ]
+    then
+	find . -follow -name '*.[dD][oO][cC]' -print 2> /dev/null \
+	    | sed -e 's%^\./%%' \
+	    | "%%NTVINST%%/%%VERSION%%/bin/filters/ntvdocfilter" \
+		    -t title -T title -f filename
+    fi
+    if [ ! -z "%%NTVPDFFILES%%" ]
+    then
+	find . -follow -name '*.[pP][dD][fF]' -print 2> /dev/null \
+	    | sed -e 's%^\./%%' \
+	    | "%%NTVINST%%/%%VERSION%%/bin/filters/ntvpdffilter" \
+		    -t title -T title -f filename
+    fi
+    if [ ! -z "%%NTVHTMLFILES%%" ]
+    then
+	find . -follow \
+		'(' -name '*.[hH][tT][mM]' -o -name '*.[hH][tT][mM][lL]' ')' \
+		-print 2> /dev/null \
+	    | sed -e 's%^\./%%' \
+	    | "%%NTVINST%%/%%VERSION%%/bin/filters/ntvhtmlfilter" \
+		    -t title -T title -f filename -l 128 -F
+    fi
+} | "%%NTVINST%%/%%VERSION%%/bin/ntvdocseq" utf-8

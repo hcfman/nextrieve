@@ -1,0 +1,255 @@
+
+=head1 NAME
+
+ntvmailfilter - NexTrieve mail message filter
+
+=head1 SYNOPSIS
+
+  ntvmailfilter [-f fnameattr] [-O initialoffset] [-o offsetattr]
+                [-k keyattr]
+                [-a hdr[=attr]]...
+                [-d hdr[=attr]]...
+                [-t hdr[=texttype]]...
+                [-m content-type=processor]...
+                [-M content-type;namespec=new-content-type]...
+                [-l maxlen] [-e defencoding] [-DFhz]
+
+=head1 DESCRIPTION
+
+B<ntvmailfilter> expects a series of filenames on stdin, each representing
+the name of a mailbox or file containing a mail message, and produces on
+stdout XML suitable for passing to ntvindex.
+
+Each mail message encountered is emitted in XML as a separate document
+with associated attributes.  See the note on multipart/digest below.
+
+Several MIME types are inherently understood.  Unknown MIME types have
+their content dropped.  It is possible to map between MIME types, and
+to associate an external handler for a particular MIME type.
+
+=head1 OPTIONS
+
+=over
+
+=item C<-f> fnameattr
+
+The name of the file being processed is emitted as the "fnameattr" attribute
+in documents generated from that file.
+
+=item C<-o> offsetattr
+
+The offset of the start of the message is emitted as a numeric attribute
+"offsetattr".  Note that the start of the message is normally a "From "
+line, but may be the start of the file (offset 0) or the position
+of a MIME boundary (line starting with "--") containing the message.
+
+=item C<-O> initialoffset
+
+A seek on each input file is performed to this value before message
+processing starts.
+
+=item C<-k> keyattr
+
+A key attribute is emitted for every message; a string attribute
+consisting of the name of the parent file and the message offset.
+
+=item C<-a> hdr[=attr]...
+
+Each -a specifies a mapping from a message header line to
+an emitted attribute.  If [attr] is omitted, the value of "hdr" will
+be used as the attribute name.
+
+Note that matching of header lines is performed in a case-insensitive
+fashion, while the attribute name is emitted case-sensitively.  Ie,
+both the following lines will match "Subject:" header lines, but will
+emit them as different attributes:
+
+    -a subject
+    -a Subject
+
+=item C<-d> hdr[=attr]
+
+The header specified represents a date field, which is processed
+and emitted as a number of the form YYYYMMDD.  Usually used as:
+
+    -d date
+
+=item C<-t> hdr[=texttype]...
+
+Each -t specifies that a given message header is to be emitted as
+a text container labelled <texttype>.  See the notes related to C<-a>
+above.
+
+=item C<-m> content-type=processor...
+
+When the MIME type specified by "content-type" is encountered, its processing
+is defined by the value of "processor".
+
+"Processor" can be one of the following keywords, otherwise it is taken
+to be the name of a program (and arguments) to execute to handle the
+MIME content.
+
+=over
+
+=item DROP
+
+The content is explicitly dropped.
+
+=item PRINT
+
+The content is assumed to be directly usable (after being decoded
+according to the transfer-encoding) and will be transformed to UTF-8 for
+output.
+The text/plain MIME type falls into this category.
+
+=item MESSAGE
+
+The content will be treated as an encapsulated mail message.
+The message/rfc822 MIME type falls into this category.
+
+=item MPMIXED
+
+The content will be treated as a multipart/mixed MIME type.  Each
+container is processed and the content will become part of the content
+of the encapsulated mail message as far as indexing is concerned.
+
+=item MPALTERNATIVE
+
+The content will be treated as a multipart/alternative MIME type.  Only
+the first container is processed, with the content becoming part of the
+content of the encapsulated mail message as far as indexing is
+concerned.
+
+=item MPDIGEST
+
+The content will be treated as a multipart/digest MIME type.  Each
+container defaults to a message/rfc822 MIME type.  The content of these
+messages becomes part of the encapsulated mail message as far as indexing
+is concerned unless the C<-z> option is also used.
+
+=back
+
+If none of these keywords is used, the processor is assumed to be an
+external program that processes the content.  The processor should
+expect the raw decoded MIME content on stdin, and should produce UTF-8
+on stdout.
+
+A small number of special tokens can be used in the processor specification
+of such an external handler, that are replaced as follows:
+
+=over
+
+=item C<%C%>
+
+Replaced with the charset in effect.
+
+=item C<%M%>
+
+Replaced with the MIME type in effect.
+
+=item C<%N%>
+
+Replaced with the name (or filename) found associated with the MIME
+information.
+
+=back
+
+=item C<-M> content-type[;namespec]=new-content-type...
+
+A mapping is specified between a MIME type with associated name, and
+another MIME type.  This is used in two situations:
+
+=over
+
+=item *
+
+The MIME type is very generic, and the suffix of the filename distinguishes
+the content.
+
+=item *
+
+The MIME type would otherwise be treated badly according to the suffix of the
+filename.  Eg, a text/plain MIME type that actually contains a word document.
+
+=back
+
+The namespec, if given, is a simple case-insensitive match, with a leading
+and/or
+trailing '*' allowed as a wildcard.  The match is performed on the
+name= parameter of the Content-Type header or, if not found, the
+filename= parameter of the Content-Disposition header.
+
+In all cases, a successful match implies that the MIME type of the
+content will be treated as "new-content-type".
+
+=item C<-l> maxlen
+
+A maximum length can be applied to string attributes.
+
+=item C<-e> defencoding
+
+A character encoding is specified that will be applied when none is
+otherwise given.  Note that the default is iso-8859-1 rather than the more
+technically correct us-ascii.  See also the C<-F> option.
+
+=item C<-D>
+
+A <ntv:docseq> container will be generated surrounding the filter output.
+This enables the output to be sent directly to ntvindex.
+
+=item C<-F>
+
+A "force" flag that indicates that content with an unknown encoding should
+be forced to be the default encoding.  Normally such content is dropped.
+
+=item C<-z>
+
+The C<-z> flag indicates that messages contained as part of MPDIGEST
+containers should be treated as separate documents, rather than having
+their content merged into the parent message.
+
+Note that the parent message is always emitted but with -z it will
+probably be short.  Also note that with -z, the last message in the
+digest will also contain text from the end of the parent message.
+
+=item C<-h>
+
+Print some help information.
+
+=back
+
+=head1 EXAMPLES
+
+Typical simple usage:
+
+    ntvmailfilter -D -f mailbox -o offset \
+                  -a from -a to -a cc -d date -a subject \
+                  -t subject \
+		  < mailbox-names | ntvindex ...
+
+Handling HTML, Word and PDF attachments with other NexTrieve filters:
+
+    ntvmailfilter -D -f mailbox -o offset \
+		  -a from -a to -a cc -d date -a subject \
+		  -t subject \
+		  -m 'text/html=ntvhtmlfilter -r' \
+		  -m 'application/msword=ntvdocfilter -r' \
+		  -m 'application/pdf=ntvpdffilter -r' \
+		  < mailbox-names | ntvindex ...
+
+As above, but dropping JPEG images that appear as text/plain attachments,
+and mapping word documents in application/octet-stream attachments
+to be handled with the ntvdocfilter:
+
+    ntvmailfilter -D -f mailbox -o offset \
+		  -a from -a to -a cc -d date -a subject \
+		  -t subject \
+		  -M 'text/plain;*.jpg=junk/junk' \
+		  -m 'application/msword=ntvdocfilter -r' \
+		  -m 'application/pdf=ntvpdffilter -r' \
+		  -M 'application/octet-stream;*.doc=application/msword' \
+		  < mailbox-names | ntvindex ...
+
+=head1 SEE ALSO
+
+    ntvhtmlfilter(1), ntvpdffilter(1), ntvdocfilter(1)

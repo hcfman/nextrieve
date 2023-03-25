@@ -1,0 +1,139 @@
+<HTML>
+<HEAD>
+<TITLE>Running the Caching Server</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">Running the Caching Server</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvcached.html#synposis">SYNPOSIS</A></LI>
+		<LI><A HREF="ntvcached.html#description">DESCRIPTION</A></LI>
+		<LI><A HREF="ntvcached.html#caching server configuration file">Caching Server Configuration File</A></LI>
+		<LI><A HREF="ntvcached.html#caching server signal operations">Caching Server Signal Operations</A></LI>
+		<LI><A HREF="ntvcached.html#caching server automatic operations">Caching Server Automatic Operations</A></LI>
+		<LI><A HREF="ntvcached.html#options">OPTIONS</A></LI>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="synposis">SYNPOSIS</A></H2>
+<PRE>
+ ntvcached [C&lt;-?&gt;] [C&lt;-V&gt;]
+           [C&lt;-L&gt; logfile]
+           [C&lt;-u&gt; user] [C&lt;-l&gt; listen-depth]
+           C&lt;-A&gt; addr C&lt;-P&gt; port C&lt;-F&gt; cache-cfg.xml</PRE>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P><STRONG>ntvcached</STRONG> implements a nextrieve caching server.  This is a daemon
+that is located between a client and a nextrieve search server.</P>
+<P>It makes no difference to a client whether the client is communicating
+with a nextrieve search server or a nextrieve caching server.
+The only difference is one of efficiency, as the caching server holds
+result lists for a while.
+Thus, if the client uses ``page next'' or ``page previous'', for example, the
+caching server can provide results without loading the search server at
+all.</P>
+<P>Like the <STRONG>ntvsearchd</STRONG> nextrieve search server, <STRONG>ntvcached</STRONG>
+will listen on the nominated address/port pair
+for incoming connections.</P>
+<P>It will accept a stream of incoming queries in XML form from each
+connection, and respond with results (``hitlists'') in XML form.</P>
+<P>A definition of what the XML for a query looks like
+can be found <A HREF="ntvqueryxml.html" target="_blank">here</A>.</P>
+<P>A definition of what the XML for the result list looks like
+can be found <A HREF="ntvhitlistxml.html" target="_blank">here</A>.</P>
+<P>The operation of the caching server is controlled by the <CODE>-F</CODE> cache-cfg.xml
+parameter.  A definition of the content of a caching configuration 
+file an be found <A HREF="ntvcachecfgxml.html" target="_blank">here</A>.  A short functional summary
+can be found in the following section.</P>
+<P>
+<H2><A NAME="caching server configuration file">Caching Server Configuration File</A></H2>
+<P><STRONG>ntvcached</STRONG> can operate on one or more <EM>physical</EM> text indexes.
+A physical text index is simply a directory in which there are is a collection
+of *.ntv files.</P>
+<P>These physical text indexes can be on remote machines,
+with file systems that are not directly accessible.
+Each of these physical text indexes is assumed to be
+served by one or more <STRONG>ntvsearchd</STRONG> nextrieve search servers, and the
+machine addresses and ports of these servers are found in the caching
+configuration file.</P>
+<P>In addition, <STRONG>ntvcached</STRONG> allows the use of multiple
+``logical'' text indexes inside single physical text index.
+A ``logical'' text index is simply defined to be a constraint applied
+to a search on the physical text index.</P>
+<P>If there are many rather small text indexes that are wanted to be created
+and searched, it is frequently more effective to create a single
+physical text index containing all the documents from all the ``logical''
+indexes, and the logical indexes are discriminated using a simple
+constraint.  The constraint is normally just a single flag value, one
+flag per different logical text index.</P>
+<P><STRONG>ntvcached</STRONG> understands how to modify any user-specified constraint
+that arrives in a query to augment it with the extra constraint required
+to search within particular logical text index.  The constraint
+information to apply is found in the caching configuration file.</P>
+<P>
+<H2><A NAME="caching server signal operations">Caching Server Signal Operations</A></H2>
+<P>While <STRONG>ntvcached</STRONG> is running, it is possible to perform two
+operations using signals.</P>
+<DL>
+<DT><STRONG><A NAME="item_kill_%2DHUP">kill <CODE>-HUP</CODE></A></STRONG><BR>
+<DD>
+<STRONG>ntvcached</STRONG> will print its state to the logfile.  The state
+of the caching server includes the number of clients currently attached
+and their outstanding requests.  It includes the state of each nextrieve
+server and any outstanding requests on each.  It also includes the number
+of entries in the caching server's cache, the number of client requests served,
+and the number of those requests that were served directly from the cache.
+<P></P>
+<DT><STRONG><A NAME="item_kill_%2DUSR1">kill <CODE>-USR1</CODE></A></STRONG><BR>
+<DD>
+The caching server will zero out or ``flush'' its cache.
+<P></P></DL>
+<P>
+<H2><A NAME="caching server automatic operations">Caching Server Automatic Operations</A></H2>
+<P>When <STRONG>ntvcached</STRONG> is performing normal operations it may notice
+that a particular nextrieve search server has ``gone away'', either due to a
+system failure or due to the fact that the server has been simply
+killed to use machine resources for some other task.</P>
+<P>In that case, any queries that were being waited on (if any) from that
+nextrieve server are re-distributed to other servers, the offending
+server is marked as ``in error'', a message is logged,
+and processing continues.
+If the caching server system
+is saturated, the nextrieve <CODE>server(s)</CODE> marked ``in error'' are periodically
+retried so that if they are re-started they start serving requests again
+automatically with no other user-intervention required.</P>
+<P>
+<H2><A NAME="options">OPTIONS</A></H2>
+<DL>
+<DT><STRONG><A NAME="item_%2DL_logfile"><CODE>-L</CODE> logfile</A></STRONG><BR>
+<DD>
+<EM>logfile</EM> explicitly overrides any <EM>logfile</EM> line in a resource file
+and any NTV_ERRORLOG environment variable.
+<P></P>
+<DT><STRONG><A NAME="item_%2DA_address%2C_%2DP_port"><CODE>-A</CODE> address, <CODE>-P</CODE> port</A></STRONG><BR>
+<DD>
+Specify the machine address and port to listen on for incoming connections.
+<P></P>
+<DT><STRONG><A NAME="item_%2D%3F"><CODE>-?</CODE></A></STRONG><BR>
+<DD>
+Write extended help information to standard output and exit.
+<P></P>
+<DT><STRONG><A NAME="item_%2DV"><CODE>-V</CODE></A></STRONG><BR>
+<DD>
+Write version information to standard output and exit.
+<P></P></DL>
+
+</BODY>
+
+</HTML>

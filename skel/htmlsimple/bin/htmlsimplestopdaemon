@@ -1,0 +1,9 @@
+#!/bin/sh
+
+#pids=`cat %%NTVBASE%%/%%NTVNAME%%/index/*pid* 2> /dev/null`
+#if [ "$pids" ] ; then
+#    kill $pids
+#    rm %%NTVBASE%%/%%NTVNAME%%/index/*pid* 2> /dev/null
+#fi
+
+exit 0

@@ -1,0 +1,142 @@
+<HTML>
+<HEAD>
+<TITLE>Query-XML Generator</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">Query-XML Generator</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvquerygen.html#synposis">SYNPOSIS</A></LI>
+		<LI><A HREF="ntvquerygen.html#description">DESCRIPTION</A></LI>
+		<LI><A HREF="ntvquerygen.html#options">OPTIONS</A></LI>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="synposis">SYNPOSIS</A></H2>
+<PRE>
+ ntvquerygen -[?xX]
+              [-i offset] [-d displayedhits] [-t totalhits]
+              [-v n] [-e {utf8|utf16|iso|ascii}]
+              [-f fuzziness] [-h highlight-length]
+              [-T texttype] [-sa[=0|1]] [-sp[=0|1]]
+              [-fww=n] [-fwv=n] [-D idxname]
+              [-c constraint]
+              [-any=&quot;text&quot;] [-all=&quot;text&quot;] [-not=&quot;text&quot;]
+              [more query text...]</PRE>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P><STRONG>ntvquerygen</STRONG> allows the generationg of nextrieve query XML from
+parameters.  The query XML is printed to standard output.</P>
+<P>A definition of what the XML for a query looks like
+can be found <A HREF="ntvqueryxml.html" target="_blank">here</A>.</P>
+<P>An example usage (reformatted) is:</P>
+<PRE>
+    $ ntvquerygen hello
+    &lt;?xml version=&quot;1.0&quot; encoding=&quot;ISO-8859-1&quot;?&gt;
+    &lt;ntv:query xmlns:ntv=&quot;http://www.nextrieve.com/1.0&quot;&gt;hello&lt;/ntv:query&gt;
+    $ ntvquerygen -x -T subjects -c financial blackbird
+    &lt;?xml version=&quot;1.0&quot; encoding=&quot;ISO-8859-1&quot;?&gt;
+    &lt;ntv:query xmlns:ntv=&quot;http://www.nextrieve.com/1.0&quot; type=&quot;exact&quot;&gt;
+        &lt;constraint&gt;financial&lt;/constraint&gt;
+        &lt;texttype name=&quot;subjects&quot; weight=&quot;100&quot;/&gt;
+        blackbird
+    &lt;/ntv:query&gt;
+    $</PRE>
+<P>
+<H2><A NAME="options">OPTIONS</A></H2>
+<DL>
+<DT><STRONG><A NAME="item_%2D%3F"><STRONG>-?</STRONG></A></STRONG><BR>
+<DD>
+Write extended help information to standard output and exit.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dv_0%7C1"><STRONG>-v 0|1</STRONG></A></STRONG><BR>
+<DD>
+Sets the 'longform' query attribute, to have a long form of the
+hitlist returned.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dx"><STRONG>-x</STRONG></A></STRONG><BR>
+<DD>
+Set the 'type=``exact''' query attribute, indicating an exact search.
+<P></P>
+<DT><STRONG><A NAME="item_%2Di_offset"><STRONG>-i offset</STRONG></A></STRONG><BR>
+<DD>
+Set the 'firsthit=``<EM>offset</EM>''' query attribute, indicating the 1-based
+offset from where to return hits in the hitlist.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dd_displayed%2Dhits"><STRONG>-d displayed-hits</STRONG></A></STRONG><BR>
+<DD>
+Set the 'displayedhits=``<EM>displayed-hits</EM>''' query attribute, indicating how
+many hits to return.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dt_total%2Dhits"><STRONG>-t total-hits</STRONG></A></STRONG><BR>
+<DD>
+Set the 'totalhits=``<EM>total-hits</EM>''' query attribute, indicating the maximum
+number of hits to process.
+<P></P>
+<DT><STRONG><A NAME="item_%2De_%7Butf8%7Cutf16%7Ciso%7Cascii%7D%27"><STRONG>-e {utf8|utf16|iso|ascii}</STRONG>'</A></STRONG><BR>
+<DD>
+The encoding is indicated.  An initial line like
+<PRE>
+    &lt;?xml version=&quot;1.0&quot; encoding=&quot;ISO-8859-1&quot;?&gt;</PRE>
+<P>is printed.  Note that this encoding is only applied to query XML
+-- the text present in the text index is always encoded with UTF-8.</P>
+<P></P>
+<DT><STRONG><A NAME="item_%2Df_fuzziness"><STRONG>-f fuzziness</STRONG></A></STRONG><BR>
+<DD>
+Set the 'fuzzylevel=``<EM>fuzziness</EM>''' query attribute (in the range 0 to 3
+inclusive), indicating the level of fuzziness for a fuzzy search.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dh_highlight%2Dlength"><STRONG>-h highlight-length</STRONG></A></STRONG><BR>
+<DD>
+Set the 'highlightlength=``<EM>highlight-length</EM>''' query attribute,
+indicating the minimum length a word must have in the preview before
+it's highlighted if it's relevant to the fuzzy search query performed.
+<P></P>
+<DT><STRONG><A NAME="item_%2DT_texttype%5B%3Dweightpercentage%5D"><STRONG>-T <EM>texttype[=weightpercentage]</EM></STRONG></A></STRONG><BR>
+<DD>
+Set a &lt;texttype&gt; element in the query container, indicating a texttype
+specification.  Special values for <EM>texttype</EM> are empty (``'')
+indicating the default text type, and ``*'' indicating ``all other text types''.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dsa%5B%3D0%7C1%5D"><STRONG>-sa[=0|1]</STRONG></A></STRONG><BR>
+<DD>
+Set the 'showattributes=``<EM>n</EM>''' query attribute, indicating whether
+attribute information should be returned with hits or not.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dsp%5B%3D0%7C1%5D"><STRONG>-sp[=0|1]</STRONG></A></STRONG><BR>
+<DD>
+Set the 'showpreview=``<EM>n</EM>''' query attribute, indicating whether
+preview information should be returned with hits or not.
+<P></P>
+<DT><STRONG><A NAME="item_%2DD_idxname"><STRONG>-D idxname</STRONG></A></STRONG><BR>
+<DD>
+Set the &lt;indexname&gt; element in the query container, indicating what
+logical index to search if we're communicating with a nextrieve
+caching server.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dc_constraint"><STRONG>-c constraint</STRONG></A></STRONG><BR>
+<DD>
+Set the &lt;constraint&gt; element in the query container, indicating a
+constraint to apply to the search.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dany%3Dtext%2C_%2Dall%3Dtext%2C_%2Dnot%3Dtext%2C"><STRONG>-any=text</STRONG>, <STRONG>-all=text</STRONG>, <STRONG>-not=text</STRONG>, <STRONG>more query text</STRONG></A></STRONG><BR>
+<DD>
+Set one of the &lt;qany&gt;, &lt;qall&gt;, or &lt;qnot&gt; elements in the query container,
+or place <EM>more query text</EM> directly in the query container.
+<P>These represent classes of text to search for.</P>
+<P></P></DL>
+
+</BODY>
+
+</HTML>

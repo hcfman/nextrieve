@@ -1,0 +1,134 @@
+#!/bin/sh
+
+shelltouse=/bin/sh
+if [ "`uname -s`" = "SunOS" ] ; then
+    shelltouse=/usr/bin/ksh
+fi
+
+PID=$$
+cat <<'eod' > /tmp/install.$PID
+
+# Perform a full-reindex operation.
+
+NTVINST=/usr/local/nextrieve
+VERSION=2.0.0
+
+if [ "$1" = "-B" ]; then
+    [ -z "$2" ] \
+	&& echo A -B parameter must be followed by the collection directory name.\
+	&& exit 1
+
+    NTVBASE="$2"
+
+    shift; shift
+fi
+
+[ -z "$1" ] \
+    && echo "An indexname must be specified." \
+    && exit 1
+
+NTVNAME="$1"
+
+if [ -z "$NTVBASE" ]; then
+    NTVBASE="$NTVINST/collection"
+fi
+
+# Check for correctly positioned vital files.
+[ ! -d "$NTVBASE" ] \
+    && echo The collection directory, "$NTVBASE", does not exist. \
+    && echo Use either: \
+    && echo "    $0 -B collectiondir..." \
+    && echo or \
+    && echo "    NTVBASE=collectiondir $0..." \
+    && echo "with an existing collection directory." \
+    && exit 1
+
+[ ! -d "$NTVINST" ] \
+    && echo The installation directory, "$NTVINST", does not exist. \
+    && exit 1
+
+[ ! -d "$NTVBASE/$NTVNAME" ] \
+    && echo The index directory, "$NTVBASE/$NTVNAME", does not exist. \
+    && exit 1
+
+ERR=echo
+[ -x "$NTVBASE/$NTVNAME/bin/${NTVNAME}error" ] \
+    && ERR="$NTVBASE/$NTVNAME/bin/${NTVNAME}error"
+
+if ! "$NTVBASE/$NTVNAME/bin/${NTVNAME}ok"; then exit 1; fi
+
+if ! "$NTVBASE/$NTVNAME/bin/${NTVNAME}prepfullidx"; then exit 1; fi
+
+if ! "$NTVBASE/$NTVNAME/bin/${NTVNAME}ok"; then exit 1; fi
+
+[ ! -d "$NTVBASE/$NTVNAME/index.new" ] \
+    && mkdir "$NTVBASE/$NTVNAME/index.new" 2> /dev/null
+[ ! -d "$NTVBASE/$NTVNAME/index.new" ] \
+    && "$ERR" "Cannot create '$NTVBASE/$NTVNAME/index.new'." \
+    && exit 1
+
+rm -f "$NTVBASE/$NTVNAME"/index.new/*.ntv
+[ ! -d "$NTVBASE/$NTVNAME/index.old" ] \
+    && mkdir "$NTVBASE/$NTVNAME/index.old" 2> /dev/null
+[ ! -d "$NTVBASE/$NTVNAME/index.old" ] \
+    && "$ERR" "Cannot create '$NTVBASE/$NTVNAME/index.old'." \
+    && exit 1
+
+rm -f "$NTVBASE/$NTVNAME"/index.old/*.ntv
+
+# Send the XML to the indexer, specifying the new index location.
+"$NTVBASE/$NTVNAME/bin/${NTVNAME}fullxml" \
+    | "$NTVINST/$VERSION"/bin/ntvindex -R "$NTVBASE/$NTVNAME/$NTVNAME.res" \
+				       -I "$NTVBASE/$NTVNAME"/index.new \
+				       -L "$NTVBASE/$NTVNAME"/logs/log.txt \
+				       -
+
+[ "$?" != "0" ] \
+    && { \
+       "$ERR" "$NTVBASE/$NTVNAME/bin/${NTVNAME}fullxml | $NTVINST/$VERSION/ntvindex -R $NTVBASE/$NTVNAME/$NTVNAME.res -I $NTVBASE/$NTVNAME/index.new failed." \
+       exit 1; \
+       }
+
+# Any cleanup.
+"$NTVBASE/$NTVNAME/bin/${NTVNAME}doneidx"
+
+if [ -x "$NTVINST/$VERSION/bin/ntvopt" ]; then
+    if "$NTVINST/$VERSION"/bin/ntvopt -R "$NTVBASE/$NTVNAME/$NTVNAME.res" "$NTVBASE/$NTVNAME"/index.new; then
+	echo Using optimized index.
+	PATH="$NTVINST/$VERSION/bin:$PATH" "$NTVINST/$VERSION"/bin/ntvidx-useopt.sh "$NTVBASE/$NTVNAME"/index.new
+	rm -f "$NTVBASE/$NTVNAME"/index.new/*-orig*
+    else
+    	echo "Optimizing failed (perhaps you don't have a valid license)"
+	echo "     -- using non-optimized index."
+	rm -f "$NTVBASE/$NTVNAME"/index.new/*-opt*
+    fi
+fi
+
+$NTVBASE/$NTVNAME/bin/${NTVNAME}stopdaemon
+
+# Migrate indexes... current->old, new->current.
+if [ -f "$NTVBASE/$NTVNAME"/index/ref0.ntv ]; then
+    if ! mv "$NTVBASE/$NTVNAME"/index/*.ntv "$NTVBASE/$NTVNAME"/index.old; then
+	"$ERR" "Cannot rename *.ntv files from $NTVBASE/$NTVNAME/index to $NTVBASE/$NTVNAME/index.old"
+	exit 1
+    fi
+fi
+
+if ! mv "$NTVBASE/$NTVNAME"/index.new/*.ntv "$NTVBASE/$NTVNAME/index"; then
+    "$ERR" "Cannot rename *.ntv files from $NTVBASE/$NTVNAME/index.new to $NTVBASE/$NTVNAME/index... replacing old index."
+    mv "$NTVBASE/$NTVNAME"/index.old/*.ntv "$NTVBASE/$NTVNAME/index"
+    exit 1
+fi
+
+echo "Full reindex of '$NTVNAME' under '$NTVBASE' done."
+echo "Restart any ntvsearchd that may be using this index."
+
+$NTVBASE/$NTVNAME/bin/${NTVNAME}startdaemon
+
+exit 0
+eod
+
+$shelltouse /tmp/install.$PID $*
+rm /tmp/install.$PID
+
+exit 0

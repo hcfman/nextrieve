@@ -1,0 +1,43 @@
+#!%%NTVPERL%% -I%%NTVBASE%%/%%NTVNAME%%/bin
+
+use %%NTVNAME%%error;
+
+exit 1 if -f '%%NTVBASE%%/%%NTVNAME%%/runblocked';
+
+# First attempt at absorbing mail messages from spool to mailboxes
+# in archive.
+# We optionally generate XML for an incremental index, which we append
+# to archive/inc.xml.
+
+opendir( DIR, "%%NTVBASE%%/%%NTVNAME%%/spool" ) ||
+    ntverror( "Can't read directory %%NTVBASE%%/%%NTVNAME%%/spool: $!\n" );
+
+@files = grep( /^\d\d\d\d\d\d\d\d-\d\d\d\d\d\d-\d+$/, readdir( DIR ) );
+closedir( DIR );
+
+for $mail ( @files ) {
+    ( $year, $month ) = $mail =~ /^(\d\d\d\d)(\d\d)/;
+    $mbx = "%%NTVBASE%%/%%NTVNAME%%/archive/%%NTVNAME%%-$year$month.mbx";
+
+    # Slurp mail in
+    open( IN, "%%NTVBASE%%/%%NTVNAME%%/spool/$mail" ) ||
+	ntverror( "Can't open %%NTVBASE%%/%%NTVNAME%%/spool/$mail: $!\n" );
+    my $save = $/;
+    undef $/;
+    $data = <IN>;
+    close IN;
+    $/ = $save;
+
+    # Append to incremental mailbox, can then delete spam before archiving
+    $mbx =~ s/\.mbx$/.inc.mbx/;
+    open( OUT, ">> $mbx" ) ||
+	ntverror( "Can't append to $mbx: $!\n" );
+    print OUT $data;
+    close OUT;
+
+    # Remove from spool if all good
+    unlink "%%NTVBASE%%/%%NTVNAME%%/spool/$mail" ||
+	ntverror( "Can't unlink %%NTVBASE%%/%%NTVNAME%%/spool/$mail: $!\n" );
+}
+
+exit 0;

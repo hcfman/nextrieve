@@ -1,0 +1,85 @@
+<HTML>
+<HEAD>
+<TITLE>HTML to index-XML filter</TITLE>
+<LINK REV="made" HREF="mailto:bhcompile@daffy.perf.redhat.com">
+</HEAD>
+
+<BODY BACKGROUND="bgblend.gif"><H1 ALIGN="CENTER">HTML to index-XML filter</H1>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<UL>
+
+		<LI><A HREF="ntvhtmlfilter.html#synopsis">SYNOPSIS</A></LI>
+		<LI><A HREF="ntvhtmlfilter.html#description">DESCRIPTION</A></LI>
+		<LI><A HREF="ntvhtmlfilter.html#options">OPTIONS</A></LI>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H2><A NAME="synopsis">SYNOPSIS</A></H2>
+<PRE>
+  ntvhtmlfilter [-f fnameattr] [-t titleattr] [-T titlett]
+                [-l maxlen] [-e defencoding] [-DFhr]</PRE>
+<P>
+<H2><A NAME="description">DESCRIPTION</A></H2>
+<P><STRONG>ntvhtmlfilter</STRONG> expects a series of filenames on stdin, each representing
+the name of a file containing HTML, and produces on
+stdout XML suitable for passing to ntvindex.</P>
+<P>Each HTML file encountered is emitted in XML as a separate document
+with associated attributes.</P>
+<P>
+<H2><A NAME="options">OPTIONS</A></H2>
+<DL>
+<DT><STRONG><A NAME="item_%2Df_fnameattr"><CODE>-f</CODE> fnameattr</A></STRONG><BR>
+<DD>
+The name of the file being processed is emitted as the ``fnameattr'' attribute.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dt_titleattr"><CODE>-t</CODE> titleattr</A></STRONG><BR>
+<DD>
+The title of the HTML file is emitted as the ``titleattr'' attribute.
+<P></P>
+<DT><STRONG><A NAME="item_%2DT_titlett"><CODE>-T</CODE> titlett</A></STRONG><BR>
+<DD>
+The title of the HTML file is emitted as a &lt;titlett&gt; container in the
+text of the document.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dl_maxlen"><CODE>-l</CODE> maxlen</A></STRONG><BR>
+<DD>
+The length of the title attribute is limited to at most <EM>maxlen</EM> characters.
+<P></P>
+<DT><STRONG><A NAME="item_%2De_defencoding"><CODE>-e</CODE> defencoding</A></STRONG><BR>
+<DD>
+A character encoding is specified that will be applied when none is
+otherwise given.  See also the <A HREF="ntvhtmlfilter.html#item_%2DF"><CODE>-F</CODE></A> option.
+<P></P>
+<DT><STRONG><A NAME="item_%2DD"><CODE>-D</CODE></A></STRONG><BR>
+<DD>
+A &lt;ntv:docseq&gt; container will be generated surrounding the filter output.
+This enables the output to be sent directly to ntvindex.
+<P></P>
+<DT><STRONG><A NAME="item_%2DF"><CODE>-F</CODE></A></STRONG><BR>
+<DD>
+A ``force'' flag that indicates that content with an unknown encoding should
+be forced to be the default encoding.  Normally such content is dropped.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dh"><CODE>-h</CODE></A></STRONG><BR>
+<DD>
+Print some help information.
+<P></P>
+<DT><STRONG><A NAME="item_%2Dr"><CODE>-r</CODE></A></STRONG><BR>
+<DD>
+Operate in ``raw'' mode.  The HTML of a single document is expected on stdin
+(rather than filenames); it will be converted to UTF-8 and output to
+stdout.  No attributes or text types will be generated.
+<P></P></DL>
+
+</BODY>
+
+</HTML>

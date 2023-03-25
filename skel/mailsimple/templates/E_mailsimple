@@ -1,0 +1,31 @@
+<HTML>
+<HEAD>
+<TITLE>Search the %%NTVNAME%% mailing list</TITLE>
+</HEAD>
+<BODY BACKGROUND="/bgblend.gif">
+<FONT FACE="arial,helvetica" SIZE=2>
+
+<H2>Search the %%NTVNAME%% mailing list</H2>
+
+<FORM METHOD="POST" ACTION="<ntv-script>">
+<ntv-include %%NTVCHROOTBASE%%/%%NTVNAME%%/templates/%%NTVNAME%%-basicbuttons>
+<FONT SIZE=-1><A HREF="<ntv-script>?adv&vblq=<ntv-search>">Advanced Search options</A></FONT>
+</FORM>
+
+<P>
+No results were found.
+</P>
+<P>
+Try changing your words, using a fuzzy search, or unchecking
+<I>subjects only</I> if it is checked.
+</P>
+<P>
+More helpful advice can be added here.
+</P>
+
+<BR CLEAR=ALL><P><HR WIDTH=90% SIZE=3 NOSHADE><P>
+<CENTER><FONT SIZE=1>Powered by <A HREF="/" TARGET=_top>NexTrieve</A></FONT></CENTER>
+
+</FONT>
+</BODY>
+</HTML>

@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Absorb any new mail messages directly into mailboxes, no incremental
+# XML is generated.
+
+rm -f "%%NTVBASE%%/%%NTVNAME%%/archive/inc.xml"
+
+if "%%NTVBASE%%/%%NTVNAME%%/bin/%%NTVNAME%%readspool"; then
+    :;
+else
+    exit 1
+fi
+
+if "%%NTVBASE%%/%%NTVNAME%%/bin/%%NTVNAME%%inc2mbx"; then
+    :;
+else
+    exit 1
+fi

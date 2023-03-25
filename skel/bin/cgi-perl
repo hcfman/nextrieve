@@ -1,0 +1,15 @@
+#!%%NTVPERL%%
+
+# echo "Content-type: text/plain";
+# echo '';
+$ENV{'NTVBASE'} = '%%NTVCHROOTBASE%%';
+$ENV{'NTVNAME'} = '%%NTVNAME%%';
+
+exec "%%NTVCHROOTINST%%/%%VERSION%%/bin/ntvultralite";
+
+print "Content-type: text/plain\n";
+print "\n";
+print "%%NTVCHROOTINST%%/%%VERSION%%/bin/ntvultralite cannot be executed.\n";
+print "Check existence and permissions.\n";
+
+exit 1;

@@ -1,0 +1,71 @@
+#!%%NTVPERL%%
+
+$INDEXBASE = '%%NTVBASEDIR%%';
+$DATABASE = '%%NTVNAME%%';
+
+sub error {
+    local( $format, @list ) = @_;
+
+    $message = sprintf( $format, @list );
+
+    $message = "$!" ? "$message: $!\n" : "$message\n";
+    print $message;
+    exit( 1 );
+}
+
+chdir $INDEXBASE ||
+    &error( "Can't change to $INDEXBASE" );
+
+opendir( DIR, "." ) ||
+    &error( "Can't open $INDEXBASE" );
+@filelist = grep( /^\d\d\d\d\d\d$/, readdir( DIR ) );
+closedir DIR;
+
+for ( @filelist ) {
+    ( $year, $month ) = m%^(\d\d\d\d)(\d\d)%;
+    $yearMonth{ "$year$month" } = 1;
+}
+
+@lastMonths = reverse sort keys %yearMonth;
+
+#
+# Find the last twelve, prepare for marking cmdfiles
+#
+$i = 0;
+$limit = $#lastMonths > 11 ? 11 : $#lastMonths;
+while ( $i <= $#lastMonths ) {
+    ( $year ) = $lastMonths[ $i ] =~ /^(\d\d\d\d)/;
+    if ( $i <= $limit ) {
+	$months{ $lastMonths[ $i ] } = 1;
+    }
+    $years{ $year } = 1;
+
+    $i++;
+}
+
+@attributes = ( sort keys %years, sort keys %months );
+
+$count = 0;
+for $i ( @attributes ) {
+    if ( $i =~ m/(\d\d\d\d)(\d\d)/ ) {
+	$year = $1;  $month = $2;
+	$startrange = $year . $month . '01';
+	if ( $month == '12' ) {
+	    $month = '01';  $year++;
+	} else {
+	    $month = sprintf( "%02d", $month + 1 );
+	}
+	$endrange = $year . $month . '01';
+    } else {
+	$startrange = $i . '0101';
+	$endrange = sprintf( "%04d", $i + 1 );
+	$endrange .= '0101';
+    }
+    print "<vblsub name=\"vbldt$i\" text=\"date &gt;= $startrange &amp; date &lt; $endrange\"/>\n";
+    print "<vbluse name=\"vbldt$i\" type=\"constraint\" class=\"any\"/>\n";
+}
+
+print "<vblsub name=\"vblallabove\" text=\"date &gt; 0\"/>\n";
+print "<vbluse name=\"vblallabove\" type=\"constraint\" class=\"any\"/>\n";
+
+exit 0;

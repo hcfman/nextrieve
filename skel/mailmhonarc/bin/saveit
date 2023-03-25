@@ -1,0 +1,32 @@
+#!%%NTVPERL%%
+
+use Time::localtime;
+
+# Save an incoming email under our spool directory...
+
+my $tm = localtime;
+
+$thedate = sprintf( "%04d%02d%02d-%02d%02d%02d-%d",
+    $tm -> year + 1900,
+    $tm -> mon + 1,
+    $tm -> mday,
+    $tm -> hour,
+    $tm -> min,
+    $tm -> sec,
+    $$ );
+
+open( OUT, ">> %%NTVCHROOTBASE%%/%%NTVNAME%%/spool/$thedate" ) || die;
+
+$inheader = 1;
+while ( <> ) {
+    print OUT ">"
+        if !$inheader && /^From /i;
+    print OUT;
+
+    $inheader = 0 if /^$/;
+}
+print OUT "\n";
+
+close OUT;
+
+exit 0;

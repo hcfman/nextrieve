@@ -1,0 +1,55 @@
+#!/bin/sh
+
+# Create an empty directory (!) ready to hold a collection of nextrieve
+# text indexes.
+
+NTVBASE="$1"
+while true
+do
+    while true
+    do
+	if [ -z "$NTVBASE" ]; then
+	    echo ''
+	    echo Please enter the base directory for this collection of search engines:
+	    read NTVBASE
+	    NTVBASE=`echo $NTVBASE|sed -e 's/^[ 	]*//' -e 's/[ 	]*$//'`
+	fi
+
+	if [ "$NTVBASE" = "`echo ${NTVBASE#/}`" ] ; then
+	    echo "$NTVBASE" is not an absolute path, please enter an absolute path.
+	    NTVBASE=
+	    continue
+	fi
+
+	break
+    done
+
+    echo "Is $NTVBASE correct (y|n)?"
+    read line
+    line=`echo $line|sed -e 's/^[   ]*//' -e 's/[   ]*$//'`
+
+    [ "$line" = 'y' -o "$line" = 'Y' ] && break;
+
+    NTVBASE=
+done
+
+echo ''
+if [ -d "$NTVBASE" ] ; then
+    echo "$NTVBASE already exists... terminating"
+    exit 0
+fi
+
+if mkdir "$NTVBASE"; then
+    :;
+else
+    echo Cannot make directory $NTVBASE; terminating...
+    exit 1
+fi
+
+cat<<EOF
+
+If you now want to make a new web index, for example, use
+    NTVBASE="$NTVBASE" ntvmakenewwebindex
+EOF
+
+exit 0
