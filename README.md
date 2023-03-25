@@ -2,7 +2,7 @@
 
 *UNDER CONSTRUCTION*
 
-Note: THIS CODE ISN'T BUILDING JUST YET ANYMORE, It dates back to 2002.
+Note: THIS CODE ISN'T BUILDING JUST YET, It dates back to 2002/2003.
 
 I've recently looked it up and placed it here for me it's part of the Dutch Internet historical reference.
 
