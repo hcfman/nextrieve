@@ -4,7 +4,7 @@
 
 Note: THIS CODE ISN'T BUILDING JUST YET, It dates back to 2002/2003.
 
-I've recently looked it up and placed it here for me it's part of the Dutch Internet historical reference.
+I've recently looked it up and placed it here because for me it's part of the Dutch Internet historical reference as it's code from one of the first national search engines of the Netherlands.
 
 I originally wrote it around 1995 when I had a company called Nexial Systems. Later, it became part of a National Search engine called Search.NL. Search.NL was one of the first national search engines in the Netherlands.
 
