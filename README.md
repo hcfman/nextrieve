@@ -15,6 +15,7 @@ https://web.archive.org/web/20021125174556/http://www.search.nl/
 There's a small piece of history about this (In Dutch) here
 
 https://www.eindhovenfotos.nl/1/ilse.nl.html#news1-y8
+
 [(English version)](https://www-eindhovenfotos-nl.translate.goog/1/ilse.nl.html?_x_tr_sl=nl&_x_tr_tl=en&_x_tr_hl=en&_x_tr_pto=wapp#news1-y8)
 
 According to the above article, in 1999 Computable magazine referred to Search.NL as the best scoring Dutch search engine, Altavista and Hotbot were first and second. That article is here:
