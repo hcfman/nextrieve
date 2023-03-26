@@ -16,7 +16,14 @@ There's a small piece of history about this (In Dutch) here
 
 https://www.eindhovenfotos.nl/1/ilse.nl.html#news1-y8
 
-According to the above artikel, in 1999 Computable magazine referred to Search.NL as the best scoring Dutch search engine, Altavista and Hotbot were first and second. I never read that article myself but I'm proud to read it in this history page.
+According to the above article, in 1999 Computable magazine referred to Search.NL as the best scoring Dutch search engine, Altavista and Hotbot were first and second. That article is here:
+
+https://www.computable.nl/artikel/achtergrond/infrastructuur/1374048/1444691/test-zoekmachines-1999-de-nederlanders-rukken-op.html
+
+with English here:
+
+[Link English version](https://www-computable-nl.translate.goog/artikel/achtergrond/infrastructuur/1374048/1444691/test-zoekmachines-1999-de-nederlanders-rukken-op.html?_x_tr_sl=nl&_x_tr_tl=en&_x_tr_hl=en&_x_tr_pto=wapp)
+
 
 I also started one of the first search engines in New Zealand, the URL for this still works and goes to a search engine, though I understand they use a different search engine now. The look and feel is pretty much the same as when I sold it to NZcity:
 
