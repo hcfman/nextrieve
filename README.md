@@ -20,7 +20,7 @@ According to the above article, in 1999 Computable magazine referred to Search.N
 
 https://www.computable.nl/artikel/achtergrond/infrastructuur/1374048/1444691/test-zoekmachines-1999-de-nederlanders-rukken-op.html
 
-[Link (English version)](https://www-computable-nl.translate.goog/artikel/achtergrond/infrastructuur/1374048/1444691/test-zoekmachines-1999-de-nederlanders-rukken-op.html?_x_tr_sl=nl&_x_tr_tl=en&_x_tr_hl=en&_x_tr_pto=wapp)
+[(English version)](https://www-computable-nl.translate.goog/artikel/achtergrond/infrastructuur/1374048/1444691/test-zoekmachines-1999-de-nederlanders-rukken-op.html?_x_tr_sl=nl&_x_tr_tl=en&_x_tr_hl=en&_x_tr_pto=wapp)
 
 I also started one of the first search engines in New Zealand, the URL for this still works and goes to a search engine, though I understand they use a different search engine now. The look and feel is pretty much the same as when I sold it to NZcity:
 
